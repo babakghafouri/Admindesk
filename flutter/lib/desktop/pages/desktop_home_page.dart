@@ -12,6 +12,7 @@ import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
+import 'package:flutter_hbb/desktop/widgets/admindesk_dashboard.dart';
 import 'package:flutter_hbb/desktop/widgets/update_progress.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/server_model.dart';
@@ -59,15 +60,35 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Widget build(BuildContext context) {
     super.build(context);
     final isIncomingOnly = bind.isIncomingOnly();
-    return _buildBlock(
+    // Keep the compact incoming-only mode and the existing page below 980px.
+    // Neither the Rust FFI nor session/window controllers are replaced.
+    return LayoutBuilder(builder: (context, constraints) {
+      if (!isIncomingOnly && constraints.maxWidth >= 980) {
+        return _buildBlock(
+          child: AdminDeskDashboard(
+            notices: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 110),
+              child: SingleChildScrollView(
+                child: Column(children: [
+                  buildPresetPasswordWarning(),
+                  Obx(() => buildHelpCards(stateGlobal.updateUrl.value)),
+                ]),
+              ),
+            ),
+          ),
+        );
+      }
+      return _buildBlock(
         child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildLeftPane(context),
-        if (!isIncomingOnly) const VerticalDivider(width: 1),
-        if (!isIncomingOnly) Expanded(child: buildRightPane(context)),
-      ],
-    ));
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            buildLeftPane(context),
+            if (!isIncomingOnly) const VerticalDivider(width: 1),
+            if (!isIncomingOnly) Expanded(child: buildRightPane(context)),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildBlock({required Widget child}) {

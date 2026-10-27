@@ -189,7 +189,16 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
 
 /// Connection page for connecting to a remote peer.
 class ConnectionPage extends StatefulWidget {
-  const ConnectionPage({Key? key}) : super(key: key);
+  final bool dashboardLayout;
+  final Widget? identityCards;
+  final ValueNotifier<int?>? requestedPeerTab;
+
+  const ConnectionPage({
+    Key? key,
+    this.dashboardLayout = false,
+    this.identityCards,
+    this.requestedPeerTab,
+  }) : super(key: key);
 
   @override
   State<ConnectionPage> createState() => _ConnectionPageState();
@@ -304,6 +313,22 @@ class _ConnectionPageState extends State<ConnectionPage>
   @override
   Widget build(BuildContext context) {
     final isOutgoingOnly = bind.isOutgoingOnly();
+    if (widget.dashboardLayout) {
+      return Column(
+        children: [
+          _buildRemoteIDTextField(context),
+          if (widget.identityCards != null) widget.identityCards!,
+          const SizedBox(height: 6),
+          Expanded(
+            child: PeerTabPage(
+              dashboardLayout: true,
+              requestedPeerTab: widget.requestedPeerTab,
+            ),
+          ),
+          if (!isOutgoingOnly) OnlineStatusWidget(),
+        ],
+      );
+    }
     return Column(
       children: [
         Expanded(
@@ -344,15 +369,23 @@ class _ConnectionPageState extends State<ConnectionPage>
   /// Search for a peer.
   Widget _buildRemoteIDTextField(BuildContext context) {
     var w = Container(
-      width: 320 + 20 * 2,
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
+      width: widget.dashboardLayout ? double.infinity : 320 + 20 * 2,
+      padding: widget.dashboardLayout
+          ? const EdgeInsets.fromLTRB(15, 10, 15, 12)
+          : const EdgeInsets.fromLTRB(20, 24, 20, 22),
       decoration: BoxDecoration(
+          color: widget.dashboardLayout ? Theme.of(context).cardColor : null,
           borderRadius: const BorderRadius.all(Radius.circular(13)),
-          border: Border.all(color: Theme.of(context).colorScheme.background)),
+          border: Border.all(
+            color: widget.dashboardLayout
+                ? Theme.of(context).dividerColor.withOpacity(0.55)
+                : Theme.of(context).colorScheme.background,
+          )),
       child: Ink(
         child: Column(
           children: [
-            getConnectionPageTitle(context, false).marginOnly(bottom: 15),
+            if (!widget.dashboardLayout)
+              getConnectionPageTitle(context, false).marginOnly(bottom: 15),
             Row(
               children: [
                 Expanded(
@@ -419,9 +452,9 @@ class _ConnectionPageState extends State<ConnectionPage>
                           enableSuggestions: false,
                           keyboardType: TextInputType.visiblePassword,
                           focusNode: fieldFocusNode,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'Vazirmatn',
-                            fontSize: 22,
+                            fontSize: widget.dashboardLayout ? 17 : 22,
                             height: 1.4,
                           ),
                           maxLines: 1,
@@ -513,8 +546,68 @@ class _ConnectionPageState extends State<ConnectionPage>
                     );
                   },
                 )),
+                if (widget.dashboardLayout) ...[
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    height: 43,
+                    width: 150,
+                    child: ElevatedButton.icon(
+                      onPressed: () => onConnect(),
+                      icon: const Icon(Icons.sync_alt, size: 18),
+                      label: Text(translate('Connect')),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF087BEE),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  PopupMenuButton<String>(
+                    tooltip: translate('More'),
+                    icon: const Icon(Icons.keyboard_arrow_down),
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'file':
+                          onConnect(isFileTransfer: true);
+                          break;
+                        case 'camera':
+                          onConnect(isViewCamera: true);
+                          break;
+                        case 'terminal':
+                          onConnect(isTerminal: true);
+                          break;
+                        case 'tcp':
+                          onConnect(isTcpTunneling: true);
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'file',
+                        child: Text(translate('Transfer file')),
+                      ),
+                      PopupMenuItem(
+                        value: 'camera',
+                        child: Text(translate('View camera')),
+                      ),
+                      PopupMenuItem(
+                        value: 'terminal',
+                        child: Text(translate('Terminal')),
+                      ),
+                      if (isDesktop)
+                        PopupMenuItem(
+                          value: 'tcp',
+                          child: Text(translate('TCP tunneling')),
+                        ),
+                    ],
+                  ),
+                ],
               ],
             ),
+            if (!widget.dashboardLayout)
             Padding(
               padding: const EdgeInsets.only(top: 13.0),
               child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
@@ -620,7 +713,9 @@ class _ConnectionPageState extends State<ConnectionPage>
         ),
       ),
     );
-    return Container(
-        constraints: const BoxConstraints(maxWidth: 600), child: w);
+    return widget.dashboardLayout
+        ? w
+        : Container(
+            constraints: const BoxConstraints(maxWidth: 600), child: w);
   }
 }
