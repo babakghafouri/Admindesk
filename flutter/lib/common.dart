@@ -3732,106 +3732,45 @@ Color? disabledTextColor(BuildContext context, bool enabled) {
       : Theme.of(context).textTheme.titleLarge?.color?.withOpacity(0.6);
 }
 
-Widget loadPowered(BuildContext context) {
-  if (bind.mainGetBuildinOption(key: "hide-powered-by-me") == 'Y') {
-    return SizedBox.shrink();
-  }
-  return MouseRegion(
-    cursor: SystemMouseCursors.click,
-    child: GestureDetector(
-      onTap: () {
-        launchUrl(Uri.parse('https://rustdesk.com'));
-      },
-      child: Opacity(
-          opacity: 0.5,
-          child: Text(
-            translate("powered_by_me"),
-            overflow: TextOverflow.clip,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(fontSize: 9, decoration: TextDecoration.underline),
-          )),
-    ),
-  ).marginOnly(top: 6);
-}
+// Admin Desk is the sole in-app brand; do not render upstream promotional links.
+Widget loadPowered(BuildContext context) => const SizedBox.shrink();
 
-const _kDefaultLogoAsset = 'assets/logo.png';
-const _kLightLogoAsset = 'assets/logo_light.png';
-const _kDarkLogoAsset = 'assets/logo_dark.png';
-
-List<String> _logoAssetCandidatesForBrightness(Brightness brightness) {
-  return brightness == Brightness.dark
-      ? [_kDarkLogoAsset, _kDefaultLogoAsset]
-      : [_kLightLogoAsset, _kDefaultLogoAsset];
-}
-
-Future<String?> _resolveLogoAsset(Brightness brightness) async {
-  for (final asset in _logoAssetCandidatesForBrightness(brightness)) {
-    try {
-      await rootBundle.load(asset);
-      return asset;
-    } on FlutterError {
-      continue;
-    }
-  }
-  return null;
-}
-
-class _Logo extends StatefulWidget {
+class _Logo extends StatelessWidget {
   const _Logo();
 
   @override
-  State<_Logo> createState() => _LogoState();
-}
-
-class _LogoState extends State<_Logo> {
-  final Map<Brightness, Future<String?>> _logoFutures = {};
-
-  Future<String?> _logoFutureFor(Brightness brightness) {
-    return _logoFutures.putIfAbsent(
-      brightness,
-      () => _resolveLogoAsset(brightness),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String?>(
-      future: _logoFutureFor(Theme.of(context).brightness),
-      builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
-        final asset = snapshot.data;
-        if (asset != null) {
-          final image = Image.asset(
-            asset,
-            fit: BoxFit.contain,
-            errorBuilder: (ctx, error, stackTrace) {
-              return Container();
-            },
-          );
-          return Container(
-            constraints: BoxConstraints(maxWidth: 300, maxHeight: 60),
-            child: image,
-          ).marginOnly(left: 12, right: 12, top: 12);
-        }
-        return const Offstage();
-      },
+    final color = Theme.of(context).colorScheme.onSurface;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset('assets/icon.svg', width: 52, height: 52),
+          const SizedBox(width: 10),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Admin Desk', style: TextStyle(
+                color: color, fontSize: 20, fontWeight: FontWeight.w700)),
+              Text('Remote Access · Greater Control', style: TextStyle(
+                color: color.withOpacity(0.7), fontSize: 9)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
-// max 300 x 60
 Widget loadLogo() => const _Logo();
 
 Widget loadIcon(double size) {
   return Image.asset('assets/icon.png',
-      width: size,
-      height: size,
-      errorBuilder: (ctx, error, stackTrace) => SvgPicture.asset(
-            'assets/icon.svg',
-            width: size,
-            height: size,
-          ));
+    width: size, height: size,
+    errorBuilder: (context, error, stackTrace) => SvgPicture.asset(
+      'assets/icon.svg', width: size, height: size));
 }
 
 var imcomingOnlyHomeSize = Size(280, 300);

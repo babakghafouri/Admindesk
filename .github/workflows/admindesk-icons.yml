@@ -1,0 +1,48 @@
+name: Generate Admin Desk icons
+
+on:
+  push:
+    branches:
+      - stage3/admindesk-logos-icons
+    paths:
+      - res/admindesk-logo.svg
+      - tools/build_admindesk_icons.py
+      - .github/workflows/admindesk-icons.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current branding branch
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install rendering dependencies
+        run: python -m pip install 'pillow>=10,<12' 'cairosvg>=2.7,<3'
+      - name: Render icons from Admin Desk logo
+        run: python tools/build_admindesk_icons.py
+      - name: Commit generated platform assets to this branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add res/icon.png res/icon.ico res/mac-icon.png res/tray-icon.ico \
+            res/32x32.png res/64x64.png res/128x128.png res/128x128@2x.png \
+            res/mac-tray-dark-x2.png res/mac-tray-light-x2.png
+          git add flutter/windows/runner/resources/app_icon.ico \
+            flutter/macos/Runner/AppIcon.icns \
+            flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset \
+            flutter/ios/Runner/Assets.xcassets/LaunchImage.imageset \
+            flutter/android/app/src/main/res/mipmap-*
+          # The project deliberately ignores generic generated icon.png files.
+          git add -f flutter/assets/icon.png \
+            flutter/android/app/src/main/res/drawable-nodpi/admindesk_splash.png
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(branding): render Admin Desk platform icons"
+            git push
+          fi
