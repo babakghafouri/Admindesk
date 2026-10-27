@@ -947,7 +947,7 @@ def build_flutter_dmg(version, features):
     system2(
         f'FLUTTER_XCODE_ARCHS={mac_arch} FLUTTER_XCODE_ONLY_ACTIVE_ARCH=YES flutter build macos --release')
     # Flutter uses the configured product name for the generated .app bundle.
-    # Do not assume the upstream RustDesk.app name after rebranding.
+    # Do not assume the upstream RustDesk.app name after rebranding; this is validated by the macOS CI build.
     app_candidates = glob.glob('./build/macos/Build/Products/Release/*.app')
     if len(app_candidates) != 1:
         raise RuntimeError(
