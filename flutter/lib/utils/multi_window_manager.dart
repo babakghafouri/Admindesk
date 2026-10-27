@@ -164,12 +164,12 @@ class RustDeskMultiWindowManager {
         ..setTitle(getWindowNameWithId(
           remoteId,
           overrideType: type,
-        ));
+        ).replaceAll('RustDesk', 'Admin Desk'));
     } else {
       windowController.setTitle(getWindowNameWithId(
         remoteId,
         overrideType: type,
-      ));
+      ).replaceAll('RustDesk', 'Admin Desk'));
     }
     if (isMacOS) {
       Future.microtask(() => windowController.show());
