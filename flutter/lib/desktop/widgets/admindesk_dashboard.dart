@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_hbb/common.dart';
+import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
@@ -34,7 +35,8 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
 
   void _openTab(int menu, int peerTab) {
     // Respect hidden/disabled tabs rather than forcing a prohibited view.
-    if (!gFFI.peerTabModel.visibleEnabledOrderedIndexs.contains(peerTab)) {
+    if (isOptionFixed(kOptionPeerTabIndex) ||
+        !gFFI.peerTabModel.visibleEnabledOrderedIndexs.contains(peerTab)) {
       showToast(translate('Unavailable'));
       return;
     }
