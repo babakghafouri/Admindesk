@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - master
+      - fix/admindesk-macos-app-bundle-paths
     paths-ignore:
       - ".github/ISSUE_TEMPLATE/**"
       - "docs/**"
