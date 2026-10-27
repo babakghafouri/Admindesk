@@ -79,10 +79,6 @@ class _PeerTabPageState extends State<PeerTabPage>
 
   final isOptVisiableFixed = isOptionFixed(kOptionPeerTabVisible);
 
-  _PeerTabPageState() {
-    _loadLocalOptions();
-  }
-
   void _loadLocalOptions() {
     final uiType = bind.getLocalFlutterOption(k: kOptionPeerCardUiType);
     if (uiType != '') {
@@ -102,6 +98,8 @@ class _PeerTabPageState extends State<PeerTabPage>
   @override
   void initState() {
     super.initState();
+    // The State.widget getter is valid after initState begins, not in a constructor.
+    _loadLocalOptions();
     widget.requestedPeerTab?.addListener(_onRequestedTabChanged);
   }
 
