@@ -27,7 +27,14 @@ import '../../common.dart';
 import '../../models/platform_model.dart';
 
 class PeerTabPage extends StatefulWidget {
-  const PeerTabPage({Key? key}) : super(key: key);
+  final bool dashboardLayout;
+  final ValueNotifier<int?>? requestedPeerTab;
+
+  const PeerTabPage({
+    Key? key,
+    this.dashboardLayout = false,
+    this.requestedPeerTab,
+  }) : super(key: key);
   @override
   State<PeerTabPage> createState() => _PeerTabPageState();
 }
@@ -84,9 +91,40 @@ class _PeerTabPageState extends State<PeerTabPage>
           : int.parse(uiType) == 1
               ? PeerUiType.tile
               : PeerUiType.list;
+    } else if (widget.dashboardLayout) {
+      // Only choose a default for new users; never overwrite saved view mode.
+      peerCardUiType.value = PeerUiType.list;
     }
     hideAbTagsPanel.value =
         bind.mainGetLocalOption(key: kOptionHideAbTagsPanel) == 'Y';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.requestedPeerTab?.addListener(_onRequestedTabChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.requestedPeerTab?.removeListener(_onRequestedTabChanged);
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant PeerTabPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.requestedPeerTab != widget.requestedPeerTab) {
+      oldWidget.requestedPeerTab?.removeListener(_onRequestedTabChanged);
+      widget.requestedPeerTab?.addListener(_onRequestedTabChanged);
+    }
+  }
+
+  void _onRequestedTabChanged() {
+    final tab = widget.requestedPeerTab?.value;
+    if (tab != null && mounted) {
+      handleTabSelection(tab);
+    }
   }
 
   Future<void> handleTabSelection(int tabIndex) async {
@@ -110,6 +148,8 @@ class _PeerTabPageState extends State<PeerTabPage>
       textBaseline: TextBaseline.ideographic,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (widget.dashboardLayout) _dashboardHeader(context, model),
+        if (!widget.dashboardLayout)
         Obx(() => SizedBox(
               height: 32,
               child: Container(
@@ -132,6 +172,98 @@ class _PeerTabPageState extends State<PeerTabPage>
             ).paddingOnly(right: stateGlobal.isPortrait.isTrue ? 0 : 12)),
         _createPeersView(),
       ],
+    );
+  }
+
+  String _dashboardTabLabel(int tab) {
+    switch (tab) {
+      case 0:
+        return 'اتصالات اخیر';
+      case 1:
+        return 'ستاره‌دارها';
+      case 2:
+        return 'شبکه محلی';
+      case 3:
+        return 'مخاطبین';
+      case 4:
+        return 'گروه‌ها';
+      default:
+        return '';
+    }
+  }
+
+  Widget _dashboardHeader(BuildContext context, PeerTabModel model) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final border = dark ? Colors.white12 : const Color(0xFFE5EAF2);
+    final ink = Theme.of(context).textTheme.bodyMedium?.color;
+    return Container(
+      height: 49,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        border: Border.all(color: border),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: model.visibleEnabledOrderedIndexs.map((tab) {
+                  final active = model.currentTab == tab;
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: isOptionFixed(kOptionPeerTabIndex)
+                          ? null
+                          : () async {
+                              await handleTabSelection(tab);
+                              await bind.setLocalFlutterOption(
+                                  k: kOptionPeerTabIndex, v: tab.toString());
+                            },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: active
+                              ? const Color(0xFFE4F0FF)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(model.tabIcon(tab), size: 17,
+                                color: active
+                                    ? const Color(0xFF087BEE) : ink),
+                            const SizedBox(width: 5),
+                            Text(_dashboardTabLabel(tab),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: active
+                                      ? FontWeight.w700 : FontWeight.w500,
+                                  color: active
+                                      ? const Color(0xFF087BEE) : ink,
+                                )),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          const PeerSearchBar(),
+          _createRefresh(
+              index: PeerTabIndex.ab, loading: gFFI.abModel.currentAbLoading),
+          _createRefresh(
+              index: PeerTabIndex.group,
+              loading: gFFI.groupModel.groupLoading),
+          _createPeerViewTypeSwitch(context),
+        ],
+      ),
     );
   }
 
