@@ -4,12 +4,18 @@ on:
   push:
     branches:
       - stage4/admindesk-desktop-rtl-dashboard
+      - final/admindesk-platform-ids-and-tray
     paths:
       - flutter/lib/desktop/widgets/admindesk_dashboard.dart
       - flutter/lib/desktop/pages/desktop_home_page.dart
       - flutter/lib/desktop/pages/connection_page.dart
       - flutter/lib/common/widgets/peer_tab_page.dart
       - .github/workflows/admindesk-ui-check.yml
+      - Cargo.toml
+      - flutter/android/app/build.gradle
+      - flutter/ios/Runner.xcodeproj/project.pbxproj
+      - flutter/macos/Runner/Configs/AppInfo.xcconfig
+      - flutter/linux/CMakeLists.txt
   workflow_dispatch:
 
 permissions:
@@ -37,3 +43,23 @@ jobs:
           lib/desktop/pages/desktop_home_page.dart
           lib/desktop/pages/connection_page.dart
           lib/common/widgets/peer_tab_page.dart
+      - name: Run self-contained Flutter regression tests
+        # Tests importing generated_bridge.dart require Rust/FFI code generation.
+        working-directory: flutter
+        run: flutter test test/input_modifier_utils_test.dart
+      - name: Check platform bundle identifiers
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root = Path('.')
+          expected = {
+              'Cargo.toml': 'identifier = "com.babakghafouri.admindesk"',
+              'flutter/android/app/build.gradle': 'applicationId "com.babakghafouri.admindesk"',
+              'flutter/ios/Runner.xcodeproj/project.pbxproj': 'PRODUCT_BUNDLE_IDENTIFIER = com.babakghafouri.admindesk;',
+              'flutter/macos/Runner/Configs/AppInfo.xcconfig': 'PRODUCT_BUNDLE_IDENTIFIER = com.babakghafouri.admindesk',
+              'flutter/linux/CMakeLists.txt': 'set(APPLICATION_ID "com.babakghafouri.admindesk")',
+          }
+          for name, text in expected.items():
+              assert text in (root / name).read_text(), f'{name}: branding identifier missing'
+          print('Platform bundle IDs verified')
+          PY

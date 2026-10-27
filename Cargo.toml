@@ -277,7 +277,7 @@ tokio = "1.44"
 
 [package.metadata.bundle]
 name = "Admin Desk"
-identifier = "com.carriez.rustdesk"
+identifier = "com.babakghafouri.admindesk"
 icon = ["res/32x32.png", "res/128x128.png", "res/128x128@2x.png"]
 osx_minimum_system_version = "10.14"
 
