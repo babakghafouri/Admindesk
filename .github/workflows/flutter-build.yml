@@ -1080,9 +1080,6 @@ jobs:
             exit 1
           fi
           APP_NAME="$(basename "$APP_BUNDLE")"
-          # Unlock keychain
-          security default-keychain -s rustdesk.keychain
-          security unlock-keychain -p ${{ secrets.MACOS_P12_PASSWORD }} rustdesk.keychain
           rm -rf *.dmg || true
           # The identity secret carries its own shell quoting, so expand it inline.
           bash ./.github/scripts/sign-macos-app.sh \
