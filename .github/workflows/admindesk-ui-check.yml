@@ -43,12 +43,10 @@ jobs:
           lib/desktop/pages/desktop_home_page.dart
           lib/desktop/pages/connection_page.dart
           lib/common/widgets/peer_tab_page.dart
-      - name: Run focused Flutter regression tests
+      - name: Run self-contained Flutter regression tests
+        # Tests importing generated_bridge.dart require Rust/FFI code generation.
         working-directory: flutter
-        run: >
-          flutter test
-          test/autocomplete_peer_merge_test.dart
-          test/input_modifier_utils_test.dart
+        run: flutter test test/input_modifier_utils_test.dart
       - name: Check platform bundle identifiers
         run: |
           python3 - <<'PY'
