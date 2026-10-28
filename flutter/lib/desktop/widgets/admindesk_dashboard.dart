@@ -61,98 +61,60 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final bg = dark ? const Color(0xFF181C28) : const Color(0xFFF5F7FB);
-    final surface = dark ? const Color(0xFF242B39) : Colors.white;
-    final border = dark ? Colors.white12 : const Color(0xFFE6EBF3);
-    final ink = dark ? Colors.white : const Color(0xFF152945);
+    final bg = dark ? const Color(0xFF181C28) : const Color(0xFFE8F3FF);
+    final surface = dark ? const Color(0xFF242B39) : const Color(0xFFF7FBFF);
+    final border = dark ? Colors.white24 : const Color(0xFFD6E7FB);
+    final ink = dark ? Colors.white : const Color(0xFF163559);
     final width = MediaQuery.of(context).size.width;
-    final compact = width < 1020;
-    final showPromo = width >= 950;
+    final promoWidth = (width * .30).clamp(280.0, 435.0).toDouble();
+    final deviceWidth = width < 1160 ? 210.0 : 242.0;
 
+    // Windows dashboard: marketing on the left, real peer list in the center,
+    // and the existing live server ID / password / install actions on the right.
     return Directionality(
-      textDirection: TextDirection.ltr, // Keep the reference's sidebar on left.
+      textDirection: TextDirection.ltr,
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: dark
-                ? [bg, const Color(0xFF1B3151), bg]
-                : [const Color(0xFFF3F8FF), const Color(0xFFF8FBFF),
-                   const Color(0xFFEAE8FF), const Color(0xFFE7F8FF)],
+                ? [bg, const Color(0xFF202F48), bg]
+                : [const Color(0xFFE8F4FF), const Color(0xFFF3F9FF),
+                   const Color(0xFFE6F0FF)],
           ),
         ),
         child: Row(
           children: [
-            _sidebar(context, compact, surface, border, ink),
             Expanded(
               child: Column(
                 children: [
                   _topBar(context, surface, border, ink),
                   Expanded(
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Expanded(
+                        SizedBox(
+                          width: promoWidth,
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                compact ? 12 : 18, 14, showPromo ? 10 : 18, 10),
-                            child: Directionality(
-                              textDirection: TextDirection.rtl,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Text('اتصال سریع',
-                                      style: TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.w800,
-                                          color: ink)),
-                                  const SizedBox(height: 2),
-                                  Text('برای اتصال، شناسه دستگاه مقصد را وارد کنید',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          color: ink.withOpacity(0.6))),
-                                  const SizedBox(height: 8),
-                                  Expanded(
-                                    child: ConnectionPage(
-                                      dashboardLayout: true,
-                                      requestedPeerTab: _requestedPeerTab,
-                                      identityCards: bind.isOutgoingOnly()
-                                          ? null
-                                          : ChangeNotifierProvider<ServerModel>.value(
-                                              value: gFFI.serverModel,
-                                              child: Consumer<ServerModel>(
-                                                builder: (context, model, child) =>
-                                                    _credentialsRow(
-                                                        context, model, surface, border, ink),
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                  if (!showPromo) widget.notices,
-                                ],
-                              ),
-                            ),
+                            padding: const EdgeInsets.fromLTRB(0, 12, 7, 10),
+                            child: _marketingPanel(context, surface, border, ink),
                           ),
                         ),
-                        if (showPromo)
-                          SizedBox(
-                            width: 240,
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(0, 14, 14, 10),
-                              child: Column(
-                                children: [
-                                  Expanded(child: _promo(context, ink)),
-                                  widget.notices,
-                                ],
-                              ),
-                            ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(7, 12, 12, 10),
+                            child: _connectionsPanel(context, surface, border, ink),
                           ),
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
+            ),
+            SizedBox(
+              width: deviceWidth,
+              child: _devicePanel(context, surface, border, ink),
             ),
           ],
         ),
@@ -160,107 +122,230 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
     );
   }
 
-  Widget _sidebar(BuildContext context, bool compact, Color surface,
-      Color border, Color ink) {
-    final width = compact ? 66.0 : 203.0;
-    final labelStyle = TextStyle(
-        color: ink, fontSize: 12, fontWeight: FontWeight.w600);
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-      child: Container(
-      width: width,
+  Widget _marketingPanel(BuildContext context, Color surface, Color border,
+      Color ink) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: surface.withOpacity(.76),
-        border: Border(right: BorderSide(color: border)),
+        color: surface.withOpacity(.77),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withOpacity(.85)),
       ),
-      padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SvgPicture.asset('assets/icon.svg', width: 38, height: 38),
-              if (!compact) ...[
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Admin Desk',
-                          maxLines: 1, style: labelStyle.copyWith(fontSize: 17)),
-                      Text('اتصال امن، مدیریت آسان',
-                          maxLines: 1,
-                          style: TextStyle(
-                              fontSize: 9, color: ink.withOpacity(.65))),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 22),
-          _nav(Icons.home_outlined, 'خانه', 0, compact, () => _openTab(0, 0)),
-          _nav(Icons.desktop_windows_outlined, 'دستگاه‌های من', 1,
-              compact, () => _openTab(1, 0)),
-          _nav(Icons.contacts_outlined, 'مخاطبین', 3,
-              compact, () => _openTab(3, 3)),
-          _nav(Icons.star_border, 'دستگاه‌های ستاره‌دار', 4,
-              compact, () => _openTab(4, 1)),
-          _nav(Icons.settings_outlined, 'تنظیمات', 5, compact, _openSettings),
-          const Spacer(),
+          Row(children: [
+            const Icon(Icons.campaign_outlined, color: _blue, size: 22),
+            const SizedBox(width: 7),
+            Text('اخبار و خدمات AdminDesk',
+                style: TextStyle(color: ink, fontSize: 13,
+                    fontWeight: FontWeight.w800)),
+          ]),
+          const SizedBox(height: 14),
+          Row(children: [
+            Expanded(child: _marketingThumb('دسترسی ایمن', Icons.shield_outlined,
+                dark, border)),
+            const SizedBox(width: 8),
+            Expanded(child: _marketingThumb('پشتیبانی سریع',
+                Icons.support_agent_rounded, dark, border)),
+          ]),
+          const SizedBox(height: 10),
+          Expanded(child: _promo(context, ink)),
         ],
       ),
-    ));
+    );
   }
 
-  Widget _nav(IconData icon, String label, int index,
-      bool compact, VoidCallback onTap) {
-    final active = index == _selectedMenu;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 7),
-      child: Tooltip(
-        message: label,
-        child: Material(
-          color: active ? _blue : Colors.transparent,
-          borderRadius: BorderRadius.circular(9),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(9),
-            child: SizedBox(
-              height: 38,
-              child: Row(
-                mainAxisAlignment: compact
-                    ? MainAxisAlignment.center : MainAxisAlignment.start,
-                children: [
-                  if (!compact) const SizedBox(width: 10),
-                  Icon(icon,
-                      size: 20,
-                      color: active
-                          ? Colors.white : Theme.of(context).iconTheme.color),
-                  if (!compact) ...[
-                    const SizedBox(width: 12),
-                    Flexible(
-                      child: Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: Text(label,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: active
-                                    ? FontWeight.w700 : FontWeight.w500,
-                                color: active
-                                    ? Colors.white
-                                    : Theme.of(context).textTheme.bodyMedium?.color)),
-                      ),
-                    ),
-                  ],
-                ],
+  Widget _marketingThumb(
+      String label, IconData icon, bool dark, Color border) {
+    return Container(
+      height: 84,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: dark
+            ? [const Color(0xFF213D65), const Color(0xFF1254A0)]
+            : [const Color(0xFFF0F9FF), const Color(0xFFCCEAFF)]),
+        border: Border.all(color: border),
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            SvgPicture.asset('assets/icon.svg', width: 30, height: 30),
+            Icon(icon, color: _blue, size: 18),
+          ]),
+          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Color(0xFF125394),
+                  fontSize: 11, fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
+  }
+
+  Widget _connectionsPanel(BuildContext context, Color surface, Color border,
+      Color ink) {
+    return Container(
+      decoration: BoxDecoration(
+        color: surface.withOpacity(.86),
+        border: Border.all(color: Colors.white.withOpacity(.9)),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+            child: Row(children: [
+              const Icon(Icons.history_rounded, color: _blue, size: 23),
+              const SizedBox(width: 9),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('اتصال‌های اخیر',
+                    style: TextStyle(color: ink, fontSize: 17,
+                        fontWeight: FontWeight.w800)),
+                const Text('Recent Sessions',
+                    style: TextStyle(color: Color(0xFF527DA4), fontSize: 10)),
+              ]),
+            ]),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: ConnectionPage(
+                  dashboardLayout: true,
+                  requestedPeerTab: _requestedPeerTab,
+                  peerTabNavigation: _peerNavigation(context, ink),
+                ),
               ),
             ),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
+            child: Row(children: [
+              const Icon(Icons.circle, size: 8, color: Color(0xFF28B69A)),
+              const SizedBox(width: 7),
+              Text('مدیریت دستگاه‌ها', style:
+                  TextStyle(fontSize: 10, color: ink.withOpacity(.7))),
+            ]),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _peerNavigation(BuildContext context, Color ink) {
+    final tabs = <({int id, IconData icon, String label})>[
+      (id: 0, icon: Icons.access_time_filled, label: 'اتصالات اخیر'),
+      (id: 1, icon: Icons.star, label: 'ستاره‌دارها'),
+      (id: 2, icon: Icons.explore, label: 'شبکه محلی'),
+      (id: 3, icon: Icons.contacts, label: 'مخاطبین'),
+      (id: 4, icon: Icons.devices, label: 'دستگاه‌ها'),
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(6, 7, 6, 9),
+      child: Row(children: [
+        for (final tab in tabs)
+          if (gFFI.peerTabModel.visibleEnabledOrderedIndexs.contains(tab.id))
+            Tooltip(
+              message: tab.label,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(7),
+                onTap: () => _openTab(tab.id, tab.id),
+                child: Container(
+                  width: 39, height: 36,
+                  decoration: BoxDecoration(
+                    color: _selectedMenu == tab.id
+                        ? _blue.withOpacity(.13) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(7),
+                    border: _selectedMenu == tab.id
+                        ? const Border(bottom: BorderSide(color: _blue, width: 2))
+                        : null,
+                  ),
+                  child: Icon(tab.icon, size: 20,
+                      color: _selectedMenu == tab.id ? _blue
+                          : ink.withOpacity(.55)),
+                ),
+              ),
+            ),
+        const Spacer(),
+        IconButton(
+          tooltip: 'تنظیمات',
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(Icons.settings_outlined, color: _blue, size: 19),
+          onPressed: _openSettings,
+        ),
+      ]),
+    );
+  }
+
+  Widget _devicePanel(BuildContext context, Color surface, Color border,
+      Color ink) {
+    return Container(
+      decoration: BoxDecoration(
+        color: surface.withOpacity(.88),
+        border: Border(left: BorderSide(color: border)),
+      ),
+      child: Column(children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(11, 17, 11, 17),
+          child: Row(children: [
+            Container(
+              height: 42, width: 42,
+              decoration: BoxDecoration(color: _blue,
+                  borderRadius: BorderRadius.circular(11)),
+              child: const Icon(Icons.shield_outlined,
+                  color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 9),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('دستگاه من',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800,
+                        color: ink)),
+                Text('دسترسی به این دستگاه', style:
+                    TextStyle(fontSize: 10, color: ink.withOpacity(.6))),
+              ],
+            )),
+          ]),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(9, 0, 9, 12),
+            child: Column(children: [
+              ChangeNotifierProvider<ServerModel>.value(
+                value: gFFI.serverModel,
+                child: Consumer<ServerModel>(
+                  builder: (context, model, _) {
+                    final showOneTime = model.approveMode != 'click' &&
+                        model.verificationMethod != kUsePermanentPassword;
+                    return Column(children: [
+                      _credentialCard(context, surface, border, ink,
+                        title: 'شناسه دستگاه',
+                        field: model.serverId,
+                        icon: Icons.content_copy_outlined,
+                        onPressed: () => _copy(model.serverId.text)),
+                      const SizedBox(height: 10),
+                      _credentialCard(context, surface, border, ink,
+                        title: 'رمز عبور یک‌بارمصرف',
+                        field: model.serverPasswd,
+                        icon: showOneTime ? Icons.refresh : Icons.settings_outlined,
+                        onPressed: showOneTime
+                            ? () => bind.mainUpdateTemporaryPassword()
+                            : () => DesktopSettingPage.switch2page(
+                                SettingsTabKey.safety)),
+                    ]);
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              widget.notices,
+            ]),
+          ),
+        ),
+      ]),
     );
   }
 
@@ -274,8 +359,20 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
         border: Border(bottom: BorderSide(color: border)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          SvgPicture.asset('assets/icon.svg', width: 37, height: 37),
+          const SizedBox(width: 10),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('AdminDesk', style: TextStyle(fontSize: 20,
+                  fontWeight: FontWeight.w800, color: ink)),
+              Text('دسترسی سریع و امن', style: TextStyle(fontSize: 9,
+                  color: ink.withOpacity(.60))),
+            ],
+          ),
+          const Spacer(),
           _themeButton(
             Icons.wb_sunny_outlined, 'روشن', !dark,
             () => MyTheme.changeDarkMode(ThemeMode.light), ink),
@@ -318,36 +415,6 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _credentialsRow(BuildContext context, ServerModel model,
-      Color surface, Color border, Color ink) {
-    final showOneTime = model.approveMode != 'click' &&
-        model.verificationMethod != kUsePermanentPassword;
-    return Padding(
-      padding: const EdgeInsets.only(top: 10, bottom: 10),
-      child: Row(
-        children: [
-          Expanded(child: _credentialCard(
-            context, surface, border, ink,
-            title: 'شناسه دستگاه شما',
-            field: model.serverId,
-            icon: Icons.content_copy_outlined,
-            onPressed: () => _copy(model.serverId.text),
-          )),
-          const SizedBox(width: 10),
-          Expanded(child: _credentialCard(
-            context, surface, border, ink,
-            title: 'رمز عبور یکبار مصرف',
-            field: model.serverPasswd,
-            icon: showOneTime ? Icons.refresh : Icons.settings_outlined,
-            onPressed: showOneTime
-                ? () => bind.mainUpdateTemporaryPassword()
-                : () => DesktopSettingPage.switch2page(SettingsTabKey.safety),
-          )),
-        ],
       ),
     );
   }
@@ -477,7 +544,17 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
                           border: Border.all(color: Colors.white.withOpacity(.65)),
                           borderRadius: BorderRadius.circular(18),
                         ),
-                        child: Icon(slide.icon, size: 80, color: const Color(0xFF087BEE)),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SvgPicture.asset('assets/icon.svg',
+                                width: 62, height: 62),
+                            const SizedBox(height: 6),
+                            const Text('AdminDesk',
+                                style: TextStyle(fontWeight: FontWeight.w800,
+                                    color: Color(0xFF15518F), fontSize: 16)),
+                          ],
+                        ),
                       ),
                     ],
                   ),
