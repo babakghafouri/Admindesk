@@ -7,6 +7,7 @@ import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
 import 'package:flutter_hbb/desktop/theme/admindesk_theme.dart';
+import 'package:flutter_hbb/desktop/widgets/admindesk_credentials.dart';
 import 'package:flutter_hbb/desktop/widgets/admindesk_sidebar.dart';
 import 'package:flutter_hbb/models/server_model.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
@@ -182,51 +183,81 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
 
   Widget _connectionsPanel(BuildContext context, Color surface, Color border,
       Color ink) {
+    final colors = AdminDeskColors.of(context);
     return Container(
+      padding: const EdgeInsets.all(AdminDeskMetrics.spaceSm),
       decoration: BoxDecoration(
-        color: surface.withOpacity(.86),
-        border: Border.all(color: Colors.white.withOpacity(.9)),
-        borderRadius: BorderRadius.circular(22),
+        color: colors.canvas,
+        borderRadius: AdminDeskMetrics.cardRadius,
       ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
-            child: Row(children: [
-              const Icon(Icons.history_rounded, color: _blue, size: 23),
-              const SizedBox(width: 9),
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('اتصال‌های اخیر',
-                    style: TextStyle(color: ink, fontSize: 17,
-                        fontWeight: FontWeight.w800)),
-                const Text('Recent Sessions',
-                    style: TextStyle(color: Color(0xFF527DA4), fontSize: 10)),
-              ]),
-            ]),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Directionality(
-                textDirection: TextDirection.rtl,
-                child: ConnectionPage(
-                  dashboardLayout: true,
-                  requestedPeerTab: _requestedPeerTab,
-                  peerTabNavigation: _peerNavigation(context, ink),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Column(
+          children: [
+            Expanded(
+              child: ConnectionPage(
+                dashboardLayout: true,
+                requestedPeerTab: _requestedPeerTab,
+                // Preserve the existing ConnectionPage controller, autofill,
+                // onConnect, and the real ServerModel ID/OTP controllers.
+                identityCards: ChangeNotifierProvider<ServerModel>.value(
+                  value: gFFI.serverModel,
+                  child: Consumer<ServerModel>(
+                    builder: (context, model, _) {
+                      final canRefresh = model.approveMode != 'click' &&
+                          model.verificationMethod != kUsePermanentPassword;
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AdminDeskMetrics.spaceSm,
+                        ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final cards = <Widget>[
+                              IdCard(
+                                controller: model.serverId,
+                                onCopy: () => _copy(model.serverId.text),
+                                onOpenSecuritySettings: () =>
+                                    DesktopSettingPage.switch2page(
+                                        SettingsTabKey.safety),
+                              ),
+                              OtpCard(
+                                controller: model.serverPasswd,
+                                canRefresh: canRefresh,
+                                onRefresh: () => bind.mainUpdateTemporaryPassword(),
+                                onOpenSecuritySettings: () =>
+                                    DesktopSettingPage.switch2page(
+                                        SettingsTabKey.safety),
+                              ),
+                            ];
+                            // Avoid card overflow on narrow Windows windows.
+                            if (constraints.maxWidth < 470) {
+                              return Column(
+                                children: [
+                                  cards.first,
+                                  const SizedBox(height: AdminDeskMetrics.spaceXs),
+                                  cards.last,
+                                ],
+                              );
+                            }
+                            return Row(
+                              children: [
+                                Expanded(child: cards.first),
+                                const SizedBox(width: AdminDeskMetrics.spaceSm),
+                                Expanded(child: cards.last),
+                              ],
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 ),
+                peerTabNavigation: _peerNavigation(context, ink),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
-            child: Row(children: [
-              const Icon(Icons.circle, size: 8, color: Color(0xFF28B69A)),
-              const SizedBox(width: 7),
-              Text('مدیریت دستگاه‌ها', style:
-                  TextStyle(fontSize: 10, color: ink.withOpacity(.7))),
-            ]),
-          ),
-        ],
+            widget.notices,
+          ],
+        ),
       ),
     );
   }
@@ -288,120 +319,6 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
           onPressed: _openSettings,
         ),
       ]),
-    );
-  }
-
-  Widget _devicePanel(BuildContext context, Color surface, Color border,
-      Color ink) {
-    return Container(
-      decoration: BoxDecoration(
-        color: surface.withOpacity(.88),
-        border: Border(left: BorderSide(color: border)),
-      ),
-      child: Column(children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(11, 17, 11, 17),
-          child: Row(children: [
-            Container(
-              height: 42, width: 42,
-              decoration: BoxDecoration(color: _blue,
-                  borderRadius: BorderRadius.circular(11)),
-              child: const Icon(Icons.shield_outlined,
-                  color: Colors.white, size: 24),
-            ),
-            const SizedBox(width: 9),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('دستگاه من',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800,
-                        color: ink)),
-                Text('دسترسی به این دستگاه', style:
-                    TextStyle(fontSize: 10, color: ink.withOpacity(.6))),
-              ],
-            )),
-          ]),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(9, 0, 9, 12),
-            child: Column(children: [
-              ChangeNotifierProvider<ServerModel>.value(
-                value: gFFI.serverModel,
-                child: Consumer<ServerModel>(
-                  builder: (context, model, _) {
-                    final showOneTime = model.approveMode != 'click' &&
-                        model.verificationMethod != kUsePermanentPassword;
-                    return Column(children: [
-                      _credentialCard(context, surface, border, ink,
-                        title: 'شناسه دستگاه',
-                        field: model.serverId,
-                        icon: Icons.content_copy_outlined,
-                        onPressed: () => _copy(model.serverId.text)),
-                      const SizedBox(height: 10),
-                      _credentialCard(context, surface, border, ink,
-                        title: 'رمز عبور یک‌بارمصرف',
-                        field: model.serverPasswd,
-                        icon: showOneTime ? Icons.refresh : Icons.settings_outlined,
-                        onPressed: showOneTime
-                            ? () => bind.mainUpdateTemporaryPassword()
-                            : () => DesktopSettingPage.switch2page(
-                                SettingsTabKey.safety)),
-                    ]);
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-              widget.notices,
-            ]),
-          ),
-        ),
-      ]),
-    );
-  }
-
-  Widget _credentialCard(BuildContext context, Color surface, Color border,
-      Color ink, {required String title, required TextEditingController field,
-      required IconData icon, required VoidCallback onPressed}) {
-    return Container(
-      height: 102,
-      padding: const EdgeInsets.fromLTRB(12, 9, 12, 7),
-      decoration: BoxDecoration(
-        color: surface.withOpacity(.78),
-        border: Border.all(color: border),
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Expanded(child: Text(title, maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12,
-                    fontWeight: FontWeight.w800, color: ink))),
-            IconButton(
-              tooltip: title,
-              onPressed: onPressed,
-              icon: Icon(icon, color: _blue, size: 19),
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              padding: EdgeInsets.zero,
-            ),
-          ]),
-          Expanded(
-            child: TextField(
-              controller: field,
-              readOnly: true,
-              showCursor: false,
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero),
-              style: const TextStyle(
-                color: _blue, fontWeight: FontWeight.w800, fontSize: 22),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
