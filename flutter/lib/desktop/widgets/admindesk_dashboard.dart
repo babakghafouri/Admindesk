@@ -67,7 +67,6 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
     // Keep live device credentials visible at 900 px; hide promotions first.
     final showPromo = width >= 1250;
     final promoWidth = (width * .22).clamp(270.0, 355.0).toDouble();
-    final deviceWidth = width < 1160 ? 196.0 : 230.0;
 
     // The existing top-level DesktopTab owns the window titlebar and its
     // minimize/maximize/close actions. Do not render a second fake titlebar.
@@ -98,11 +97,6 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
                       child: _connectionsPanel(context, colors.surface,
                           colors.border, colors.textPrimary),
                     ),
-                  ),
-                  SizedBox(
-                    width: deviceWidth,
-                    child: _devicePanel(context, colors.surface,
-                        colors.border, colors.textPrimary),
                   ),
                 ],
               ),
