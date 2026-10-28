@@ -275,51 +275,6 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
     }
   }
 
-  Widget _peerNavigation(BuildContext context, Color ink) {
-    final tabs = <({int id, IconData icon, String label})>[
-      (id: 0, icon: Icons.access_time_filled, label: 'اتصالات اخیر'),
-      (id: 1, icon: Icons.star, label: 'ستاره‌دارها'),
-      (id: 2, icon: Icons.explore, label: 'شبکه محلی'),
-      (id: 3, icon: Icons.contacts, label: 'مخاطبین'),
-      (id: 4, icon: Icons.devices, label: 'دستگاه‌ها'),
-    ];
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(6, 7, 6, 9),
-      child: Row(children: [
-        for (final tab in tabs)
-          if (gFFI.peerTabModel.visibleEnabledOrderedIndexs.contains(tab.id))
-            Tooltip(
-              message: tab.label,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(7),
-                onTap: () => _openTab(_menuForPeerTab(tab.id), tab.id),
-                child: Container(
-                  width: 39, height: 36,
-                  decoration: BoxDecoration(
-                    color: _selectedMenu == tab.id
-                        ? _blue.withOpacity(.13) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(7),
-                    border: _selectedMenu == tab.id
-                        ? const Border(bottom: BorderSide(color: _blue, width: 2))
-                        : null,
-                  ),
-                  child: Icon(tab.icon, size: 20,
-                      color: _selectedMenu == tab.id ? _blue
-                          : ink.withOpacity(.55)),
-                ),
-              ),
-            ),
-        const Spacer(),
-        IconButton(
-          tooltip: 'تنظیمات',
-          visualDensity: VisualDensity.compact,
-          icon: const Icon(Icons.settings_outlined, color: _blue, size: 19),
-          onPressed: _openSettings,
-        ),
-      ]),
-    );
-  }
-
   void _copy(String value) {
     Clipboard.setData(ClipboardData(text: value));
     showToast(translate('Copied'));
