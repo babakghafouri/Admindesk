@@ -30,11 +30,13 @@ import '../../models/platform_model.dart';
 class PeerTabPage extends StatefulWidget {
   final bool dashboardLayout;
   final ValueNotifier<int?>? requestedPeerTab;
+  final ValueChanged<int>? onPeerTabChanged;
 
   const PeerTabPage({
     Key? key,
     this.dashboardLayout = false,
     this.requestedPeerTab,
+    this.onPeerTabChanged,
   }) : super(key: key);
   @override
   State<PeerTabPage> createState() => _PeerTabPageState();
@@ -209,6 +211,7 @@ class _PeerTabPageState extends State<PeerTabPage>
           return;
         }
         await handleTabSelection(tab);
+        widget.onPeerTabChanged?.call(tab);
         await bind.setLocalFlutterOption(
             k: kOptionPeerTabIndex, v: tab.toString());
       },
