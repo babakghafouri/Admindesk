@@ -23,7 +23,7 @@ class _InstallPageState extends State<InstallPage> {
 
   _InstallPageState() {
     Get.put<DesktopTabController>(tabController);
-    const label = "install";
+    const label = "نصب";
     tabController.add(TabInfo(
         key: label,
         label: label,
@@ -252,7 +252,7 @@ class _InstallPageBodyState extends State<_InstallPageBody>
                   Obx(
                     () => ElevatedButton.icon(
                       icon: Icon(Icons.done_rounded, size: 16),
-                      label: Text(translate('Accept and Install')),
+                      label: const Text('نصب', style: TextStyle(fontWeight: FontWeight.w800)),
                       onPressed: btnEnabled.value ? install : null,
                       style: buttonStyle,
                     ),
