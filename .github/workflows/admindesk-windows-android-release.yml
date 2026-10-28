@@ -1,0 +1,28 @@
+name: Admin Desk Windows and Android Preview Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/admindesk-windows-android-release.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: admindesk-windows-android-v1.5.1-preview2
+  cancel-in-progress: false
+
+jobs:
+  publish-preview:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/flutter-build.yml
+    with:
+      windows-android-only: true
+      upload-artifact: true
+      upload-tag: admindesk-win-android-v1.5.1-preview.2
+      publish-update-metadata: false
+    secrets: inherit
