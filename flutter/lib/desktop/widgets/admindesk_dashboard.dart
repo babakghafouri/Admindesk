@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -7,6 +6,8 @@ import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
+import 'package:flutter_hbb/desktop/theme/admindesk_theme.dart';
+import 'package:flutter_hbb/desktop/widgets/admindesk_sidebar.dart';
 import 'package:flutter_hbb/models/server_model.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:provider/provider.dart';
@@ -60,61 +61,56 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final bg = dark ? const Color(0xFF181C28) : const Color(0xFFE8F3FF);
-    final surface = dark ? const Color(0xFF242B39) : const Color(0xFFF7FBFF);
-    final border = dark ? Colors.white24 : const Color(0xFFD6E7FB);
-    final ink = dark ? Colors.white : const Color(0xFF163559);
+    final colors = AdminDeskColors.of(context);
     final width = MediaQuery.of(context).size.width;
-    final promoWidth = (width * .30).clamp(280.0, 435.0).toDouble();
-    final deviceWidth = width < 1160 ? 210.0 : 242.0;
+    // Keep live device credentials visible at 900 px; hide promotions first.
+    final showPromo = width >= 1400;
+    final promoWidth = (width * .22).clamp(270.0, 355.0).toDouble();
+    final deviceWidth = width < 1160 ? 196.0 : 230.0;
 
-    // Windows dashboard: marketing on the left, real peer list in the center,
-    // and the existing live server ID / password / install actions on the right.
+    // The existing top-level DesktopTab owns the window titlebar and its
+    // minimize/maximize/close actions. Do not render a second fake titlebar.
+    // Only rearrange presentation: optional promo, peers, live ID/OTP,
+    // then the RTL navigation sidebar on the far right.
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: dark
-                ? [bg, const Color(0xFF202F48), bg]
-                : [const Color(0xFFE8F4FF), const Color(0xFFF3F9FF),
-                   const Color(0xFFE6F0FF)],
-          ),
-        ),
+        color: colors.canvas,
         child: Row(
           children: [
             Expanded(
-              child: Column(
+              child: Row(
                 children: [
-                  _topBar(context, surface, border, ink),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: promoWidth,
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 12, 7, 10),
-                            child: _marketingPanel(context, surface, border, ink),
-                          ),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(7, 12, 12, 10),
-                            child: _connectionsPanel(context, surface, border, ink),
-                          ),
-                        ),
-                      ],
+                  if (showPromo)
+                    SizedBox(
+                      width: promoWidth,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 12, 6, 10),
+                        child: _marketingPanel(context, colors.surface,
+                            colors.border, colors.textPrimary),
+                      ),
                     ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        showPromo ? 6 : 12, 12, 8, 10),
+                      child: _connectionsPanel(context, colors.surface,
+                          colors.border, colors.textPrimary),
+                    ),
+                  ),
+                  SizedBox(
+                    width: deviceWidth,
+                    child: _devicePanel(context, colors.surface,
+                        colors.border, colors.textPrimary),
                   ),
                 ],
               ),
             ),
-            SizedBox(
-              width: deviceWidth,
-              child: _devicePanel(context, surface, border, ink),
+            AdminDeskSideBar(
+              selectedMenu: _selectedMenu,
+              versionLabel: version.isEmpty ? 'AdminDesk' : 'نسخه $version',
+              onNavigate: _openTab,
+              onSettings: _openSettings,
             ),
           ],
         ),
@@ -235,6 +231,21 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
     );
   }
 
+  int _menuForPeerTab(int peerTab) {
+    switch (peerTab) {
+      case 0:
+        return 2; // Recent sessions
+      case 1:
+        return 4; // Starred devices
+      case 3:
+        return 3; // Contacts
+      case 4:
+        return 1; // My devices
+      default:
+        return 1;
+    }
+  }
+
   Widget _peerNavigation(BuildContext context, Color ink) {
     final tabs = <({int id, IconData icon, String label})>[
       (id: 0, icon: Icons.access_time_filled, label: 'اتصالات اخیر'),
@@ -252,7 +263,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
               message: tab.label,
               child: InkWell(
                 borderRadius: BorderRadius.circular(7),
-                onTap: () => _openTab(tab.id, tab.id),
+                onTap: () => _openTab(_menuForPeerTab(tab.id), tab.id),
                 child: Container(
                   width: 39, height: 36,
                   decoration: BoxDecoration(
@@ -346,76 +357,6 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
           ),
         ),
       ]),
-    );
-  }
-
-  Widget _topBar(BuildContext context, Color surface, Color border, Color ink) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      height: 47,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: surface.withOpacity(.78),
-        border: Border(bottom: BorderSide(color: border)),
-      ),
-      child: Row(
-        children: [
-          SvgPicture.asset('assets/icon.svg', width: 37, height: 37),
-          const SizedBox(width: 10),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('AdminDesk', style: TextStyle(fontSize: 20,
-                  fontWeight: FontWeight.w800, color: ink)),
-              Text('دسترسی سریع و امن', style: TextStyle(fontSize: 9,
-                  color: ink.withOpacity(.60))),
-            ],
-          ),
-          const Spacer(),
-          _themeButton(
-            Icons.wb_sunny_outlined, 'روشن', !dark,
-            () => MyTheme.changeDarkMode(ThemeMode.light), ink),
-          const SizedBox(width: 4),
-          _themeButton(
-            Icons.dark_mode_outlined, 'تاریک', dark,
-            () => MyTheme.changeDarkMode(ThemeMode.dark), ink),
-          const SizedBox(width: 10),
-          IconButton(
-            tooltip: 'تنظیمات',
-            icon: Icon(Icons.settings_outlined, size: 20, color: ink),
-            onPressed: _openSettings,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _themeButton(IconData icon, String label, bool active,
-      VoidCallback onPressed, Color ink) {
-    return Tooltip(
-      message: label,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(22),
-        child: Container(
-          height: 30,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: active ? _blue.withOpacity(.13) : Colors.transparent,
-            border: active ? Border.all(color: _blue.withOpacity(.5)) : null,
-            borderRadius: BorderRadius.circular(22),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 16, color: active ? _blue : ink),
-              const SizedBox(width: 5),
-              Text(label, style: TextStyle(
-                  fontSize: 11, color: active ? _blue : ink)),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
