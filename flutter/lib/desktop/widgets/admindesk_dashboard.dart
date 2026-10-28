@@ -246,7 +246,11 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
                     },
                   ),
                 ),
-                peerTabNavigation: _peerNavigation(context, ink),
+                onPeerTabChanged: (tab) {
+                  if (mounted) {
+                    setState(() => _selectedMenu = _menuForPeerTab(tab));
+                  }
+                },
               ),
             ),
             widget.notices,
