@@ -1,0 +1,25 @@
+name: Admin Desk macOS 15 ARM Runner Smoke
+
+on:
+  push:
+    branches:
+      - fix/admindesk-macos15-arm-runner
+    paths:
+      - ".github/workflows/admindesk-macos15-runner-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe-arm64:
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - name: Verify ARM64 GitHub runner and toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          sw_vers
+          uname -m
+          test "$(uname -m)" = "arm64"
+          xcodebuild -version
