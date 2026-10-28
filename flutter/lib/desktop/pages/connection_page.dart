@@ -195,6 +195,7 @@ class ConnectionPage extends StatefulWidget {
   final Widget? identityCards;
   final Widget? peerTabNavigation;
   final ValueNotifier<int?>? requestedPeerTab;
+  final ValueChanged<int>? onPeerTabChanged;
 
   const ConnectionPage({
     Key? key,
@@ -202,6 +203,7 @@ class ConnectionPage extends StatefulWidget {
     this.identityCards,
     this.peerTabNavigation,
     this.requestedPeerTab,
+    this.onPeerTabChanged,
   }) : super(key: key);
 
   @override
@@ -329,6 +331,7 @@ class _ConnectionPageState extends State<ConnectionPage>
             child: PeerTabPage(
               dashboardLayout: true,
               requestedPeerTab: widget.requestedPeerTab,
+              onPeerTabChanged: widget.onPeerTabChanged,
             ),
           ),
           // Redundant dashboard-only online notice removed (status is still available in server settings).
