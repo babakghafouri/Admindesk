@@ -4,6 +4,7 @@ import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
 import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
+import 'package:flutter_hbb/desktop/widgets/admindesk_titlebar.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/state_model.dart';
 import 'package:get/get.dart';
@@ -96,15 +97,24 @@ class _DesktopTabPageState extends State<DesktopTabPage> {
             backgroundColor: Theme.of(context).colorScheme.background,
             body: DesktopTab(
               controller: tabController,
-              tail: Offstage(
-                offstage: bind.isIncomingOnly() || bind.isDisableSettings(),
-                child: ActionIcon(
-                  message: 'Settings',
-                  icon: IconFont.menu,
-                  onTap: DesktopTabPage.onAddSetting,
-                  isClose: false,
-                ),
-              ),
+              // Leave the original WindowActionPanel in control of native
+              // minimize/maximize/close behavior, including tray semantics.
+              leading: isWindows ? const AdminDeskTitleBrand() : null,
+              tail: isWindows
+                  ? AdminDeskTitleActions(
+                      settingsEnabled: !bind.isDisableSettings(),
+                      onSettings: () => DesktopTabPage.onAddSetting(),
+                    )
+                  : Offstage(
+                      offstage: bind.isIncomingOnly() ||
+                          bind.isDisableSettings(),
+                      child: ActionIcon(
+                        message: 'Settings',
+                        icon: IconFont.menu,
+                        onTap: DesktopTabPage.onAddSetting,
+                        isClose: false,
+                      ),
+                    ),
             )));
     return isMacOS || kUseCompatibleUiMode
         ? tabWidget

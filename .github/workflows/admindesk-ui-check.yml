@@ -5,8 +5,22 @@ on:
     branches:
       - stage4/admindesk-desktop-rtl-dashboard
       - final/admindesk-platform-ids-and-tray
+      - feature/new-ui
     paths:
       - flutter/lib/desktop/widgets/admindesk_dashboard.dart
+      - flutter/lib/desktop/widgets/admindesk_sidebar.dart
+      - flutter/lib/desktop/widgets/admindesk_titlebar.dart
+      - flutter/lib/desktop/widgets/quick_connect_card.dart
+      - flutter/lib/desktop/widgets/admindesk_credentials.dart
+      - flutter/lib/desktop/widgets/devices_table.dart
+      - flutter/lib/desktop/widgets/promo_carousel.dart
+      - flutter/lib/desktop/widgets/tabbar_widget.dart
+      - flutter/lib/desktop/pages/desktop_tab_page.dart
+      - flutter/lib/desktop/theme/admindesk_theme.dart
+      - flutter/lib/common/widgets/peer_card.dart
+      - flutter/lib/common/widgets/peers_view.dart
+      - flutter/lib/common.dart
+      - flutter/assets/admindesk_promo_*.svg
       - flutter/lib/desktop/pages/desktop_home_page.dart
       - flutter/lib/desktop/pages/connection_page.dart
       - flutter/lib/common/widgets/peer_tab_page.dart
@@ -39,10 +53,22 @@ jobs:
         working-directory: flutter
         run: >
           flutter analyze --no-fatal-infos
+          lib/common.dart
+          lib/desktop/theme/admindesk_theme.dart
           lib/desktop/widgets/admindesk_dashboard.dart
+          lib/desktop/widgets/admindesk_sidebar.dart
+          lib/desktop/widgets/admindesk_titlebar.dart
+          lib/desktop/widgets/quick_connect_card.dart
+          lib/desktop/widgets/admindesk_credentials.dart
+          lib/desktop/widgets/devices_table.dart
+          lib/desktop/widgets/promo_carousel.dart
+          lib/desktop/widgets/tabbar_widget.dart
+          lib/desktop/pages/desktop_tab_page.dart
           lib/desktop/pages/desktop_home_page.dart
           lib/desktop/pages/connection_page.dart
           lib/common/widgets/peer_tab_page.dart
+          lib/common/widgets/peer_card.dart
+          lib/common/widgets/peers_view.dart
       - name: Run self-contained Flutter regression tests
         # Tests importing generated_bridge.dart require Rust/FFI code generation.
         working-directory: flutter

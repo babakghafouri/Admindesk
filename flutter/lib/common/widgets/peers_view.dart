@@ -5,6 +5,7 @@ import 'package:dynamic_layouts/dynamic_layouts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/consts.dart';
+import 'package:flutter_hbb/desktop/widgets/devices_table.dart';
 import 'package:flutter_hbb/models/ab_model.dart';
 import 'package:flutter_hbb/models/peer_tab_model.dart';
 import 'package:flutter_hbb/models/state_model.dart';
@@ -187,6 +188,14 @@ class _PeersViewState extends State<_PeersView>
       child: Consumer<Peers>(builder: (context, peers, child) {
         if (peers.peers.isEmpty) {
           gFFI.peerTabModel.setCurrentTabCachedPeers([]);
+          if (DevicesTableScope.enabledOf(context)) {
+            return DevicesTable(
+              peers: const <Peer>[],
+              peerTab: widget.peerTabIndex,
+              cardKeyPrefix: widget.peers.name,
+              onPeerVisible: (peerId, visible) {},
+            );
+          }
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -295,6 +304,23 @@ class _PeersViewState extends State<_PeersView>
               _curPeers.clear();
               _curPeers.addAll(peers.map((e) => e.id));
               _queryOnlines(true);
+            }
+            // Keep this loader, search, sort and online polling machinery
+            // unchanged. Only swap its row presentation in the Windows UI.
+            if (DevicesTableScope.enabledOf(context)) {
+              return DevicesTable(
+                peers: peers,
+                peerTab: widget.peerTabIndex,
+                cardKeyPrefix: widget.peers.name,
+                onPeerVisible: (peerId, visible) {
+                  if (visible) {
+                    _curPeers.add(peerId);
+                  } else {
+                    _curPeers.remove(peerId);
+                  }
+                  _lastChangeTime = DateTime.now();
+                },
+              );
             }
             return child;
           } else {

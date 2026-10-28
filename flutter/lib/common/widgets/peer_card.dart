@@ -1464,6 +1464,43 @@ void _rdpDialog(String id) async {
   });
 }
 
+/// Reuse the existing complete per-tab RustDesk peer action menus inside
+/// the Windows table. The original permissions and action callbacks stay intact.
+Future<void> showPeerActionsMenu(BuildContext context, Peer peer,
+    PeerTabIndex tab, Offset globalPosition) async {
+  late final BasePeerCard card;
+  switch (tab) {
+    case PeerTabIndex.recent:
+      card = RecentPeerCard(peer: peer);
+      break;
+    case PeerTabIndex.fav:
+      card = FavoritePeerCard(peer: peer);
+      break;
+    case PeerTabIndex.lan:
+      card = DiscoveredPeerCard(peer: peer);
+      break;
+    case PeerTabIndex.ab:
+      card = AddressBookPeerCard(peer: peer);
+      break;
+    case PeerTabIndex.group:
+      card = MyGroupPeerCard(peer: peer);
+      break;
+  }
+  final items = await card._buildPopupMenuEntry(context);
+  if (!context.mounted) return;
+  await mod_menu.showMenu(
+    context: context,
+    position: RelativeRect.fromLTRB(
+      globalPosition.dx,
+      globalPosition.dy,
+      globalPosition.dx,
+      globalPosition.dy,
+    ),
+    items: items,
+    elevation: 8,
+  );
+}
+
 Widget getOnline(double rightPadding, bool online) {
   return Tooltip(
       message: translate(online ? 'Online' : 'Offline'),

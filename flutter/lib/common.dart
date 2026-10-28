@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -35,6 +34,7 @@ import 'mobile/pages/remote_page.dart';
 import 'mobile/pages/view_camera_page.dart';
 import 'mobile/pages/terminal_page.dart';
 import 'desktop/pages/remote_page.dart' as desktop_remote;
+import 'desktop/theme/admindesk_theme.dart';
 import 'desktop/pages/file_manager_page.dart' as desktop_file_manager;
 import 'desktop/pages/view_camera_page.dart' as desktop_view_camera;
 import 'package:flutter_hbb/desktop/widgets/remote_toolbar.dart';
@@ -370,7 +370,7 @@ class MyTheme {
   );
 
   static ThemeData lightTheme = ThemeData(
-    fontFamily: 'Vazirmatn',
+    fontFamily: AdminDeskTypography.family,
     // https://stackoverflow.com/questions/77537315/after-upgrading-to-flutter-3-16-the-app-bar-background-color-button-size-and
     useMaterial3: false,
     brightness: Brightness.light,
@@ -467,10 +467,12 @@ class MyTheme {
     extensions: <ThemeExtension<dynamic>>[
       ColorThemeExtension.light,
       TabbarTheme.light,
+      // Windows UI design tokens; no changes to legacy Android styling.
+      AdminDeskColors.light,
     ],
   );
   static ThemeData darkTheme = ThemeData(
-    fontFamily: 'Vazirmatn',
+    fontFamily: AdminDeskTypography.family,
     useMaterial3: false,
     brightness: Brightness.dark,
     hoverColor: Color.fromARGB(255, 45, 46, 53),
@@ -575,6 +577,7 @@ class MyTheme {
     extensions: <ThemeExtension<dynamic>>[
       ColorThemeExtension.dark,
       TabbarTheme.dark,
+      AdminDeskColors.dark,
     ],
   );
 
