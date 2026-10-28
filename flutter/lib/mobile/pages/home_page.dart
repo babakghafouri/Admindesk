@@ -150,7 +150,7 @@ class HomePageState extends State<HomePage> {
         ],
       );
     }
-    return Text(bind.mainGetAppNameSync());
+    return Text(isAndroid ? 'Admin Desk' : bind.mainGetAppNameSync());
   }
 }
 
