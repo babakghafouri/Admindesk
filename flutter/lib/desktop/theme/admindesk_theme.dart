@@ -1,3 +1,5 @@
+import 'dart:ui' show FontFeature;
+
 import 'package:flutter/material.dart';
 
 /// Design tokens for the Windows AdminDesk UI.
