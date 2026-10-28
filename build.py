@@ -946,7 +946,16 @@ def build_flutter_dmg(version, features):
     mac_arch = 'arm64' if platform.machine().lower() in ('arm64', 'aarch64') else 'x86_64'
     system2(
         f'FLUTTER_XCODE_ARCHS={mac_arch} FLUTTER_XCODE_ONLY_ACTIVE_ARCH=YES flutter build macos --release')
-    system2('cp -rf ../target/release/service ./build/macos/Build/Products/Release/RustDesk.app/Contents/MacOS/')
+    # Flutter uses the configured product name for the generated .app bundle.
+    # Do not assume the upstream RustDesk.app name after rebranding.
+    app_candidates = glob.glob('./build/macos/Build/Products/Release/*.app')
+    if len(app_candidates) != 1:
+        raise RuntimeError(
+            f'Expected one macOS .app bundle in Release, found: {app_candidates}')
+    app_bundle = app_candidates[0]
+    macos_dir = os.path.join(app_bundle, 'Contents', 'MacOS')
+    os.makedirs(macos_dir, exist_ok=True)
+    shutil.copy2('../target/release/service', macos_dir)
     '''
     system2(
         "create-dmg --volname \"RustDesk Installer\" --window-pos 200 120 --window-size 800 400 --icon-size 100 --app-drop-link 600 185 --icon RustDesk.app 200 190 --hide-extension RustDesk.app rustdesk.dmg ./build/macos/Build/Products/Release/RustDesk.app")
