@@ -12,6 +12,7 @@ import 'package:flutter_hbb/desktop/widgets/popup_menu.dart';
 import 'package:flutter_hbb/desktop/widgets/material_mod_popup_menu.dart'
     as mod_menu;
 import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
+import 'package:flutter_hbb/desktop/widgets/devices_table.dart';
 import 'package:flutter_hbb/models/ab_model.dart';
 import 'package:flutter_hbb/models/peer_model.dart';
 
@@ -147,6 +148,11 @@ class _PeerTabPageState extends State<PeerTabPage>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.dashboardLayout) _dashboardHeader(context, model),
+        if (widget.dashboardLayout && model.multiSelectionMode)
+          SizedBox(
+            height: 36,
+            child: selectionWrap(const SizedBox()),
+          ),
         if (!widget.dashboardLayout)
         Obx(() => SizedBox(
               height: 32,
@@ -190,36 +196,38 @@ class _PeerTabPageState extends State<PeerTabPage>
     }
   }
 
-  // Navigation is in the left sidebar. Keep the search, refresh, and view
-  // controls while removing duplicate favorite/contact tabs from this header.
+  // The dashboard table is a presentation of the existing native peer tabs.
+  // Keep tab visibility restrictions, persistent tab index and original loads.
   Widget _dashboardHeader(BuildContext context, PeerTabModel model) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final border = dark ? Colors.white24 : const Color(0xFFD8E7FA);
-    final ink = Theme.of(context).textTheme.bodyMedium?.color;
-    return Container(
-      height: 49,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withOpacity(.75),
-        border: Border.all(color: border),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(children: [
-        const Icon(Icons.devices_rounded, size: 19, color: Color(0xFF087BEE)),
-        const SizedBox(width: 7),
-        Expanded(
-          child: Text('دستگاه‌های مرتبط',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: ink)),
-        ),
-        const PeerSearchBar(),
-        _createRefresh(
-          index: PeerTabIndex.ab, loading: gFFI.abModel.currentAbLoading),
-        _createRefresh(
-          index: PeerTabIndex.group, loading: gFFI.groupModel.groupLoading),
-        _createPeerViewTypeSwitch(context),
-      ]),
+    return DevicesTableTabs(
+      currentTab: model.currentTab,
+      availableTabs: model.visibleEnabledOrderedIndexs,
+      onTabSelected: (tab) async {
+        if (isOptionFixed(kOptionPeerTabIndex) ||
+            !model.visibleEnabledOrderedIndexs.contains(tab)) {
+          showToast(translate('Unavailable'));
+          return;
+        }
+        await handleTabSelection(tab);
+        await bind.setLocalFlutterOption(
+            k: kOptionPeerTabIndex, v: tab.toString());
+      },
+      onRefresh: () {
+        switch (model.currentTab) {
+          case 0:
+            bind.mainLoadRecentPeers();
+            break;
+          case 1:
+            bind.mainLoadFavPeers();
+            break;
+          case 2:
+            bind.mainLoadLanPeers();
+            break;
+          default:
+            entries[model.currentTab].load?.call();
+            break;
+        }
+      },
     );
   }
 
@@ -293,8 +301,12 @@ class _PeerTabPageState extends State<PeerTabPage>
       }
     }
     return Expanded(
+      child: DevicesTableScope(
+        enabled: widget.dashboardLayout && isWindows,
         child: child.marginSymmetric(
-            vertical: (isDesktop || isWebDesktop) ? 12.0 : 6.0));
+            vertical: (isDesktop || isWebDesktop) ? 12.0 : 6.0),
+      ),
+    );
   }
 
   Widget _createRefresh(
