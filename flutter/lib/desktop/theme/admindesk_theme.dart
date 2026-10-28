@@ -27,6 +27,9 @@ class AdminDeskColors extends ThemeExtension<AdminDeskColors> {
   final Color notification;
   final Color shadow;
   final Color onPrimary;
+  final Color promoTop;
+  final Color promoBottom;
+  final Color promoBadge;
 
   const AdminDeskColors({
     required this.primary,
@@ -46,6 +49,9 @@ class AdminDeskColors extends ThemeExtension<AdminDeskColors> {
     required this.notification,
     required this.shadow,
     required this.onPrimary,
+    required this.promoTop,
+    required this.promoBottom,
+    required this.promoBadge,
   });
 
   static const light = AdminDeskColors(
@@ -66,6 +72,9 @@ class AdminDeskColors extends ThemeExtension<AdminDeskColors> {
     notification: Color(0xFFEF4444),
     shadow: Color(0x140E2F58),
     onPrimary: Color(0xFFFFFFFF),
+    promoTop: Color(0xFFEAF6FF),
+    promoBottom: Color(0xFFBBDEFF),
+    promoBadge: Color(0xFFD5E8FF),
   );
 
   static const dark = AdminDeskColors(
@@ -86,6 +95,9 @@ class AdminDeskColors extends ThemeExtension<AdminDeskColors> {
     notification: Color(0xFFF87171),
     shadow: Color(0x33000000),
     onPrimary: Color(0xFFFFFFFF),
+    promoTop: Color(0xFF253A5A),
+    promoBottom: Color(0xFF1B3153),
+    promoBadge: Color(0xFF38547A),
   );
 
   /// The extension is registered in both MyTheme modes in common.dart.
@@ -112,6 +124,9 @@ class AdminDeskColors extends ThemeExtension<AdminDeskColors> {
     Color? notification,
     Color? shadow,
     Color? onPrimary,
+    Color? promoTop,
+    Color? promoBottom,
+    Color? promoBadge,
   }) {
     return AdminDeskColors(
       primary: primary ?? this.primary,
@@ -131,6 +146,9 @@ class AdminDeskColors extends ThemeExtension<AdminDeskColors> {
       notification: notification ?? this.notification,
       shadow: shadow ?? this.shadow,
       onPrimary: onPrimary ?? this.onPrimary,
+      promoTop: promoTop ?? this.promoTop,
+      promoBottom: promoBottom ?? this.promoBottom,
+      promoBadge: promoBadge ?? this.promoBadge,
     );
   }
 
@@ -156,6 +174,9 @@ class AdminDeskColors extends ThemeExtension<AdminDeskColors> {
       notification: blend(notification, other.notification),
       shadow: blend(shadow, other.shadow),
       onPrimary: blend(onPrimary, other.onPrimary),
+      promoTop: blend(promoTop, other.promoTop),
+      promoBottom: blend(promoBottom, other.promoBottom),
+      promoBadge: blend(promoBadge, other.promoBadge),
     );
   }
 }
