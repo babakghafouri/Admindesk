@@ -1,4 +1,4 @@
-name: Full Flutter CI
+name: Windows Flutter CI
 
 # Full native builds require a write-capable caller token because the existing
 # reusable build workflow has publishing jobs that request contents: write.
@@ -23,4 +23,6 @@ jobs:
       contents: write
     uses: ./.github/workflows/flutter-build.yml
     with:
+      # Windows-only iteration; skip macOS, Android and Linux native builds.
+      windows-only: true
       upload-artifact: false
