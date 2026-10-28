@@ -67,7 +67,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
     final ink = dark ? Colors.white : const Color(0xFF152945);
     final width = MediaQuery.of(context).size.width;
     final compact = width < 1020;
-    final showPromo = width >= 1250;
+    final showPromo = width >= 950;
 
     return Directionality(
       textDirection: TextDirection.ltr, // Keep the reference's sidebar on left.
@@ -405,7 +405,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
   Widget _promo(BuildContext context, Color ink) {
     const slides = <({String title, String subtitle, IconData icon,
         List<String> benefits})>[
-      (title: 'مدیریت آسان\\nدسترسی ایمن',
+      (title: 'مدیریت آسان\nدسترسی ایمن',
        subtitle: 'با Admin Desk به سیستم‌های خود متصل شوید',
        icon: Icons.security_rounded,
        benefits: ['اتصال سریع و پایدار', 'امنیت بالا',
