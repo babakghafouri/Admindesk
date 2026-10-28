@@ -523,18 +523,22 @@ class _DesktopTabState extends State<DesktopTab>
 
   @override
   Widget build(BuildContext context) {
+    // Give the branded Windows main titlebar sufficient vertical room.
+    // Remote-session and other OS window controls keep their original height.
+    final mainTitleBarHeight =
+        isWindows && tabType == DesktopTabType.main ? 52.0 : _kTabBarHeight;
     return Column(children: [
       Obx(() {
         if (stateGlobal.showTabBar.isTrue &&
             !(kUseCompatibleUiMode && isHideSingleItem())) {
           final showBottomDivider = _showTabBarBottomDivider(tabType);
           return SizedBox(
-            height: _kTabBarHeight,
+            height: mainTitleBarHeight,
             child: Column(
               children: [
                 SizedBox(
-                  height:
-                      showBottomDivider ? _kTabBarHeight - 1 : _kTabBarHeight,
+                  height: showBottomDivider
+                      ? mainTitleBarHeight - 1 : mainTitleBarHeight,
                   child: _buildBar(),
                 ),
                 if (showBottomDivider)
