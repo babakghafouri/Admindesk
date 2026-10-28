@@ -188,6 +188,14 @@ class _PeersViewState extends State<_PeersView>
       child: Consumer<Peers>(builder: (context, peers, child) {
         if (peers.peers.isEmpty) {
           gFFI.peerTabModel.setCurrentTabCachedPeers([]);
+          if (DevicesTableScope.enabledOf(context)) {
+            return DevicesTable(
+              peers: const <Peer>[],
+              peerTab: widget.peerTabIndex,
+              cardKeyPrefix: widget.peers.name,
+              onPeerVisible: (peerId, visible) {},
+            );
+          }
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
