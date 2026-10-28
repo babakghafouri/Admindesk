@@ -864,7 +864,9 @@ jobs:
             }
           - {
               target: aarch64-apple-darwin,
-              os: macos-14,
+              # macos-14 is being retired on 2026-11-02 and has reduced runner capacity.
+              # macos-15 is the supported hosted Apple Silicon (arm64) image.
+              os: macos-15,
               # extra-build-args: "--disable-flutter-texture-render", # disable this for mac, because we see a lot of users reporting flickering both on arm and x64, and we can not confirm if texture rendering has better performance if htere is no vram, https://github.com/rustdesk/rustdesk/issues/6296
               extra-build-args: "--screencapturekit",
               extra-cargo-features: ",screencapturekit",
