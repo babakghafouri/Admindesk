@@ -64,7 +64,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
     final colors = AdminDeskColors.of(context);
     final width = MediaQuery.of(context).size.width;
     // Keep live device credentials visible at 900 px; hide promotions first.
-    final showPromo = width >= 1400;
+    final showPromo = width >= 1250;
     final promoWidth = (width * .22).clamp(270.0, 355.0).toDouble();
     final deviceWidth = width < 1160 ? 196.0 : 230.0;
 
