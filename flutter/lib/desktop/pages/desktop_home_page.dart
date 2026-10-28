@@ -482,7 +482,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     if (isWindows && !bind.isDisableInstallation()) {
       if (!bind.mainIsInstalled()) {
         return buildInstallCard(
-            "", bind.isOutgoingOnly() ? "" : "install_tip", "Install",
+            "", bind.isOutgoingOnly() ? "" : "install_tip", "نصب",
             () async {
           await rustDeskWinManager.closeAllSubWindows();
           bind.mainGotoInstall();
@@ -633,8 +633,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
                 colors: [
-                  Color.fromARGB(255, 226, 66, 188),
-                  Color.fromARGB(255, 244, 114, 124),
+                  Color.fromARGB(230, 19, 119, 237),
+                  Color.fromARGB(180, 112, 184, 255),
                 ],
               )),
               padding: EdgeInsets.all(20),
