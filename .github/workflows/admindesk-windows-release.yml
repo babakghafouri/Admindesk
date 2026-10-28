@@ -13,7 +13,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: admindesk-windows-release-1.5.1-preview
+  group: admindesk-windows-release-1.5.1-preview3
   cancel-in-progress: false
 
 jobs:
@@ -24,6 +24,6 @@ jobs:
     with:
       windows-only: true
       upload-artifact: true
-      upload-tag: admindesk-win-v1.5.1-preview.1
+      upload-tag: admindesk-win-v1.5.1-preview.3
       publish-update-metadata: false
     secrets: inherit
