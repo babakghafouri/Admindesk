@@ -245,6 +245,8 @@ class DesktopTab extends StatefulWidget {
   // Right click tab menu
   final TabMenuBuilder? tabMenuBuilder;
   final Widget? tail;
+  /// Optional branded leading title; default behavior is unchanged for other windows.
+  final Widget? leading;
   final Future<bool> Function()? onWindowCloseButton;
   final TabBuilder? tabBuilder;
   final LabelGetter? labelGetter;
@@ -270,6 +272,7 @@ class DesktopTab extends StatefulWidget {
     this.pageViewBuilder,
     this.tabMenuBuilder,
     this.tail,
+    this.leading,
     this.onWindowCloseButton,
     this.tabBuilder,
     this.labelGetter,
@@ -643,7 +646,7 @@ class _DesktopTabState extends State<DesktopTab>
                         )),
                     Offstage(
                       offstage: kUseCompatibleUiMode || isMacOS,
-                      child: Row(children: [
+                      child: widget.leading ?? Row(children: [
                         Offstage(
                           offstage: !showLogo,
                           child: loadIcon(16),
