@@ -3054,7 +3054,6 @@ mod tests {
         self,
         time::{interval, interval_at, sleep, Duration, Instant, Interval},
     };
-    use std::collections::HashSet;
 
     #[test]
     fn parses_stable_rustdesk_release_url() {
@@ -3100,16 +3099,6 @@ mod tests {
                 assert!(cursor_content_id(32, 32, hotx, 0, colors) <= MAX_SAFE_INTEGER);
             }
         }
-    }
-
-    #[inline]
-    fn get_timestamp_secs() -> u128 {
-        (std::time::SystemTime::UNIX_EPOCH
-            .elapsed()
-            .unwrap()
-            .as_millis()
-            + 500)
-            / 1000
     }
 
     fn interval_maker() -> Interval {
@@ -3178,29 +3167,33 @@ mod tests {
         }
     }
 
-    // ThrottledInterval tick less times than tokio interval, if there're sleeps
+    // Verify throttling after an interval has accumulated missed ticks.
+    // The implementation intentionally allows ticks every 90% of the nominal
+    // one-second period. Rounding wall-clock timestamps to whole seconds
+    // incorrectly treats two valid ticks 900 ms apart as duplicates.
     #[allow(non_snake_case)]
     #[tokio::test]
     async fn test_RustDesk_interval_sleep() {
         let base_intervals = [interval_maker, interval_at_maker];
         for (i, maker) in base_intervals.into_iter().enumerate() {
             let mut timer = rustdesk_interval(maker());
-            let mut times = Vec::new();
             sleep(Duration::from_secs(3)).await;
-            loop {
-                tokio::select! {
-                    _ = timer.tick() => {
-                        times.push(get_timestamp_secs());
-                        if times.len() == 5 {
-                            break;
-                        }
-                    }
+
+            let mut previous_tick: Option<Instant> = None;
+            for _ in 0..5 {
+                timer.tick().await;
+                let observed = Instant::now();
+                if let Some(previous) = previous_tick {
+                    // A 50 ms margin covers overhead between tick readiness and
+                    // observing Instant without hiding unthrottled burst ticks.
+                    assert!(
+                        observed.duration_since(previous) >= Duration::from_millis(850),
+                        "throttled interval returned ticks too close together: test {}",
+                        i
+                    );
                 }
+                previous_tick = Some(observed);
             }
-            // No multiple ticks in the `interval` time.
-            // Values in "times" are unique and are less than normal tokio interval.
-            let times2: HashSet<u128> = HashSet::from_iter(times.clone());
-            assert_eq!(times.len(), times2.len(), "test: {}", i);
         }
     }
 
