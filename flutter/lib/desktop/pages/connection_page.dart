@@ -191,12 +191,14 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
 class ConnectionPage extends StatefulWidget {
   final bool dashboardLayout;
   final Widget? identityCards;
+  final Widget? peerTabNavigation;
   final ValueNotifier<int?>? requestedPeerTab;
 
   const ConnectionPage({
     Key? key,
     this.dashboardLayout = false,
     this.identityCards,
+    this.peerTabNavigation,
     this.requestedPeerTab,
   }) : super(key: key);
 
@@ -318,6 +320,7 @@ class _ConnectionPageState extends State<ConnectionPage>
         children: [
           _buildRemoteIDTextField(context),
           if (widget.identityCards != null) widget.identityCards!,
+          if (widget.peerTabNavigation != null) widget.peerTabNavigation!,
           const SizedBox(height: 6),
           Expanded(
             child: PeerTabPage(
