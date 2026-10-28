@@ -23,7 +23,10 @@ class IdCard extends StatelessWidget {
       action: IconButton(
         tooltip: 'کپی شناسه',
         onPressed: onCopy,
-        icon: Icon(Icons.copy_outlined, size: 19, color: c.textSecondary),
+        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        visualDensity: VisualDensity.compact,
+        padding: EdgeInsets.zero,
+        icon: Icon(Icons.content_copy_outlined, size: 19, color: c.textSecondary),
       ),
       controller: controller,
       footer: Row(
@@ -38,6 +41,12 @@ class IdCard extends StatelessWidget {
           ),
           TextButton(
             onPressed: onOpenSecuritySettings,
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, 28),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
             child: Text('تنظیم',
               style: AdminDeskTypography.caption(c).copyWith(
                 color: c.primary, fontWeight: AdminDeskTypography.semibold)),
@@ -72,6 +81,9 @@ class OtpCard extends StatelessWidget {
       action: IconButton(
         tooltip: canRefresh ? 'تولید رمز جدید' : 'تنظیمات رمز',
         onPressed: canRefresh ? onRefresh : onOpenSecuritySettings,
+        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        visualDensity: VisualDensity.compact,
+        padding: EdgeInsets.zero,
         icon: Icon(
           canRefresh ? Icons.refresh : Icons.settings_outlined,
           size: 20, color: c.textSecondary,
