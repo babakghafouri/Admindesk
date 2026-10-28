@@ -76,6 +76,9 @@ class HomePageState extends State<HomePage> {
           // backgroundColor: MyTheme.grayBg,
           appBar: AppBar(
             centerTitle: true,
+            elevation: 0,
+            backgroundColor: isAndroid
+                ? const Color(0xFFF3F9FF) : Theme.of(context).appBarTheme.backgroundColor,
             title: appTitle(),
             actions: _pages.elementAt(_selectedIndex).appBarActions,
           ),
@@ -102,7 +105,18 @@ class HomePageState extends State<HomePage> {
               }
             }),
           ),
-          body: _pages.elementAt(_selectedIndex),
+          body: isAndroid
+              ? Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft, end: Alignment.bottomRight,
+                      colors: [Color(0xFFF3F9FF), Color(0xFFE9F3FF),
+                               Color(0xFFF8F6FF)],
+                    ),
+                  ),
+                  child: _pages.elementAt(_selectedIndex),
+                )
+              : _pages.elementAt(_selectedIndex),
         ));
   }
 
