@@ -486,7 +486,6 @@ class _ConnectionPageState extends State<ConnectionPage>
                           cursorColor:
                               Theme.of(context).textTheme.titleLarge?.color,
                           decoration: InputDecoration(
-                              filled: false,
                               counterText: '',
                               hintText: _idInputFocused.value
                                   ? null
