@@ -8,6 +8,10 @@ on:
 
 jobs:
   run-flutter-nightly-build:
+    # The reusable workflow includes publishing jobs with contents: write.
+    # Scheduled/manual runs are trusted; this workflow has no PR trigger.
+    permissions:
+      contents: write
     uses: ./.github/workflows/flutter-build.yml
     secrets: inherit
     with:
