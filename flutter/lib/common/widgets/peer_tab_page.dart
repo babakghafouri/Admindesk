@@ -190,78 +190,36 @@ class _PeerTabPageState extends State<PeerTabPage>
     }
   }
 
+  // Navigation is in the left sidebar. Keep the search, refresh, and view
+  // controls while removing duplicate favorite/contact tabs from this header.
   Widget _dashboardHeader(BuildContext context, PeerTabModel model) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final border = dark ? Colors.white12 : const Color(0xFFE5EAF2);
+    final border = dark ? Colors.white24 : const Color(0xFFD8E7FA);
     final ink = Theme.of(context).textTheme.bodyMedium?.color;
     return Container(
       height: 49,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: Theme.of(context).cardColor.withOpacity(.75),
         border: Border.all(color: border),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: model.visibleEnabledOrderedIndexs.map((tab) {
-                  final active = model.currentTab == tab;
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: isOptionFixed(kOptionPeerTabIndex)
-                          ? null
-                          : () async {
-                              await handleTabSelection(tab);
-                              await bind.setLocalFlutterOption(
-                                  k: kOptionPeerTabIndex, v: tab.toString());
-                            },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: active
-                              ? const Color(0xFFE4F0FF)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(model.tabIcon(tab), size: 17,
-                                color: active
-                                    ? const Color(0xFF087BEE) : ink),
-                            const SizedBox(width: 5),
-                            Text(_dashboardTabLabel(tab),
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: active
-                                      ? FontWeight.w700 : FontWeight.w500,
-                                  color: active
-                                      ? const Color(0xFF087BEE) : ink,
-                                )),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          const PeerSearchBar(),
-          _createRefresh(
-              index: PeerTabIndex.ab, loading: gFFI.abModel.currentAbLoading),
-          _createRefresh(
-              index: PeerTabIndex.group,
-              loading: gFFI.groupModel.groupLoading),
-          _createPeerViewTypeSwitch(context),
-        ],
-      ),
+      child: Row(children: [
+        const Icon(Icons.devices_rounded, size: 19, color: Color(0xFF087BEE)),
+        const SizedBox(width: 7),
+        Expanded(
+          child: Text('دستگاه‌های مرتبط',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: ink)),
+        ),
+        const PeerSearchBar(),
+        _createRefresh(
+          index: PeerTabIndex.ab, loading: gFFI.abModel.currentAbLoading),
+        _createRefresh(
+          index: PeerTabIndex.group, loading: gFFI.groupModel.groupLoading),
+        _createPeerViewTypeSwitch(context),
+      ]),
     );
   }
 
