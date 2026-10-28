@@ -325,7 +325,7 @@ class _ConnectionPageState extends State<ConnectionPage>
               requestedPeerTab: widget.requestedPeerTab,
             ),
           ),
-          if (!isOutgoingOnly) OnlineStatusWidget(),
+          // Redundant dashboard-only online notice removed (status is still available in server settings).
         ],
       );
     }
@@ -554,7 +554,7 @@ class _ConnectionPageState extends State<ConnectionPage>
                     child: ElevatedButton.icon(
                       onPressed: () => onConnect(),
                       icon: const Icon(Icons.sync_alt, size: 18),
-                      label: Text(translate('Connect')),
+                      label: const Text('اتصال', style: TextStyle(fontWeight: FontWeight.w700)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF087BEE),
                         foregroundColor: Colors.white,
