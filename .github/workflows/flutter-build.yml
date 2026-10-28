@@ -331,6 +331,11 @@ jobs:
         run: echo "SODIUM_LIB_DIR=$VCPKG_ROOT/installed/${{ matrix.job.vcpkg-triplet }}/lib" >> "$GITHUB_ENV"
 
       - name: Build rustdesk
+        env:
+          # Set both values under GitHub Settings > Secrets and variables > Actions.
+          # An incomplete pair is intentionally ignored by the application.
+          ADMINDESK_ID_SERVER: ${{ secrets.ADMINDESK_ID_SERVER }}
+          ADMINDESK_SERVER_KEY: ${{ secrets.ADMINDESK_SERVER_KEY }}
         run: |
           # Windows: build RustDesk
           # --hwcodec is shared by all Windows targets; per-target extras (e.g. --vram) come from the matrix
@@ -1530,6 +1535,8 @@ jobs:
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ADMINDESK_ID_SERVER: ${{ secrets.ADMINDESK_ID_SERVER }}
+          ADMINDESK_SERVER_KEY: ${{ secrets.ADMINDESK_SERVER_KEY }}
         run: |
           rustup target add ${{ matrix.job.target }}
           cargo install cargo-ndk --version ${{ env.CARGO_NDK_VERSION }} --locked
