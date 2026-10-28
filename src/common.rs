@@ -121,6 +121,20 @@ impl Drop for SimpleCallOnReturn {
 }
 
 pub fn global_init() -> bool {
+    // Branded Windows/Android builds may supply a custom ID server and its
+    // matching public server key through build-time environment variables.
+    // Defaults do not overwrite settings already chosen by the user.
+    // Neither value is stored in this public source repository.
+    #[cfg(any(target_os = "windows", target_os = "android"))]
+    {
+        let host = option_env!("ADMINDESK_ID_SERVER").unwrap_or("").trim();
+        let key = option_env!("ADMINDESK_SERVER_KEY").unwrap_or("").trim();
+        if !host.is_empty() && !key.is_empty() {
+            let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
+            defaults.insert("custom-rendezvous-server".to_owned(), host.to_owned());
+            defaults.insert("key".to_owned(), key.to_owned());
+        }
+    }
     #[cfg(all(target_os = "linux", feature = "drm"))]
     crate::platform::linux::dispatch_wayland_display_probe();
     #[cfg(target_os = "linux")]

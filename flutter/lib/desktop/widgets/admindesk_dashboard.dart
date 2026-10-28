@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -24,12 +25,15 @@ class AdminDeskDashboard extends StatefulWidget {
 class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
   final ValueNotifier<int?> _requestedPeerTab = ValueNotifier<int?>(null);
   int _selectedMenu = 0;
+  int _promoPage = 0;
+  final PageController _promoController = PageController();
 
   static const _blue = Color(0xFF087BEE);
 
   @override
   void dispose() {
     _requestedPeerTab.dispose();
+    _promoController.dispose();
     super.dispose();
   }
 
@@ -63,12 +67,21 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
     final ink = dark ? Colors.white : const Color(0xFF152945);
     final width = MediaQuery.of(context).size.width;
     final compact = width < 1020;
-    final showPromo = width >= 1250;
+    final showPromo = width >= 950;
 
     return Directionality(
       textDirection: TextDirection.ltr, // Keep the reference's sidebar on left.
-      child: ColoredBox(
-        color: bg,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: dark
+                ? [bg, const Color(0xFF1B3151), bg]
+                : [const Color(0xFFF3F8FF), const Color(0xFFF8FBFF),
+                   const Color(0xFFEAE8FF), const Color(0xFFE7F8FF)],
+          ),
+        ),
         child: Row(
           children: [
             _sidebar(context, compact, surface, border, ink),
@@ -152,10 +165,12 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
     final width = compact ? 66.0 : 203.0;
     final labelStyle = TextStyle(
         color: ink, fontSize: 12, fontWeight: FontWeight.w600);
-    return Container(
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+      child: Container(
       width: width,
       decoration: BoxDecoration(
-        color: surface,
+        color: surface.withOpacity(.76),
         border: Border(right: BorderSide(color: border)),
       ),
       padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
@@ -188,39 +203,15 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
           _nav(Icons.home_outlined, 'خانه', 0, compact, () => _openTab(0, 0)),
           _nav(Icons.desktop_windows_outlined, 'دستگاه‌های من', 1,
               compact, () => _openTab(1, 0)),
-          _nav(Icons.history, 'اتصالات اخیر', 2,
-              compact, () => _openTab(2, 0)),
           _nav(Icons.contacts_outlined, 'مخاطبین', 3,
               compact, () => _openTab(3, 3)),
           _nav(Icons.star_border, 'دستگاه‌های ستاره‌دار', 4,
               compact, () => _openTab(4, 1)),
           _nav(Icons.settings_outlined, 'تنظیمات', 5, compact, _openSettings),
           const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white10 : const Color(0xFFF5F8FD),
-              border: Border.all(color: border),
-            ),
-            child: Column(
-              children: [
-                SvgPicture.asset('assets/icon.svg', width: 46, height: 46),
-                if (!compact) ...[
-                  const SizedBox(height: 3),
-                  Text('Admin Desk', style: labelStyle.copyWith(fontSize: 17)),
-                  Text('Remote Access · Greater Control',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 8, color: ink.withOpacity(.7))),
-                ],
-              ],
-            ),
-          ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _nav(IconData icon, String label, int index,
@@ -279,7 +270,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
       height: 47,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: surface,
+        color: surface.withOpacity(.78),
         border: Border(bottom: BorderSide(color: border)),
       ),
       child: Row(
@@ -368,7 +359,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
       height: 102,
       padding: const EdgeInsets.fromLTRB(12, 9, 12, 7),
       decoration: BoxDecoration(
-        color: surface,
+        color: surface.withOpacity(.78),
         border: Border.all(color: border),
         borderRadius: BorderRadius.circular(11),
       ),
@@ -379,7 +370,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
             Expanded(child: Text(title, maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 12,
-                    fontWeight: FontWeight.w700, color: ink))),
+                    fontWeight: FontWeight.w800, color: ink))),
             IconButton(
               tooltip: title,
               onPressed: onPressed,
@@ -412,44 +403,141 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
   }
 
   Widget _promo(BuildContext context, Color ink) {
+    const slides = <({String title, String subtitle, IconData icon,
+        List<String> benefits})>[
+      (title: 'مدیریت آسان\nدسترسی ایمن',
+       subtitle: 'با Admin Desk به سیستم‌های خود متصل شوید',
+       icon: Icons.security_rounded,
+       benefits: ['اتصال سریع و پایدار', 'امنیت بالا',
+                  'سازگار با سیستم‌عامل‌های مختلف']),
+      (title: 'همیشه متصل',
+       subtitle: 'ارتباط حرفه‌ای با رایانه‌های خود از هر جا',
+       icon: Icons.computer_rounded,
+       benefits: ['پشتیبانی از ویندوز و اندروید', 'اتصال از راه دور',
+                  'مدیریت سادهٔ دستگاه‌ها']),
+      (title: 'دسترسی کنترل‌شده',
+       subtitle: 'ابزارهایی که برای پشتیبانی نیاز دارید',
+       icon: Icons.verified_user_rounded,
+       benefits: ['رمز یک‌بارمصرف', 'انتقال فایل در اتصال مجاز',
+                  'دسترسی با تأیید کاربر']),
+      (title: 'Admin Desk',
+       subtitle: 'تجربه‌ای روان و یکپارچه برای پشتیبانی',
+       icon: Icons.support_agent_rounded,
+       benefits: ['رابط فارسی خوانا', 'مدیریت اتصال‌ها',
+                  'کنترل حرفه‌ای از راه دور']),
+    ];
     return Container(
-      width: double.infinity,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFD9EDFF), Color(0xFFA8D3FF)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          begin: Alignment.topCenter, end: Alignment.bottomCenter,
+          colors: [Color(0xFFDDEEFF), Color(0xFFB8DCFF), Color(0xFFD9EAFF)],
         ),
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(.8)),
+        boxShadow: [BoxShadow(color: const Color(0xFF80B9F1).withOpacity(.17),
+            blurRadius: 24, offset: const Offset(0, 7))],
       ),
-      padding: const EdgeInsets.all(13),
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            const Text('مدیریت آسان\nدسترسی ایمن',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF133458),
-                    fontSize: 23, height: 1.25,
-                    fontWeight: FontWeight.w800)),
-            const SizedBox(height: 10),
-            const Text('با Admin Desk به دستگاه‌های خود متصل شوید',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF244763), fontSize: 11)),
-            const SizedBox(height: 18),
-            _benefit('اتصال سریع و آسان'),
-            _benefit('امنیت بالا'),
-            _benefit('سازگار با دستگاه‌های مختلف'),
-            const Spacer(),
-            SvgPicture.asset('assets/icon.svg', width: 105, height: 105),
-            const SizedBox(height: 12),
-            Text('Admin Desk',
-                style: TextStyle(color: ink,
-                    fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-          ],
-        ),
+      child: Column(
+        children: [
+          Expanded(
+            child: PageView.builder(
+              controller: _promoController,
+              itemCount: slides.length,
+              onPageChanged: (index) => setState(() => _promoPage = index),
+              itemBuilder: (context, index) {
+                final slide = slides[index];
+                return Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 17),
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('${index + 1}/4',
+                          textDirection: TextDirection.ltr,
+                          style: const TextStyle(fontSize: 11,
+                              color: Color(0xFF42699E), fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(slide.title, textAlign: TextAlign.center,
+                        style: const TextStyle(color: Color(0xFF153B6A),
+                            fontSize: 20, height: 1.45, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 10),
+                      Text(slide.subtitle, textAlign: TextAlign.center,
+                        style: const TextStyle(color: Color(0xFF28547D),
+                            fontSize: 11, height: 1.6)),
+                      const SizedBox(height: 24),
+                      ...slide.benefits.map((benefit) => _benefit(benefit)),
+                      const SizedBox(height: 20),
+                      Container(
+                        height: 122,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(.30),
+                          border: Border.all(color: Colors.white.withOpacity(.65)),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Icon(slide.icon, size: 80, color: const Color(0xFF087BEE)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          Container(
+            height: 86,
+            padding: const EdgeInsets.fromLTRB(9, 6, 9, 10),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(.88),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16))),
+            child: Column(children: [
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                IconButton(
+                  tooltip: 'قبلی',
+                  icon: const Icon(Icons.chevron_left, size: 20),
+                  onPressed: _promoPage > 0 ? () => _promoController.previousPage(
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeInOut) : null,
+                ),
+                Row(children: List.generate(slides.length, (index) =>
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: _promoPage == index ? 16 : 6, height: 6,
+                    decoration: BoxDecoration(
+                      color: _promoPage == index
+                          ? const Color(0xFF087BEE) : const Color(0xFFB4C9DA),
+                      borderRadius: BorderRadius.circular(6)),
+                  ))),
+                IconButton(
+                  tooltip: 'بعدی',
+                  icon: const Icon(Icons.chevron_right, size: 20),
+                  onPressed: _promoPage < slides.length - 1
+                      ? () => _promoController.nextPage(
+                          duration: const Duration(milliseconds: 260),
+                          curve: Curves.easeInOut) : null,
+                ),
+              ]),
+              SizedBox(
+                height: 27,
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _promoController.animateToPage(
+                      (_promoPage + 1) % slides.length,
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeInOut),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: _blue, foregroundColor: Colors.white,
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8))),
+                  child: const Text('اطلاعات بیشتر',
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11)),
+                ),
+              ),
+            ]),
+          ),
+        ],
       ),
     );
   }
