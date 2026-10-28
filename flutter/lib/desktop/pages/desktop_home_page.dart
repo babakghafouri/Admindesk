@@ -64,7 +64,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     // from 900 px upwards. Narrower windows retain the established layout.
     // Neither the Rust FFI nor session/window controllers are replaced.
     return LayoutBuilder(builder: (context, constraints) {
-      if (!isIncomingOnly && constraints.maxWidth >= 900) {
+      if (isWindows && !isIncomingOnly && constraints.maxWidth >= 900) {
         return _buildBlock(
           child: AdminDeskDashboard(
             notices: ConstrainedBox(
