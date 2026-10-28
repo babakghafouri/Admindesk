@@ -1,0 +1,29 @@
+name: Admin Desk Windows Installer Release
+
+on:
+  workflow_dispatch:
+  # Create the first preview when this workflow lands on master.
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/admindesk-windows-release.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: admindesk-windows-release-1.5.1-preview
+  cancel-in-progress: false
+
+jobs:
+  publish-windows-installers:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/flutter-build.yml
+    with:
+      windows-only: true
+      upload-artifact: true
+      upload-tag: admindesk-win-v1.5.1-preview.1
+      publish-update-metadata: false
+    secrets: inherit
