@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/widgets/connection_page_title.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/widgets/popup_menu.dart';
+import 'package:flutter_hbb/desktop/widgets/quick_connect_card.dart';
+import 'package:flutter_hbb/desktop/theme/admindesk_theme.dart';
 import 'package:flutter_hbb/models/state_model.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -318,7 +320,8 @@ class _ConnectionPageState extends State<ConnectionPage>
     if (widget.dashboardLayout) {
       return Column(
         children: [
-          _buildRemoteIDTextField(context),
+          QuickConnectCard(connectFields: _buildRemoteIDTextField(context)),
+          const SizedBox(height: AdminDeskMetrics.spaceSm),
           if (widget.identityCards != null) widget.identityCards!,
           if (widget.peerTabNavigation != null) widget.peerTabNavigation!,
           const SizedBox(height: 6),
@@ -368,22 +371,38 @@ class _ConnectionPageState extends State<ConnectionPage>
         isTcpTunneling: isTcpTunneling);
   }
 
+  Future<void> _addRemoteIdToFavorites() async {
+    final remoteId = _idController.id.trim();
+    if (remoteId.isEmpty) {
+      showToast(translate('Enter Remote ID'));
+      return;
+    }
+    // Reuse the same Favorites bindings used by the existing peer view.
+    final favs = (await bind.mainGetFav()).toList();
+    if (!favs.contains(remoteId)) {
+      favs.add(remoteId);
+      await bind.mainStoreFav(favs: favs);
+      bind.mainLoadFavPeers();
+    }
+    showToast(translate('Successful'));
+  }
+
   /// UI for the remote ID TextField.
   /// Search for a peer.
   Widget _buildRemoteIDTextField(BuildContext context) {
+    final dashboardColors = AdminDeskColors.of(context);
     var w = Container(
       width: widget.dashboardLayout ? double.infinity : 320 + 20 * 2,
       padding: widget.dashboardLayout
-          ? const EdgeInsets.fromLTRB(15, 10, 15, 12)
+          ? EdgeInsets.zero
           : const EdgeInsets.fromLTRB(20, 24, 20, 22),
-      decoration: BoxDecoration(
-          color: widget.dashboardLayout ? Theme.of(context).cardColor : null,
-          borderRadius: const BorderRadius.all(Radius.circular(13)),
-          border: Border.all(
-            color: widget.dashboardLayout
-                ? Theme.of(context).dividerColor.withOpacity(0.55)
-                : Theme.of(context).colorScheme.background,
-          )),
+      decoration: widget.dashboardLayout
+          ? null
+          : BoxDecoration(
+              borderRadius: const BorderRadius.all(Radius.circular(13)),
+              border: Border.all(
+                  color: Theme.of(context).colorScheme.background),
+            ),
       child: Ink(
         child: Column(
           children: [
@@ -468,7 +487,28 @@ class _ConnectionPageState extends State<ConnectionPage>
                               counterText: '',
                               hintText: _idInputFocused.value
                                   ? null
-                                  : translate('Enter Remote ID'),
+                                  : widget.dashboardLayout
+                                      ? 'شناسه دستگاه مقصد را وارد کنید...'
+                                      : translate('Enter Remote ID'),
+                              filled: widget.dashboardLayout,
+                              fillColor: widget.dashboardLayout
+                                  ? dashboardColors.inputBackground : null,
+                              prefixIcon: widget.dashboardLayout
+                                  ? Icon(Icons.desktop_windows_outlined,
+                                      color: dashboardColors.textSecondary)
+                                  : null,
+                              enabledBorder: widget.dashboardLayout
+                                  ? OutlineInputBorder(
+                                      borderRadius: AdminDeskMetrics.controlRadius,
+                                      borderSide: BorderSide(
+                                          color: dashboardColors.border))
+                                  : null,
+                              focusedBorder: widget.dashboardLayout
+                                  ? OutlineInputBorder(
+                                      borderRadius: AdminDeskMetrics.controlRadius,
+                                      borderSide: BorderSide(
+                                          color: dashboardColors.primary))
+                                  : null,
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 15, vertical: 13)),
                           controller: fieldTextEditingController,
@@ -550,27 +590,45 @@ class _ConnectionPageState extends State<ConnectionPage>
                   },
                 )),
                 if (widget.dashboardLayout) ...[
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AdminDeskMetrics.spaceXs),
+                  Tooltip(
+                    message: 'افزودن به دستگاه‌های ستاره‌دار',
+                    child: IconButton(
+                      icon: Icon(Icons.star_border_rounded,
+                          color: dashboardColors.textSecondary),
+                      onPressed: _addRemoteIdToFavorites,
+                    ),
+                  ),
                   SizedBox(
-                    height: 43,
-                    width: 150,
+                    height: 44,
+                    width: 135,
                     child: ElevatedButton.icon(
                       onPressed: () => onConnect(),
                       icon: const Icon(Icons.sync_alt, size: 18),
-                      label: const Text('اتصال', style: TextStyle(fontWeight: FontWeight.w700)),
+                      label: Text('اتصال',
+                          style: AdminDeskTypography.body(dashboardColors)
+                              .copyWith(
+                                  color: dashboardColors.onPrimary,
+                                  fontWeight: AdminDeskTypography.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF087BEE),
-                        foregroundColor: Colors.white,
+                        backgroundColor: dashboardColors.primary,
+                        foregroundColor: dashboardColors.onPrimary,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(9),
+                          borderRadius: AdminDeskMetrics.controlRadius,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 5),
+                  IconButton(
+                    tooltip: 'تاریخچه شناسه‌ها',
+                    icon: Icon(Icons.keyboard_arrow_down,
+                        color: dashboardColors.textSecondary),
+                    onPressed: () => _idFocusNode.requestFocus(),
+                  ),
                   PopupMenuButton<String>(
-                    tooltip: translate('More'),
-                    icon: const Icon(Icons.keyboard_arrow_down),
+                    tooltip: 'گزینه‌های اتصال',
+                    icon: Icon(Icons.more_vert,
+                        color: dashboardColors.textSecondary),
                     onSelected: (value) {
                       switch (value) {
                         case 'file':
@@ -589,22 +647,18 @@ class _ConnectionPageState extends State<ConnectionPage>
                     },
                     itemBuilder: (context) => [
                       PopupMenuItem(
-                        value: 'file',
-                        child: Text(translate('Transfer file')),
-                      ),
+                          value: 'file',
+                          child: Text(translate('Transfer file'))),
                       PopupMenuItem(
-                        value: 'camera',
-                        child: Text(translate('View camera')),
-                      ),
+                          value: 'camera',
+                          child: Text(translate('View camera'))),
                       PopupMenuItem(
-                        value: 'terminal',
-                        child: Text(translate('Terminal')),
-                      ),
+                          value: 'terminal',
+                          child: Text(translate('Terminal'))),
                       if (isDesktop)
                         PopupMenuItem(
-                          value: 'tcp',
-                          child: Text(translate('TCP tunneling')),
-                        ),
+                            value: 'tcp',
+                            child: Text(translate('TCP tunneling'))),
                     ],
                   ),
                 ],
