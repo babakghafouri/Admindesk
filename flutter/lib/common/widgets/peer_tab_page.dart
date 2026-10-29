@@ -149,8 +149,7 @@ class _PeerTabPageState extends State<PeerTabPage>
       textBaseline: TextBaseline.ideographic,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Windows navigation lives exclusively in the right-hand sidebar.
-        // The active peer view, search and connections stay intact.
+        if (widget.dashboardLayout) _dashboardHeader(context, model),
         if (widget.dashboardLayout && model.multiSelectionMode)
           SizedBox(
             height: 36,
@@ -203,6 +202,7 @@ class _PeerTabPageState extends State<PeerTabPage>
   // Keep tab visibility restrictions, persistent tab index and original loads.
   Widget _dashboardHeader(BuildContext context, PeerTabModel model) {
     return DevicesTableTabs(
+      showNavigation: false,
       currentTab: model.currentTab,
       availableTabs: model.visibleEnabledOrderedIndexs,
       onTabSelected: (tab) async {
