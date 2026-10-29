@@ -149,7 +149,8 @@ class _PeerTabPageState extends State<PeerTabPage>
       textBaseline: TextBaseline.ideographic,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (widget.dashboardLayout) _dashboardHeader(context, model),
+        // Windows navigation lives exclusively in the right-hand sidebar.
+        // The active peer view, search and connections stay intact.
         if (widget.dashboardLayout && model.multiSelectionMode)
           SizedBox(
             height: 36,
