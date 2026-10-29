@@ -5,6 +5,7 @@ import 'package:flutter_hbb/common/hbbs/hbbs.dart';
 import 'package:flutter_hbb/common/widgets/login.dart';
 import 'package:flutter_hbb/common/widgets/peers_view.dart';
 import 'package:flutter_hbb/models/state_model.dart';
+import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:get/get.dart';
 
 import '../../common.dart';
@@ -31,6 +32,8 @@ class _MyGroupState extends State<MyGroup> {
   Widget build(BuildContext context) {
     return Obx(() {
       if (!gFFI.userModel.isLogin) {
+        // Hide the legacy account prompt from the Windows AdminDesk workspace.
+        if (isWindows) return const SizedBox.shrink();
         return Center(
             child: ElevatedButton(
                 onPressed: loginDialog, child: Text(translate("Login"))));
