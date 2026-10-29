@@ -25,4 +25,4 @@ jobs:
     with:
       # Windows-only iteration; skip macOS, Android and Linux native builds.
       windows-only: true
-      upload-artifact: false
+      upload-artifact: true
