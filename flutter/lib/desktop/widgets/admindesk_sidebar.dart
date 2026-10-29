@@ -42,15 +42,10 @@ class AdminDeskSideBar extends StatelessWidget {
             const SizedBox(height: AdminDeskMetrics.spaceMd),
             _entry(context, Icons.home_outlined, 'خانه', 0,
                 () => onNavigate(0, 0)),
-            _entry(context, Icons.desktop_windows_outlined, 'دستگاه‌های من', 1,
-                () => onNavigate(1, 4)),
             _entry(context, Icons.history_rounded, 'اتصالات اخیر', 2,
                 () => onNavigate(2, 0)),
-            _entry(context, Icons.contacts_outlined, 'مخاطبین', 3,
-                () => onNavigate(3, 3)),
             _entry(context, Icons.star_border_rounded, 'دستگاه‌های ستاره‌دار', 4,
                 () => onNavigate(4, 1)),
-            _entry(context, Icons.settings_outlined, 'تنظیمات', 5, onSettings),
             const Spacer(),
             Padding(
               padding: const EdgeInsets.fromLTRB(
