@@ -476,6 +476,10 @@ class _ConnectionPageState extends State<ConnectionPage>
                           autocorrect: false,
                           enableSuggestions: false,
                           keyboardType: TextInputType.visiblePassword,
+                          // Remote IDs are numeric identifiers: keep input order
+                          // left-to-right even though the surrounding UI is RTL.
+                          textDirection: TextDirection.ltr,
+                          textAlign: TextAlign.left,
                           focusNode: fieldFocusNode,
                           style: TextStyle(
                             fontFamily: 'Vazirmatn',
@@ -620,12 +624,6 @@ class _ConnectionPageState extends State<ConnectionPage>
                         ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    tooltip: 'تاریخچه شناسه‌ها',
-                    icon: Icon(Icons.keyboard_arrow_down,
-                        color: dashboardColors.textSecondary),
-                    onPressed: () => _idFocusNode.requestFocus(),
                   ),
                   PopupMenuButton<String>(
                     tooltip: 'گزینه‌های اتصال',
