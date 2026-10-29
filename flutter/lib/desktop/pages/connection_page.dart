@@ -305,7 +305,7 @@ class _ConnectionPageState extends State<ConnectionPage>
   void onFocusChanged() {
     _idInputFocused.value = _idFocusNode.hasFocus;
     if (_idFocusNode.hasFocus) {
-      if (_allPeersLoader.needLoad) {
+      if (!widget.dashboardLayout && _allPeersLoader.needLoad) {
         _allPeersLoader.getAllPeers();
       }
 
@@ -416,6 +416,12 @@ class _ConnectionPageState extends State<ConnectionPage>
                 Expanded(
                     child: RawAutocomplete<Peer>(
                   optionsBuilder: (TextEditingValue textEditingValue) {
+                    // The AdminDesk Windows dashboard must never show partial
+                    // peer IDs over the promotion panel while typing a remote ID.
+                    if (widget.dashboardLayout) {
+                      _autocompleteOpts = const Iterable<Peer>.empty();
+                      return _autocompleteOpts;
+                    }
                     if (textEditingValue.text == '') {
                       _autocompleteOpts = const Iterable<Peer>.empty();
                     } else if (_allPeersLoader.peers.isEmpty &&
