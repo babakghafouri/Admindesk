@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../theme/admindesk_theme.dart';
 
@@ -17,6 +18,7 @@ class _PromoSlide {
     required this.features,
     required this.image,
     this.networkImage,
+    this.targetUrl,
   });
 
   final String heading;
@@ -25,6 +27,7 @@ class _PromoSlide {
   final List<String> features;
   final String image;
   final String? networkImage;
+  final String? targetUrl;
 }
 
 /// Windows-only promotional carousel. All colors/fonts come from the
@@ -91,10 +94,14 @@ class _PromoCarouselState extends State<PromoCarousel>
 
   // A public JSON feed URL from the ads-admin service is supplied at build time.
   // Never embed administrative credentials or the dashboard login page here.
-  static const _feedUrl = String.fromEnvironment('ADMINDESK_ADS_FEED_URL');
+  static const _feedUrl = String.fromEnvironment(
+    'ADMINDESK_ADS_FEED_URL',
+    defaultValue: 'https://admin98.ir/ads-admin/ads.php',
+  );
   List<_PromoSlide> _activeSlides = _slides;
   late final PageController _controller;
   Timer? _timer;
+  Timer? _refreshTimer;
   int _page = 0;
   bool _hovered = false;
   bool _foreground = true;
@@ -105,6 +112,9 @@ class _PromoCarouselState extends State<PromoCarousel>
     _controller = PageController();
     WidgetsBinding.instance.addObserver(this);
     _loadRemoteAds();
+    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      if (mounted && _foreground) _loadRemoteAds();
+    });
     _timer = Timer.periodic(const Duration(seconds: 6), (_) {
       if (mounted && !_hovered && _foreground && _controller.hasClients) {
         _goTo((_page + 1) % _activeSlides.length);
@@ -120,6 +130,7 @@ class _PromoCarouselState extends State<PromoCarousel>
   @override
   void dispose() {
     _timer?.cancel();
+    _refreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
@@ -143,6 +154,12 @@ class _PromoCarouselState extends State<PromoCarousel>
         final imageUrl = Uri.tryParse(item['image_url']?.toString() ?? '');
         if (imageUrl == null || imageUrl.scheme != 'https' ||
             imageUrl.host != 'admin98.ir') continue;
+        final destination = Uri.tryParse(item['target_url']?.toString() ?? '');
+        final safeDestination = destination != null &&
+                (destination.scheme == 'https' || destination.scheme == 'http') &&
+                destination.host.isNotEmpty
+            ? destination.toString()
+            : null;
         final heading = item['title']?.toString() ?? '';
         if (heading.isEmpty || heading.length > 100) continue;
         slides.add(_PromoSlide(
@@ -154,6 +171,7 @@ class _PromoCarouselState extends State<PromoCarousel>
               : const <String>[],
           image: 'assets/admindesk_promo_1.svg',
           networkImage: imageUrl.toString(),
+          targetUrl: safeDestination,
         ));
       }
       if (!mounted || slides.isEmpty) return;
@@ -183,6 +201,16 @@ class _PromoCarouselState extends State<PromoCarousel>
       duration: const Duration(milliseconds: 370),
       curve: Curves.easeInOutCubic,
     );
+  }
+
+  Future<void> _openPromotion(_PromoSlide slide) async {
+    final url = slide.targetUrl;
+    final uri = url == null ? null : Uri.tryParse(url);
+    if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) {
+      _showDetails(slide);
+      return;
+    }
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   void _showDetails(_PromoSlide slide) {
@@ -417,7 +445,7 @@ class _PromoCarouselState extends State<PromoCarousel>
             width: double.infinity,
             height: 43,
             child: ElevatedButton(
-              onPressed: () => _showDetails(_activeSlides[_page]),
+              onPressed: () => _openPromotion(_activeSlides[_page]),
               style: ElevatedButton.styleFrom(
                 backgroundColor: c.primary,
                 foregroundColor: c.onPrimary,
@@ -426,7 +454,8 @@ class _PromoCarouselState extends State<PromoCarousel>
                 ),
               ),
               child: Text(
-                'اطلاعات بیشتر',
+                _activeSlides[_page].targetUrl == null
+                    ? 'اطلاعات بیشتر' : 'مشاهده تبلیغ',
                 style: AdminDeskTypography.body(c).copyWith(
                   fontWeight: AdminDeskTypography.bold,
                   color: c.onPrimary,
