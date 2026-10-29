@@ -478,7 +478,7 @@ jobs:
           # Keep the intermediate filename expected by the signing/upload/branding steps.
           # The MSI package itself is already branded AdminDesk by preprocess.py.
           mv $msi.FullName ../../SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.msi
-          sha256sum ../../SignOutput/admindesk-*.msi
+          sha256sum ../../SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.msi
 
       - name: Build pre-built MSI template
         # Two things this works around: preprocess.py rewrites res/msi in place, so the
