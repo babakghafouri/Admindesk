@@ -255,10 +255,22 @@ class DevicesTable extends StatelessWidget {
       height: 40,
       child: Row(children: [
         const SizedBox(width: 12),
-        Expanded(flex: 4, child: Text('نام دستگاه', style: label)),
-        Expanded(flex: 3, child: Text('شناسه', style: label)),
-        Expanded(flex: 2, child: Text('وضعیت', style: label)),
-        Expanded(flex: 3, child: Text('آخرین اتصال', style: label)),
+        Expanded(flex: 4, child: Align(
+          alignment: Alignment.centerRight,
+          child: Text('نام دستگاه', style: label, textAlign: TextAlign.right),
+        )),
+        Expanded(flex: 3, child: Align(
+          alignment: Alignment.centerRight,
+          child: Text('شناسه', style: label, textAlign: TextAlign.right),
+        )),
+        Expanded(flex: 2, child: Align(
+          alignment: Alignment.centerRight,
+          child: Text('وضعیت', style: label, textAlign: TextAlign.right),
+        )),
+        Expanded(flex: 3, child: Align(
+          alignment: Alignment.centerRight,
+          child: Text('آخرین اتصال', style: label, textAlign: TextAlign.right),
+        )),
         const SizedBox(width: 52),
       ]),
     );
@@ -305,13 +317,17 @@ class _DeviceTableRow extends StatelessWidget {
                     fontWeight: AdminDeskTypography.semibold),
               )),
             ])),
-            Expanded(flex: 3, child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Text(
-                peer.id,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AdminDeskTypography.body(c),
+            Expanded(flex: 3, child: Align(
+              alignment: Alignment.centerRight,
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Text(
+                  peer.id,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.left,
+                  style: AdminDeskTypography.body(c),
+                ),
               ),
             )),
             Expanded(flex: 2, child: Row(children: [
