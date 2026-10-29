@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -14,6 +16,7 @@ class _PromoSlide {
     required this.description,
     required this.features,
     required this.image,
+    this.networkImage,
   });
 
   final String heading;
@@ -21,6 +24,7 @@ class _PromoSlide {
   final String description;
   final List<String> features;
   final String image;
+  final String? networkImage;
 }
 
 /// Windows-only promotional carousel. All colors/fonts come from the
@@ -85,6 +89,10 @@ class _PromoCarouselState extends State<PromoCarousel>
     ),
   ];
 
+  // A public JSON feed URL from the ads-admin service is supplied at build time.
+  // Never embed administrative credentials or the dashboard login page here.
+  static const _feedUrl = String.fromEnvironment('ADMINDESK_ADS_FEED_URL');
+  List<_PromoSlide> _activeSlides = _slides;
   late final PageController _controller;
   Timer? _timer;
   int _page = 0;
@@ -96,9 +104,10 @@ class _PromoCarouselState extends State<PromoCarousel>
     super.initState();
     _controller = PageController();
     WidgetsBinding.instance.addObserver(this);
+    _loadRemoteAds();
     _timer = Timer.periodic(const Duration(seconds: 6), (_) {
       if (mounted && !_hovered && _foreground && _controller.hasClients) {
-        _goTo((_page + 1) % _slides.length);
+        _goTo((_page + 1) % _activeSlides.length);
       }
     });
   }
@@ -116,10 +125,61 @@ class _PromoCarouselState extends State<PromoCarousel>
     super.dispose();
   }
 
+  Future<void> _loadRemoteAds() async {
+    final uri = Uri.tryParse(_feedUrl);
+    if (uri == null || uri.scheme != 'https' || uri.host != 'admin98.ir') return;
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 6);
+    try {
+      final request = await client.getUrl(uri).timeout(const Duration(seconds: 8));
+      final response = await request.close().timeout(const Duration(seconds: 8));
+      if (response.statusCode != HttpStatus.ok) return;
+      final raw = await response.transform(utf8.decoder).join();
+      if (raw.length > 200000) return;
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map || decoded['ads'] is! List) return;
+      final slides = <_PromoSlide>[];
+      for (final item in (decoded['ads'] as List).take(12)) {
+        if (item is! Map) continue;
+        final imageUrl = Uri.tryParse(item['image_url']?.toString() ?? '');
+        if (imageUrl == null || imageUrl.scheme != 'https' ||
+            imageUrl.host != 'admin98.ir') continue;
+        final heading = item['title']?.toString() ?? '';
+        if (heading.isEmpty || heading.length > 100) continue;
+        slides.add(_PromoSlide(
+          heading: heading,
+          accent: (item['subtitle'] ?? '').toString(),
+          description: (item['description'] ?? '').toString(),
+          features: item['features'] is List
+              ? (item['features'] as List).take(4).map((e) => e.toString()).toList()
+              : const <String>[],
+          image: 'assets/admindesk_promo_1.svg',
+          networkImage: imageUrl.toString(),
+        ));
+      }
+      if (!mounted || slides.isEmpty) return;
+      setState(() { _activeSlides = slides; _page = 0; });
+      if (_controller.hasClients) _controller.jumpToPage(0);
+    } catch (_) {
+      // Offline or invalid feeds retain bundled local promotional slides.
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  Widget _slideArtwork(_PromoSlide slide, double height) {
+    final remote = slide.networkImage;
+    if (remote != null) {
+      return Image.network(remote, height: height, fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => SvgPicture.asset(slide.image,
+              height: height, fit: BoxFit.contain));
+    }
+    return SvgPicture.asset(slide.image, height: height, fit: BoxFit.contain);
+  }
+
   void _goTo(int target) {
     if (!mounted || !_controller.hasClients) return;
     _controller.animateToPage(
-      (target + _slides.length) % _slides.length,
+      (target + _activeSlides.length) % _activeSlides.length,
       duration: const Duration(milliseconds: 370),
       curve: Curves.easeInOutCubic,
     );
@@ -153,11 +213,7 @@ class _PromoCarouselState extends State<PromoCarousel>
                   ...slide.features.map((feature) =>
                       _feature(context, feature, large: true)),
                   const SizedBox(height: AdminDeskMetrics.spaceSm),
-                  SvgPicture.asset(
-                    slide.image,
-                    height: 165,
-                    fit: BoxFit.contain,
-                  ),
+                  _slideArtwork(slide, 165),
                 ],
               ),
             ),
@@ -198,10 +254,10 @@ class _PromoCarouselState extends State<PromoCarousel>
             Expanded(
               child: PageView.builder(
                 controller: _controller,
-                itemCount: _slides.length,
+                itemCount: _activeSlides.length,
                 onPageChanged: (page) => setState(() => _page = page),
                 itemBuilder: (context, index) =>
-                    _slide(context, _slides[index], index),
+                    _slide(context, _activeSlides[index], index),
               ),
             ),
             _footer(context),
@@ -235,7 +291,7 @@ class _PromoCarouselState extends State<PromoCarousel>
                     borderRadius: AdminDeskMetrics.controlRadius,
                   ),
                   child: Text(
-                    '${index + 1} / ${_slides.length}',
+                    '${index + 1} / ${_activeSlides.length}',
                     textDirection: TextDirection.ltr,
                     style: AdminDeskTypography.caption(c).copyWith(
                       fontWeight: AdminDeskTypography.bold,
@@ -269,12 +325,7 @@ class _PromoCarouselState extends State<PromoCarousel>
             const SizedBox(height: AdminDeskMetrics.spaceMd),
             ...slide.features.map((feature) => _feature(context, feature)),
             const SizedBox(height: AdminDeskMetrics.spaceSm),
-            SvgPicture.asset(
-              slide.image,
-              height: constraints.maxHeight < 430 ? 135 : 210,
-              fit: BoxFit.contain,
-              semanticsLabel: 'تصویر معرفی خدمات AdminDesk',
-            ),
+            _slideArtwork(slide, constraints.maxHeight < 430 ? 135 : 210),
           ],
         ),
       ),
@@ -330,7 +381,7 @@ class _PromoCarouselState extends State<PromoCarousel>
                   onPressed: () => _goTo(_page - 1),
                 ),
                 Row(
-                  children: List.generate(_slides.length, (index) =>
+                  children: List.generate(_activeSlides.length, (index) =>
                     Semantics(
                       label: 'نمایش اسلاید ${index + 1}',
                       button: true,
@@ -366,7 +417,7 @@ class _PromoCarouselState extends State<PromoCarousel>
             width: double.infinity,
             height: 43,
             child: ElevatedButton(
-              onPressed: () => _showDetails(_slides[_page]),
+              onPressed: () => _showDetails(_activeSlides[_page]),
               style: ElevatedButton.styleFrom(
                 backgroundColor: c.primary,
                 foregroundColor: c.onPrimary,
