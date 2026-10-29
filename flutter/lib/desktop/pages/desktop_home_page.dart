@@ -60,22 +60,14 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Widget build(BuildContext context) {
     super.build(context);
     final isIncomingOnly = bind.isIncomingOnly();
-    // Keep the compact incoming-only mode; use the responsive Windows dashboard
-    // from 900 px upwards. Narrower windows retain the established layout.
+    // Keep the AdminDesk dashboard mounted across minimize/restore and
+    // temporary width changes. Preserve the compact incoming-only mode.
     // Neither the Rust FFI nor session/window controllers are replaced.
     return LayoutBuilder(builder: (context, constraints) {
-      if (isWindows && !isIncomingOnly && constraints.maxWidth >= 900) {
+      if (isWindows && !isIncomingOnly) {
         return _buildBlock(
-          child: AdminDeskDashboard(
-            notices: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 110),
-              child: SingleChildScrollView(
-                child: Column(children: [
-                  buildPresetPasswordWarning(),
-                  Obx(() => buildHelpCards(stateGlobal.updateUrl.value)),
-                ]),
-              ),
-            ),
+          child: const AdminDeskDashboard(
+            notices: SizedBox.shrink(),
           ),
         );
       }
@@ -114,24 +106,6 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       buildTip(context),
       if (!isOutgoingOnly) buildIDBoard(context),
       if (!isOutgoingOnly) buildPasswordBoard(context),
-      FutureBuilder<Widget>(
-        future: Future.value(
-            Obx(() => buildHelpCards(stateGlobal.updateUrl.value))),
-        builder: (_, data) {
-          if (data.hasData) {
-            if (isIncomingOnly) {
-              if (isInHomePage()) {
-                Future.delayed(Duration(milliseconds: 300), () {
-                  _updateWindowSize();
-                });
-              }
-            }
-            return data.data!;
-          } else {
-            return const Offstage();
-          }
-        },
-      ),
     ];
     if (isIncomingOnly) {
       children.addAll([
