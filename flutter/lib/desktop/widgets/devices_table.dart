@@ -36,12 +36,14 @@ class DevicesTableTabs extends StatelessWidget {
     required this.availableTabs,
     required this.onTabSelected,
     required this.onRefresh,
+    this.showNavigation = true,
   }) : super(key: key);
 
   final int currentTab;
   final List<int> availableTabs;
   final ValueChanged<int> onTabSelected;
   final VoidCallback onRefresh;
+  final bool showNavigation;
 
   static const _tabs = <({int index, String title, IconData icon})>[
     (index: 4, title: 'دستگاه‌های من', icon: Icons.desktop_windows_outlined),
@@ -78,7 +80,9 @@ class DevicesTableTabs extends StatelessWidget {
         decoration: AdminDeskMetrics.cardDecoration(c),
         child: Directionality(
           textDirection: TextDirection.rtl,
-          child: compact
+          child: !showNavigation
+              ? Row(children: [Expanded(child: search), _refresh(c)])
+              : compact
               ? Column(
                   children: [
                     SingleChildScrollView(
