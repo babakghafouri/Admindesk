@@ -40,6 +40,9 @@ class _AddressBookState extends State<AddressBook> {
   @override
   Widget build(BuildContext context) => Obx(() {
         if (!gFFI.userModel.isLogin) {
+          // The Windows AdminDesk dashboard keeps the account prompt out of
+          // the device workspace; account sign-in remains available elsewhere.
+          if (isWindows) return const SizedBox.shrink();
           return Center(
               child: ElevatedButton(
                   onPressed: loginDialog, child: Text(translate("Login"))));
