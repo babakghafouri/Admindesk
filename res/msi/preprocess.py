@@ -243,7 +243,11 @@ def put_app_exe_on_media2():
 
 def gen_pre_vars(args, dist_dir):
     def func(lines, index_start):
-        upgrade_code = uuid.uuid5(uuid.NAMESPACE_OID, app_name + ".exe")
+        # Keep the legacy RustDesk UpgradeCode when rebranding the existing
+        # installation as AdminDesk, so Windows Installer can upgrade/replace
+        # the old product instead of leaving a duplicate installation behind.
+        upgrade_identity = "RustDesk.exe" if app_name == "AdminDesk" else app_name + ".exe"
+        upgrade_code = uuid.uuid5(uuid.NAMESPACE_OID, upgrade_identity)
 
         indent = g_indent_unit * 1
         to_insert_lines = [
