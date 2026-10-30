@@ -373,7 +373,7 @@ class _DeviceTableRow extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 
   IconData _deviceIcon(String platform) {
