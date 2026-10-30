@@ -2,7 +2,7 @@ name: Admin Desk Windows Installer Release
 
 on:
   workflow_dispatch:
-  # Create the first preview when this workflow lands on master.
+  # Publish the next Windows preview when this workflow update lands on master.
   push:
     branches:
       - master
@@ -21,7 +21,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: admindesk-windows-release-1.5.1-preview3
+  group: admindesk-windows-release-1.5.1-preview4
   cancel-in-progress: false
 
 jobs:
@@ -32,6 +32,6 @@ jobs:
     with:
       windows-only: true
       upload-artifact: true
-      upload-tag: admindesk-win-v1.5.1-preview.3
+      upload-tag: admindesk-win-v1.5.1-preview.4
       publish-update-metadata: false
     secrets: inherit
