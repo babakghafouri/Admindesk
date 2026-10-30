@@ -11,6 +11,7 @@ on:
       - ".github/workflows/flutter-build.yml"
       - "flutter/lib/**"
       - "src/lang/fa.rs"
+      - "src/common.rs"
       - "res/msi/**"
 
 permissions:
