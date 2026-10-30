@@ -300,37 +300,63 @@ class _PeerCardState extends State<_PeerCard>
           child: ClipRRect(
             borderRadius: BorderRadius.circular(_cardRadius - _borderWidth),
             child: BackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+              filter: ui.ImageFilter.blur(
+                sigmaX: isWindows ? 26 : 18,
+                sigmaY: isWindows ? 26 : 18,
+              ),
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      Theme.of(context).colorScheme.surface.withOpacity(0.66),
-                      Theme.of(context).colorScheme.surface.withOpacity(0.34),
-                      Theme.of(context).colorScheme.primary.withOpacity(0.08),
-                    ],
+                    colors: isWindows
+                        ? [
+                            // Pale ice-blue glass: presentation only, Windows Grid cards.
+                            const Color(0xFFF7FCFF).withOpacity(0.82),
+                            const Color(0xFFE4F2FF).withOpacity(0.64),
+                            const Color(0xFFCCE7FF).withOpacity(0.52),
+                          ]
+                        : [
+                            Theme.of(context).colorScheme.surface.withOpacity(0.66),
+                            Theme.of(context).colorScheme.surface.withOpacity(0.34),
+                            Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                          ],
                   ),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.72),
+                    color: isWindows
+                        ? const Color(0xFFA8D6FF).withOpacity(0.82)
+                        : Colors.white.withOpacity(0.72),
                     width: 1.15,
                   ),
                   borderRadius: BorderRadius.circular(_cardRadius - _borderWidth),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context).colorScheme.shadow.withOpacity(0.10),
-                      blurRadius: 18,
-                      spreadRadius: 1,
-                      offset: const Offset(0, 7),
-                    ),
-                    BoxShadow(
-                      color: Colors.white.withOpacity(0.48),
-                      blurRadius: 1,
-                      spreadRadius: 0,
-                      offset: const Offset(-1, -1),
-                    ),
-                  ],
+                  boxShadow: isWindows
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF4E9ADB).withOpacity(0.14),
+                            blurRadius: 24,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 7),
+                          ),
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.88),
+                            blurRadius: 3,
+                            offset: const Offset(-1, -2),
+                          ),
+                        ]
+                      : [
+                          BoxShadow(
+                            color: Theme.of(context).colorScheme.shadow.withOpacity(0.10),
+                            blurRadius: 18,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 7),
+                          ),
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.48),
+                            blurRadius: 1,
+                            spreadRadius: 0,
+                            offset: const Offset(-1, -1),
+                          ),
+                        ],
                 ),
                 child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -338,7 +364,9 @@ class _PeerCardState extends State<_PeerCard>
               children: [
                 Expanded(
                   child: Container(
-                    color: Colors.white.withOpacity(0.10),
+                    color: isWindows
+                        ? Colors.white.withOpacity(0.16)
+                        : Colors.white.withOpacity(0.10),
                     child: Row(
                       children: [
                         Expanded(
@@ -394,7 +422,9 @@ class _PeerCardState extends State<_PeerCard>
                   ),
                 ),
                 Container(
-                  color: Theme.of(context).colorScheme.surface.withOpacity(0.20),
+                  color: isWindows
+                      ? const Color(0xFFDEEEFF).withOpacity(0.30)
+                      : Theme.of(context).colorScheme.surface.withOpacity(0.20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
