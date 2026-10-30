@@ -311,10 +311,10 @@ class _PeerCardState extends State<_PeerCard>
                     end: Alignment.bottomRight,
                     colors: isWindows
                         ? [
-                            // Pale ice-blue glass: presentation only, Windows Grid cards.
-                            const Color(0xFFF7FCFF).withOpacity(0.82),
-                            const Color(0xFFE4F2FF).withOpacity(0.64),
-                            const Color(0xFFCCE7FF).withOpacity(0.52),
+                            // Clear, neutral glass over the AdminDesk canvas.
+                            Colors.white.withOpacity(0.30),
+                            Colors.white.withOpacity(0.16),
+                            Colors.white.withOpacity(0.24),
                           ]
                         : [
                             Theme.of(context).colorScheme.surface.withOpacity(0.66),
@@ -324,7 +324,7 @@ class _PeerCardState extends State<_PeerCard>
                   ),
                   border: Border.all(
                     color: isWindows
-                        ? const Color(0xFFA8D6FF).withOpacity(0.82)
+                        ? Colors.white.withOpacity(0.78)
                         : Colors.white.withOpacity(0.72),
                     width: 1.15,
                   ),
@@ -332,14 +332,14 @@ class _PeerCardState extends State<_PeerCard>
                   boxShadow: isWindows
                       ? [
                           BoxShadow(
-                            color: const Color(0xFF4E9ADB).withOpacity(0.14),
-                            blurRadius: 24,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 7),
+                            color: const Color(0xFF607D9A).withOpacity(0.08),
+                            blurRadius: 18,
+                            spreadRadius: 0,
+                            offset: const Offset(0, 5),
                           ),
                           BoxShadow(
-                            color: Colors.white.withOpacity(0.88),
-                            blurRadius: 3,
+                            color: Colors.white.withOpacity(0.72),
+                            blurRadius: 2,
                             offset: const Offset(-1, -2),
                           ),
                         ]
@@ -365,7 +365,7 @@ class _PeerCardState extends State<_PeerCard>
                 Expanded(
                   child: Container(
                     color: isWindows
-                        ? Colors.white.withOpacity(0.16)
+                        ? Colors.white.withOpacity(0.10)
                         : Colors.white.withOpacity(0.10),
                     child: Row(
                       children: [
@@ -423,7 +423,7 @@ class _PeerCardState extends State<_PeerCard>
                 ),
                 Container(
                   color: isWindows
-                      ? const Color(0xFFDEEEFF).withOpacity(0.30)
+                      ? Colors.white.withOpacity(0.14)
                       : Theme.of(context).colorScheme.surface.withOpacity(0.20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
