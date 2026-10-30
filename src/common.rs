@@ -139,6 +139,11 @@ pub fn global_init() -> bool {
             ADMINDESK_HOST.to_owned(),
         );
         overrides.insert("relay-server".to_owned(), format!("{}:21117", ADMINDESK_HOST));
+        // Prevent a previously saved api-server option from sending account/API traffic upstream.
+        overrides.insert(
+            "api-server".to_owned(),
+            format!("http://{}:{}", ADMINDESK_HOST, config::RENDEZVOUS_PORT - 2),
+        );
         overrides.insert("key".to_owned(), ADMINDESK_PUBLIC_KEY.to_owned());
     }
     #[cfg(all(target_os = "linux", feature = "drm"))]
