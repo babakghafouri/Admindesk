@@ -12,6 +12,8 @@ on:
       - "flutter/lib/**"
       - "src/lang/fa.rs"
       - "src/common.rs"
+      - "src/client.rs"
+      - "res/admindesk/**"
       - "res/msi/**"
 
 permissions:
