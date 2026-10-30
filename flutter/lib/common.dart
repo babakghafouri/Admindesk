@@ -2975,10 +2975,10 @@ class ServerConfig {
   // first user-configured options are written to disk.
   ServerConfig.fromOptions(Map<String, dynamic> options)
       : idServer = (isWindows || isAndroid)
-            ? 'Desk.admin98.ir'
+            ? 'desk.admin98.ir'
             : (options['custom-rendezvous-server'] ?? ""),
         relayServer = (isWindows || isAndroid)
-            ? 'Desk.admin98.ir:21117'
+            ? 'desk.admin98.ir:21117'
             : (options['relay-server'] ?? ""),
         apiServer = options['api-server'] ?? "",
         key = (isWindows || isAndroid)
