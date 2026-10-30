@@ -1,6 +1,9 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hbb/common.dart';
+import 'package:flutter_hbb/consts.dart';
+import 'package:get/get.dart';
 import 'package:flutter_hbb/common/widgets/peer_card.dart';
 import 'package:flutter_hbb/common/widgets/peers_view.dart';
 import 'package:flutter_hbb/models/peer_model.dart';
@@ -83,7 +86,24 @@ class DevicesTableTabs extends StatelessWidget {
         child: Directionality(
           textDirection: TextDirection.rtl,
           child: !showNavigation
-              ? Row(children: [Expanded(child: search), _refresh(c)])
+              ? (constraints.maxWidth < 560
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(children: [Expanded(child: search), _refresh(c)]),
+                        const SizedBox(height: AdminDeskMetrics.spaceXs),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: _viewModeControl(c),
+                        ),
+                      ],
+                    )
+                  : Row(children: [
+                      Expanded(child: search),
+                      const SizedBox(width: AdminDeskMetrics.spaceXs),
+                      _viewModeControl(c),
+                      _refresh(c),
+                    ]))
               : compact
               ? Column(
                   children: [
@@ -139,6 +159,85 @@ class DevicesTableTabs extends StatelessWidget {
                   ),
                 ),
               ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _viewModeControl(AdminDeskColors c) {
+    return Obx(() => Container(
+          height: 36,
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: c.inputBackground,
+            border: Border.all(color: c.border),
+            borderRadius: AdminDeskMetrics.controlRadius,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _viewModeButton(
+                c,
+                mode: PeerUiType.grid,
+                icon: Icons.grid_view_rounded,
+                label: 'کارتی',
+              ),
+              _viewModeButton(
+                c,
+                mode: PeerUiType.list,
+                icon: Icons.view_list_rounded,
+                label: 'لیستی',
+              ),
+            ],
+          ),
+        ));
+  }
+
+  Widget _viewModeButton(
+    AdminDeskColors c, {
+    required PeerUiType mode,
+    required IconData icon,
+    required String label,
+  }) {
+    final selected = peerCardUiType.value == mode;
+    return Tooltip(
+      message: 'نمایش $label',
+      child: Material(
+        color: selected ? c.selectedBackground : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () async {
+            if (peerCardUiType.value == mode) return;
+            peerCardUiType.value = mode;
+            await bind.setLocalFlutterOption(
+              k: kOptionPeerCardUiType,
+              v: mode.index.toString(),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: selected ? c.primary : c.textSecondary,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  label,
+                  style: AdminDeskTypography.caption(c).copyWith(
+                    color: selected ? c.primary : c.textPrimary,
+                    fontWeight: selected
+                        ? AdminDeskTypography.bold
+                        : AdminDeskTypography.medium,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
