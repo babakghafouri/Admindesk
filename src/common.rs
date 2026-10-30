@@ -127,10 +127,18 @@ pub fn global_init() -> bool {
     // Neither value is stored in this public source repository.
     #[cfg(any(target_os = "windows", target_os = "android"))]
     {
+        // AdminDesk uses its own rendezvous server. Keep safe compile-time
+        // fallbacks so a missing GitHub Actions secret can never silently ship
+        // a build that points at the public RustDesk infrastructure.
+        const ADMINDESK_HOST: &str = "desk.admin98.ir";
+        const ADMINDESK_PUBLIC_KEY: &str =
+            "lcUnP6wMPG9948IHDqLyKVoSMSq85xqUnlpNtuRZexM=";
         let host = option_env!("ADMINDESK_ID_SERVER")
-            .unwrap_or("desk.admin98.ir")
+            .unwrap_or(ADMINDESK_HOST)
             .trim();
-        let key = option_env!("ADMINDESK_SERVER_KEY").unwrap_or("").trim();
+        let key = option_env!("ADMINDESK_SERVER_KEY")
+            .unwrap_or(ADMINDESK_PUBLIC_KEY)
+            .trim();
         if !host.is_empty() && !key.is_empty() {
             let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
             defaults.insert("custom-rendezvous-server".to_owned(), host.to_owned());
