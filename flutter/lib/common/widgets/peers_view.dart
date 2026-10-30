@@ -308,19 +308,24 @@ class _PeersViewState extends State<_PeersView>
             // Keep this loader, search, sort and online polling machinery
             // unchanged. Only swap its row presentation in the Windows UI.
             if (DevicesTableScope.enabledOf(context)) {
-              return DevicesTable(
-                peers: peers,
-                peerTab: widget.peerTabIndex,
-                cardKeyPrefix: widget.peers.name,
-                onPeerVisible: (peerId, visible) {
-                  if (visible) {
-                    _curPeers.add(peerId);
-                  } else {
-                    _curPeers.remove(peerId);
-                  }
-                  _lastChangeTime = DateTime.now();
-                },
-              );
+              // The Windows dashboard can switch between the existing glass
+              // peer cards and the native data-backed list without reloading
+              // or replacing the peer model.
+              return Obx(() => peerCardUiType.value == PeerUiType.list
+                  ? DevicesTable(
+                      peers: peers,
+                      peerTab: widget.peerTabIndex,
+                      cardKeyPrefix: widget.peers.name,
+                      onPeerVisible: (peerId, visible) {
+                        if (visible) {
+                          _curPeers.add(peerId);
+                        } else {
+                          _curPeers.remove(peerId);
+                        }
+                        _lastChangeTime = DateTime.now();
+                      },
+                    )
+                  : child);
             }
             return child;
           } else {

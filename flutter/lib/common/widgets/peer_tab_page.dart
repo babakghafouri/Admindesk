@@ -84,15 +84,20 @@ class _PeerTabPageState extends State<PeerTabPage>
 
   void _loadLocalOptions() {
     final uiType = bind.getLocalFlutterOption(k: kOptionPeerCardUiType);
-    if (uiType != '') {
-      peerCardUiType.value = int.parse(uiType) == 0
+    final savedUiType = int.tryParse(uiType);
+    if (widget.dashboardLayout) {
+      // Windows dashboard supports two layouts: cards by default, or list.
+      // Preserve a saved list choice; map the legacy tile choice to cards.
+      peerCardUiType.value = savedUiType == PeerUiType.list.index
+          ? PeerUiType.list
+          : PeerUiType.grid;
+    } else if (savedUiType != null) {
+      // Keep the original three view modes in non-dashboard peer pages.
+      peerCardUiType.value = savedUiType == 0
           ? PeerUiType.grid
-          : int.parse(uiType) == 1
+          : savedUiType == 1
               ? PeerUiType.tile
               : PeerUiType.list;
-    } else if (widget.dashboardLayout) {
-      // Only choose a default for new users; never overwrite saved view mode.
-      peerCardUiType.value = PeerUiType.list;
     }
     hideAbTagsPanel.value =
         bind.mainGetLocalOption(key: kOptionHideAbTagsPanel) == 'Y';
