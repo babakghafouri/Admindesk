@@ -1,4 +1,6 @@
 import 'package:bot_toast/bot_toast.dart';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common/widgets/dialog.dart';
@@ -297,13 +299,46 @@ class _PeerCardState extends State<_PeerCard>
           foregroundDecoration: deco.value,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(_cardRadius - _borderWidth),
-            child: Column(
+            child: BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).colorScheme.surface.withOpacity(0.66),
+                      Theme.of(context).colorScheme.surface.withOpacity(0.34),
+                      Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.72),
+                    width: 1.15,
+                  ),
+                  borderRadius: BorderRadius.circular(_cardRadius - _borderWidth),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).colorScheme.shadow.withOpacity(0.10),
+                      blurRadius: 18,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 7),
+                    ),
+                    BoxShadow(
+                      color: Colors.white.withOpacity(0.48),
+                      blurRadius: 1,
+                      spreadRadius: 0,
+                      offset: const Offset(-1, -1),
+                    ),
+                  ],
+                ),
+                child: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Expanded(
                   child: Container(
-                    color: str2color('${peer.id}${peer.platform}', 0x7f),
+                    color: Colors.white.withOpacity(0.10),
                     child: Row(
                       children: [
                         Expanded(
@@ -324,7 +359,7 @@ class _PeerCardState extends State<_PeerCard>
                                       child: Text(
                                         name,
                                         style: const TextStyle(
-                                            color: Colors.white70,
+                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.92),
                                             fontSize: 12),
                                         textAlign: TextAlign.center,
                                         overflow: TextOverflow.ellipsis,
@@ -343,7 +378,7 @@ class _PeerCardState extends State<_PeerCard>
                                       child: Text(
                                         peer.note,
                                         style: const TextStyle(
-                                            color: Colors.white38,
+                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.62),
                                             fontSize: 10),
                                         textAlign: TextAlign.center,
                                         overflow: TextOverflow.ellipsis,
@@ -359,7 +394,7 @@ class _PeerCardState extends State<_PeerCard>
                   ),
                 ),
                 Container(
-                  color: Theme.of(context).colorScheme.background,
+                  color: Theme.of(context).colorScheme.surface.withOpacity(0.20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -378,6 +413,8 @@ class _PeerCardState extends State<_PeerCard>
                   ).paddingSymmetric(horizontal: 12.0),
                 )
               ],
+                ),
+              ),
             ),
           ),
         ),
