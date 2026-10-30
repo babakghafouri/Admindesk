@@ -127,7 +127,9 @@ pub fn global_init() -> bool {
     // Neither value is stored in this public source repository.
     #[cfg(any(target_os = "windows", target_os = "android"))]
     {
-        let host = option_env!("ADMINDESK_ID_SERVER").unwrap_or("").trim();
+        let host = option_env!("ADMINDESK_ID_SERVER")
+            .unwrap_or("desk.admin98.ir")
+            .trim();
         let key = option_env!("ADMINDESK_SERVER_KEY").unwrap_or("").trim();
         if !host.is_empty() && !key.is_empty() {
             let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
