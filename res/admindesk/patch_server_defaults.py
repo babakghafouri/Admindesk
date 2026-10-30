@@ -9,7 +9,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "libs" / "hbb_common" / "src" / "config.rs"
-HOST = "desk.admin98.ir"
+HOST = "Desk.admin98.ir"
 PUBLIC_KEY = "lcUnP6wMPG9948IHDqLyKVoSMSq85xqUnlpNtuRZexM="
 
 if not SOURCE.is_file():
