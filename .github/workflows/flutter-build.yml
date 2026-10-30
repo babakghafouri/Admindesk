@@ -334,6 +334,9 @@ jobs:
         shell: bash
         run: echo "SODIUM_LIB_DIR=$VCPKG_ROOT/installed/${{ matrix.job.vcpkg-triplet }}/lib" >> "$GITHUB_ENV"
 
+      - name: Pin AdminDesk Windows rendezvous defaults
+        run: python3 res/admindesk/patch_server_defaults.py
+
       - name: Build rustdesk
         env:
           # Set both values under GitHub Settings > Secrets and variables > Actions.
