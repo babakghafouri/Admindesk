@@ -242,85 +242,42 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
     final ms = _latencyMs;
     final Color signalColor;
     final String quality;
-    final int bars;
     if (ms == null) {
-      signalColor = colors.textSecondary;
+      signalColor = const Color(0xFFE34D4D);
       quality = 'قطع ارتباط';
-      bars = 0;
     } else if (ms < 50) {
       signalColor = const Color(0xFF16A765);
       quality = 'عالی';
-      bars = 4;
     } else if (ms < 100) {
       signalColor = const Color(0xFF79BF45);
       quality = 'خوب';
-      bars = 3;
     } else if (ms < 200) {
       signalColor = const Color(0xFFE6B91E);
       quality = 'متوسط';
-      bars = 2;
     } else if (ms <= 400) {
       signalColor = const Color(0xFFEF8B25);
       quality = 'ضعیف';
-      bars = 1;
     } else {
       signalColor = const Color(0xFFE34D4D);
       quality = 'بسیار ضعیف';
-      bars = 1;
     }
+
+    // One compact icon only; its color communicates server reachability
+    // and TCP handshake latency. Tap to run an immediate check.
     return Tooltip(
       message: ms == null
           ? 'سرور $_host در دسترس نیست'
           : 'سرور $_host\nکیفیت: $quality\nزمان اتصال TCP: $ms ms',
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: _check,
-        child: Container(
-          height: 30,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: colors.selectedBackground.withOpacity(0.72),
-            border: Border.all(color: colors.border),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.dns_outlined, size: 15, color: signalColor),
-              const SizedBox(width: 5),
-              SizedBox(
-                width: 24,
-                height: 20,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: List.generate(4, (index) {
-                    final active = index < bars;
-                    return Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 1),
-                        height: 5.0 + index * 3.5,
-                        decoration: BoxDecoration(
-                          color: active ? signalColor : colors.textSecondary.withOpacity(0.22),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                ms == null ? '—' : '$ms ms',
-                style: AdminDeskTypography.caption(colors).copyWith(
-                  fontSize: 9,
-                  color: signalColor,
-                  fontWeight: AdminDeskTypography.semibold,
-                ),
-              ),
-            ],
-          ),
+      child: IconButton(
+        tooltip: 'وضعیت اتصال به سرور',
+        constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+        padding: EdgeInsets.zero,
+        onPressed: _check,
+        icon: Icon(
+          Icons.wifi_tethering_rounded,
+          size: 21,
+          color: signalColor,
         ),
       ),
     );
-  }
-}
+  }}
