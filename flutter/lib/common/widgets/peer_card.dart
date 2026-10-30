@@ -358,7 +358,7 @@ class _PeerCardState extends State<_PeerCard>
                                       waitDuration: const Duration(seconds: 1),
                                       child: Text(
                                         name,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.92),
                                             fontSize: 12),
                                         textAlign: TextAlign.center,
@@ -377,7 +377,7 @@ class _PeerCardState extends State<_PeerCard>
                                       waitDuration: const Duration(seconds: 1),
                                       child: Text(
                                         peer.note,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.62),
                                             fontSize: 10),
                                         textAlign: TextAlign.center,
