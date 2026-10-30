@@ -2971,11 +2971,19 @@ class ServerConfig {
   }
 
   /// from local options
+  // Display the built-in AdminDesk server on Windows/Android even before the
+  // first user-configured options are written to disk.
   ServerConfig.fromOptions(Map<String, dynamic> options)
-      : idServer = options['custom-rendezvous-server'] ?? "",
-        relayServer = options['relay-server'] ?? "",
+      : idServer = (isWindows || isAndroid)
+            ? 'Desk.admin98.ir'
+            : (options['custom-rendezvous-server'] ?? ""),
+        relayServer = (isWindows || isAndroid)
+            ? 'Desk.admin98.ir:21117'
+            : (options['relay-server'] ?? ""),
         apiServer = options['api-server'] ?? "",
-        key = options['key'] ?? "";
+        key = (isWindows || isAndroid)
+            ? 'lcUnP6wMPG9948IHDqLyKVoSMSq85xqUnlpNtuRZexM='
+            : (options['key'] ?? "");
 }
 
 Widget dialogButton(String text,
