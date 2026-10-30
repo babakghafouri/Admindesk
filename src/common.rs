@@ -128,7 +128,7 @@ pub fn global_init() -> bool {
         // AdminDesk uses its own rendezvous server. Keep safe compile-time
         // fallbacks so a missing GitHub Actions secret can never silently ship
         // a build that points at the public RustDesk infrastructure.
-        const ADMINDESK_HOST: &str = "Desk.admin98.ir";
+        const ADMINDESK_HOST: &str = "desk.admin98.ir";
         const ADMINDESK_PUBLIC_KEY: &str =
             "lcUnP6wMPG9948IHDqLyKVoSMSq85xqUnlpNtuRZexM=";
         // Lock the rendezvous configuration on both supported platforms so
@@ -1281,7 +1281,7 @@ fn get_api_server_(api: String, custom: String) -> String {
             return format!("http://{}", s);
         }
     }
-    "http://Desk.admin98.ir:21114".to_owned()
+    "http://desk.admin98.ir:21114".to_owned()
 }
 
 #[inline]
