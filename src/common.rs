@@ -121,16 +121,14 @@ impl Drop for SimpleCallOnReturn {
 }
 
 pub fn global_init() -> bool {
-    // Branded Windows/Android builds may supply a custom ID server and its
-    // matching public server key through build-time environment variables.
-    // Defaults do not overwrite settings already chosen by the user.
-    // Neither value is stored in this public source repository.
+    // Branded Windows/Android builds use the fixed AdminDesk rendezvous server
+    // and matching public key even if older user options are present.
     #[cfg(any(target_os = "windows", target_os = "android"))]
     {
         // AdminDesk uses its own rendezvous server. Keep safe compile-time
         // fallbacks so a missing GitHub Actions secret can never silently ship
         // a build that points at the public RustDesk infrastructure.
-        const ADMINDESK_HOST: &str = "desk.admin98.ir";
+        const ADMINDESK_HOST: &str = "Desk.admin98.ir";
         const ADMINDESK_PUBLIC_KEY: &str =
             "lcUnP6wMPG9948IHDqLyKVoSMSq85xqUnlpNtuRZexM=";
         // Lock the rendezvous configuration on both supported platforms so
