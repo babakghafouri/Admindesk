@@ -35,5 +35,9 @@ for name, port in (
     if not match or int(match.group(1)) != port:
         raise SystemExit(f"Unexpected {name}; refusing to build with unknown server ports")
 
+# Never leave the original public RustDesk rendezvous hostname in the built core.
+if "rs-ny.rustdesk.com" in text:
+    raise SystemExit("Public RustDesk rendezvous hostname remains after patching")
+
 SOURCE.write_text(text, encoding="utf-8")
 print("Pinned Windows rendezvous host and matching public key; checked all ports.")
