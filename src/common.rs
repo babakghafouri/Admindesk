@@ -133,16 +133,32 @@ pub fn global_init() -> bool {
         const ADMINDESK_HOST: &str = "desk.admin98.ir";
         const ADMINDESK_PUBLIC_KEY: &str =
             "lcUnP6wMPG9948IHDqLyKVoSMSq85xqUnlpNtuRZexM=";
-        let host = option_env!("ADMINDESK_ID_SERVER")
-            .unwrap_or(ADMINDESK_HOST)
-            .trim();
-        let key = option_env!("ADMINDESK_SERVER_KEY")
-            .unwrap_or(ADMINDESK_PUBLIC_KEY)
-            .trim();
-        if !host.is_empty() && !key.is_empty() {
-            let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
-            defaults.insert("custom-rendezvous-server".to_owned(), host.to_owned());
-            defaults.insert("key".to_owned(), key.to_owned());
+        // On Windows, the configured server is fixed. Stored legacy settings
+        // may otherwise override DEFAULT_SETTINGS and silently reconnect to
+        // the public RustDesk servers. Android retains its existing build-time
+        // behavior while Windows is explicitly locked to the AdminDesk host.
+        #[cfg(target_os = "windows")]
+        {
+            let mut overrides = config::OVERWRITE_SETTINGS.write().unwrap();
+            overrides.insert(
+                "custom-rendezvous-server".to_owned(),
+                ADMINDESK_HOST.to_owned(),
+            );
+            overrides.insert("key".to_owned(), ADMINDESK_PUBLIC_KEY.to_owned());
+        }
+        #[cfg(target_os = "android")]
+        {
+            let host = option_env!("ADMINDESK_ID_SERVER")
+                .unwrap_or(ADMINDESK_HOST)
+                .trim();
+            let key = option_env!("ADMINDESK_SERVER_KEY")
+                .unwrap_or(ADMINDESK_PUBLIC_KEY)
+                .trim();
+            if !host.is_empty() && !key.is_empty() {
+                let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
+                defaults.insert("custom-rendezvous-server".to_owned(), host.to_owned());
+                defaults.insert("key".to_owned(), key.to_owned());
+            }
         }
     }
     #[cfg(all(target_os = "linux", feature = "drm"))]
