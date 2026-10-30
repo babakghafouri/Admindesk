@@ -9,6 +9,7 @@ on:
     paths:
       - ".github/workflows/admindesk-windows-release.yml"
       - ".github/workflows/flutter-build.yml"
+      - ".github/workflows/third-party-RustDeskTempTopMostWindow.yml"
       - "flutter/lib/**"
       - "src/lang/fa.rs"
       - "src/common.rs"
