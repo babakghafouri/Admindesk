@@ -12,7 +12,7 @@ HBB_SRC = ROOT / "libs" / "hbb_common" / "src"
 CONFIG_SOURCE = HBB_SRC / "config.rs"
 LIB_SOURCE = HBB_SRC / "lib.rs"
 
-HOST = "Desk.admin98.ir"
+HOST = "desk.admin98.ir"
 PUBLIC_KEY = "lcUnP6wMPG9948IHDqLyKVoSMSq85xqUnlpNtuRZexM="
 VERSION_CHECK_URL = f"https://{HOST}/version/latest"
 UPSTREAM_DEFAULT_KEY = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw="
