@@ -54,10 +54,10 @@ Future<void> _ensureFavoritePeerIdsLoaded() async {
 }
 
 Future<void> _storeFavoritePeerIds(List favorites) async {
-  await bind.mainStoreFav(favs: favorites);
-  _favoritePeerIds.assignAll(
-    favorites.map((id) => id.toString()),
-  );
+  final normalizedFavorites =
+      favorites.map<String>((id) => id.toString()).toList();
+  await bind.mainStoreFav(favs: normalizedFavorites);
+  _favoritePeerIds.assignAll(normalizedFavorites);
 }
 
 class _PeerCard extends StatefulWidget {
