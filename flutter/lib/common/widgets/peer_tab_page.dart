@@ -312,6 +312,13 @@ class _PeerTabPageState extends State<PeerTabPage>
     return Expanded(
       child: DevicesTableScope(
         enabled: widget.dashboardLayout && isWindows,
+        onViewModeChanged: (mode) async {
+          peerCardUiType.value = mode;
+          await bind.setLocalFlutterOption(
+            k: kOptionPeerCardUiType,
+            v: mode.index.toString(),
+          );
+        },
         child: child.marginSymmetric(
             vertical: (isDesktop || isWebDesktop) ? 12.0 : 6.0),
       ),
