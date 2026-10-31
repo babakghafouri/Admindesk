@@ -321,170 +321,208 @@ class _PeerCardState extends State<_PeerCard>
       BuildContext context, Peer peer, Rx<BoxDecoration?> deco) {
     hideUsernameOnCard ??=
         bind.mainGetBuildinOption(key: kHideUsernameOnCard) == 'Y';
-    final name = hideUsernameOnCard == true
+    final fallbackName = hideUsernameOnCard == true
         ? peer.hostname
         : '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}';
-    final child = Card(
-      color: Colors.transparent,
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      // to-do: memory leak here, more investigation needed.
-      // Continious rebuilds of `Obx()` will cause memory leak here.
-      // The simple demo does not have this issue.
+    final displayName = peer.alias.isNotEmpty
+        ? peer.alias
+        : (fallbackName.isNotEmpty ? fallbackName : formatID(peer.id));
+    _isFavorite ??= widget.tab == PeerTabIndex.fav;
+    final isFavorite = _isFavorite == true;
+    final tagColors = _frontN(peer.tags, 25)
+        .map((e) => gFFI.abModel.getCurrentAbTagColor(e))
+        .toList();
+
+    return Tooltip(
+      message: peer.tags.isNotEmpty
+          ? '${translate('Tags')}: ${peer.tags.join(', ')}'
+          : '',
       child: Obx(
         () => Container(
           foregroundDecoration: deco.value,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(_cardRadius),
+          ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(_cardRadius - _borderWidth),
+            borderRadius: BorderRadius.circular(_cardRadius - 1),
             child: BackdropFilter(
               filter: ui.ImageFilter.blur(
-                sigmaX: isWindows ? 26 : 18,
-                sigmaY: isWindows ? 26 : 18,
+                sigmaX: isWindows ? 22 : 16,
+                sigmaY: isWindows ? 22 : 16,
               ),
               child: Container(
+                padding: const EdgeInsets.all(13),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: isWindows
                         ? [
-                            // Transparent blue glass, not an opaque blue fill.
-                            const Color(0xFF4CA9F0).withOpacity(0.34),
-                            const Color(0xFF147FDB).withOpacity(0.24),
-                            const Color(0xFF83CBFF).withOpacity(0.30),
+                            const Color(0xFFEAF7FF).withOpacity(0.86),
+                            const Color(0xFFCFEAFF).withOpacity(0.72),
+                            const Color(0xFFF6FBFF).withOpacity(0.84),
                           ]
                         : [
-                            Theme.of(context).colorScheme.surface.withOpacity(0.66),
-                            Theme.of(context).colorScheme.surface.withOpacity(0.34),
-                            Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                            Theme.of(context).colorScheme.surface.withOpacity(0.78),
+                            Theme.of(context).colorScheme.surface.withOpacity(0.58),
+                            Theme.of(context).colorScheme.primary.withOpacity(0.10),
                           ],
                   ),
                   border: Border.all(
                     color: isWindows
-                        ? const Color(0xFFDDF4FF).withOpacity(0.82)
+                        ? const Color(0xFFB9DFF7).withOpacity(0.90)
                         : Colors.white.withOpacity(0.72),
-                    width: 1.15,
+                    width: 1.1,
                   ),
-                  borderRadius: BorderRadius.circular(_cardRadius - _borderWidth),
-                  boxShadow: isWindows
-                      ? [
-                          BoxShadow(
-                            color: const Color(0xFF168BFF).withOpacity(0.16),
-                            blurRadius: 20,
-                            spreadRadius: 0,
-                            offset: const Offset(0, 6),
-                          ),
-                          BoxShadow(
-                            color: Colors.white.withOpacity(0.72),
-                            blurRadius: 2,
-                            offset: const Offset(-1, -2),
-                          ),
-                        ]
-                      : [
-                          BoxShadow(
-                            color: Theme.of(context).colorScheme.shadow.withOpacity(0.10),
-                            blurRadius: 18,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 7),
-                          ),
-                          BoxShadow(
-                            color: Colors.white.withOpacity(0.48),
-                            blurRadius: 1,
-                            spreadRadius: 0,
-                            offset: const Offset(-1, -1),
-                          ),
-                        ],
+                  borderRadius: BorderRadius.circular(_cardRadius - 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF248EDB).withOpacity(0.13),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
+                    ),
+                    BoxShadow(
+                      color: Colors.white.withOpacity(0.70),
+                      blurRadius: 2,
+                      offset: const Offset(-1, -2),
+                    ),
+                  ],
                 ),
                 child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Container(
-                    color: isWindows
-                        ? const Color(0xFF65B9F5).withOpacity(0.20)
-                        : Colors.white.withOpacity(0.10),
-                    child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header: favorite, connection status, platform and menu.
+                    Row(
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                child:
-                                    getPlatformImage(peer.platform, size: 60),
-                              ),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Tooltip(
-                                      message: name,
-                                      waitDuration: const Duration(seconds: 1),
-                                      child: Text(
-                                        name,
-                                        style: TextStyle(
-                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.92),
-                                            fontSize: 12),
-                                        textAlign: TextAlign.center,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (_showNote(peer))
-                                Row(
-                                  children: [
-                                    Expanded(
-                                        child: Tooltip(
-                                      message: peer.note,
-                                      waitDuration: const Duration(seconds: 1),
-                                      child: Text(
-                                        peer.note,
-                                        style: TextStyle(
-                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.62),
-                                            fontSize: 10),
-                                        textAlign: TextAlign.center,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ))
-                                  ],
-                                ),
-                            ],
-                          ).paddingOnly(top: 4.0, left: 4.0, right: 4.0),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(18),
+                          onTap: () => _toggleFavorite(peer),
+                          child: Padding(
+                            padding: const EdgeInsets.all(2),
+                            child: Icon(
+                              isFavorite
+                                  ? Icons.star_rounded
+                                  : Icons.star_outline_rounded,
+                              color: isFavorite
+                                  ? const Color(0xFFE7A900)
+                                  : const Color(0xFF536A80),
+                              size: 22,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 7),
+                        _peerStatusBadge(context, peer.online),
+                        const Spacer(),
+                        getPlatformImage(peer.platform, size: 26),
+                        const SizedBox(width: 6),
+                        SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: checkBoxOrActionMoreLandscape(
+                            peer,
+                            isTile: false,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-                Container(
-                  color: isWindows
-                      ? const Color(0xFF2E8FEA).withOpacity(0.20)
-                      : Theme.of(context).colorScheme.surface.withOpacity(0.20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                          child: Row(children: [
-                        _peerStatusBadge(context, peer.online),
-                        const SizedBox(width: 6),
+                    const SizedBox(height: 9),
+                    // Device title.
+                    Text(
+                      displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: Directionality.of(context),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    // Remote ID is always rendered LTR, independently of the
+                    // Persian application direction.
+                    Row(
+                      children: [
                         Expanded(
-                            child: Text(
-                          peer.alias.isEmpty ? formatID(peer.id) : peer.alias,
-                          textDirection: peer.alias.isEmpty
-                              ? TextDirection.ltr
-                              : Directionality.of(context),
-                          textAlign: peer.alias.isEmpty ? TextAlign.left : null,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleSmall,
-                        )),
-                      ]).paddingSymmetric(vertical: 8)),
-                      checkBoxOrActionMoreLandscape(peer, isTile: false),
-                    ],
-                  ).paddingSymmetric(horizontal: 12.0),
-                )
-              ],
+                          child: Text(
+                            formatID(peer.id),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textDirection: TextDirection.ltr,
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.82),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.25,
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () => _copyPeerId(peer),
+                          child: const Padding(
+                            padding: EdgeInsets.all(5),
+                            child: Icon(
+                              Icons.copy_rounded,
+                              size: 16,
+                              color: Color(0xFF5B7894),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    // Main connect action and two compact device actions.
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 38,
+                            child: ElevatedButton.icon(
+                              onPressed: () => widget.connect(context, peer.id),
+                              icon: const Icon(
+                                Icons.compare_arrows_rounded,
+                                size: 17,
+                              ),
+                              label: Text(translate('Connect')),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF168BFA),
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 7,
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 7),
+                        _glassActionButton(
+                          icon: Icons.desktop_windows_outlined,
+                          tooltip: 'اتصال در پنجره جدید',
+                          onTap: () => _connectInNewWindow(peer),
+                        ),
+                        const SizedBox(width: 7),
+                        _glassActionButton(
+                          icon: Icons.edit_outlined,
+                          tooltip: 'تغییر نام دستگاه',
+                          onTap: () => _renamePeer(peer),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -492,31 +530,104 @@ class _PeerCardState extends State<_PeerCard>
         ),
       ),
     );
+  }
 
-    final colors = _frontN(peer.tags, 25)
-        .map((e) => gFFI.abModel.getCurrentAbTagColor(e))
-        .toList();
+  bool? _isFavorite;
+
+  Widget _glassActionButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+  }) {
     return Tooltip(
-      message: peer.tags.isNotEmpty
-          ? '${translate('Tags')}: ${peer.tags.join(', ')}'
-          : '',
-      child: Stack(children: [
-        child,
-        if (_shouldBuildPasswordIcon(peer))
-          Positioned(
-            top: 4,
-            left: 12,
-            child: Icon(Icons.key, size: 12, color: Colors.white),
-          ),
-        if (colors.isNotEmpty)
-          Positioned(
-            top: 4,
-            right: 12,
-            child: CustomPaint(
-              painter: TagPainter(radius: 4, colors: colors),
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: 39,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.56),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: const Color(0xFF9BCDF0).withOpacity(0.48),
+              ),
             ),
-          )
-      ]),
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              size: 19,
+              color: const Color(0xFF294B68),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _copyPeerId(Peer peer) async {
+    await Clipboard.setData(ClipboardData(text: peer.id));
+    showToast('شناسه دستگاه کپی شد');
+  }
+
+  Future<void> _toggleFavorite(Peer peer) async {
+    final favorites = (await bind.mainGetFav()).toList();
+    if (favorites.contains(peer.id)) {
+      favorites.remove(peer.id);
+      _isFavorite = false;
+    } else {
+      favorites.add(peer.id);
+      _isFavorite = true;
+    }
+    await bind.mainStoreFav(favs: favorites);
+    if (widget.tab == PeerTabIndex.fav) {
+      await bind.mainLoadFavPeers();
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _connectInNewWindow(Peer peer) async {
+    await bind.mainSetPeerOption(
+      id: peer.id,
+      key: kOptionOpenInWindows,
+      value: 'Y',
+    );
+    if (mounted) widget.connect(context, peer.id);
+  }
+
+  Future<void> _renamePeer(Peer peer) async {
+    final oldName = await bind.mainGetPeerOption(id: peer.id, key: 'alias');
+    if (!mounted) return;
+    renameDialog(
+      oldName: oldName,
+      onSubmit: (String newName) async {
+        if (newName == oldName) return;
+        await bind.mainSetPeerAlias(id: peer.id, alias: newName);
+        peer.alias = newName;
+        if (widget.tab == PeerTabIndex.ab) {
+          await gFFI.abModel.changeAlias(id: peer.id, alias: newName);
+        } else {
+          switch (widget.tab) {
+            case PeerTabIndex.recent:
+              await bind.mainLoadRecentPeers();
+              break;
+            case PeerTabIndex.fav:
+              await bind.mainLoadFavPeers();
+              break;
+            case PeerTabIndex.lan:
+              await bind.mainLoadLanPeers();
+              break;
+            case PeerTabIndex.group:
+              break;
+            case PeerTabIndex.ab:
+              break;
+          }
+        }
+        if (mounted) setState(() {});
+      },
     );
   }
 
