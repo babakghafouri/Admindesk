@@ -97,7 +97,7 @@ class DevicesTableTabs extends StatelessWidget {
                         const SizedBox(height: AdminDeskMetrics.spaceXs),
                         Align(
                           alignment: Alignment.centerRight,
-                          child: _viewModeControl(c),
+                          child: _viewModeControl(context, c),
                         ),
                       ],
                     )
@@ -169,7 +169,7 @@ class DevicesTableTabs extends StatelessWidget {
     );
   }
 
-  Widget _viewModeControl(AdminDeskColors c) {
+  Widget _viewModeControl(BuildContext context, AdminDeskColors c) {
     return Obx(() => Container(
           height: 36,
           padding: const EdgeInsets.all(3),
@@ -182,6 +182,7 @@ class DevicesTableTabs extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _viewModeButton(
+                context,
                 c,
                 mode: PeerUiType.grid,
                 icon: Icons.grid_view_rounded,
@@ -199,6 +200,7 @@ class DevicesTableTabs extends StatelessWidget {
   }
 
   Widget _viewModeButton(
+    BuildContext context,
     AdminDeskColors c, {
     required PeerUiType mode,
     required IconData icon,
