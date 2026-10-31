@@ -41,6 +41,7 @@ class DevicesTableTabs extends StatelessWidget {
     required this.availableTabs,
     required this.onTabSelected,
     required this.onRefresh,
+    required this.onViewModeChanged,
     this.showNavigation = true,
   }) : super(key: key);
 
@@ -48,6 +49,7 @@ class DevicesTableTabs extends StatelessWidget {
   final List<int> availableTabs;
   final ValueChanged<int> onTabSelected;
   final VoidCallback onRefresh;
+  final ValueChanged<PeerUiType> onViewModeChanged;
   final bool showNavigation;
 
   static const _tabs = <({int index, String title, IconData icon})>[
@@ -212,10 +214,7 @@ class DevicesTableTabs extends StatelessWidget {
           onTap: () async {
             if (peerCardUiType.value == mode) return;
             peerCardUiType.value = mode;
-            await bind.setLocalFlutterOption(
-              k: kOptionPeerCardUiType,
-              v: mode.index.toString(),
-            );
+            onViewModeChanged(mode);
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
