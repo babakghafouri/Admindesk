@@ -1479,7 +1479,18 @@ fn load_recent_peers(
     let mut peers_next = PeerConfig::batch_peers(vec_id_modified_time_path, from, to);
     // There may be less peers than the batch size.
     // But no need to consider this case, because it is a rare case.
-    let peers = peers_next.0.drain(..).map(|(id, _, p)| peer_to_map(id, p));
+    let peers = peers_next.0.drain(..).map(|(id, modified_time, p)| {
+        let mut peer = peer_to_map(id, p);
+        // The peer config file's modification time is also the timestamp used
+        // to order the native Recent sessions list.
+        let last_connected = modified_time
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+            .to_string();
+        peer.insert("last_connected", last_connected);
+        peer
+    });
     all_peers.extend(peers);
     peers_next.1
 }

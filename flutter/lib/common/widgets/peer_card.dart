@@ -129,6 +129,39 @@ class _PeerCardState extends State<_PeerCard>
     );
   }
 
+  Widget _peerStatusBadge(BuildContext context, bool online) {
+    final color = online
+        ? const Color(0xFF159B57)
+        : const Color(0xFF75869A);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.22)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            online ? 'آنلاین' : 'آفلاین',
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   bool _showNote(Peer peer) {
     return peerTabShowNote(widget.tab) && peer.note.isNotEmpty;
   }
@@ -185,10 +218,14 @@ class _PeerCardState extends State<_PeerCard>
                   child: Column(
                     children: [
                       Row(children: [
-                        getOnline(isPortrait ? 4 : 8, peer.online),
+                        _peerStatusBadge(context, peer.online),
                         Expanded(
                             child: Text(
                           peer.alias.isEmpty ? formatID(peer.id) : peer.alias,
+                          textDirection: peer.alias.isEmpty
+                              ? TextDirection.ltr
+                              : Directionality.of(context),
+                          textAlign: peer.alias.isEmpty ? TextAlign.left : null,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleSmall,
                         )),
@@ -311,10 +348,10 @@ class _PeerCardState extends State<_PeerCard>
                     end: Alignment.bottomRight,
                     colors: isWindows
                         ? [
-                            // Clear, neutral glass over the AdminDesk canvas.
-                            Colors.white.withOpacity(0.30),
-                            Colors.white.withOpacity(0.16),
-                            Colors.white.withOpacity(0.24),
+                            // Transparent blue glass, not an opaque blue fill.
+                            const Color(0xFF4CA9F0).withOpacity(0.34),
+                            const Color(0xFF147FDB).withOpacity(0.24),
+                            const Color(0xFF83CBFF).withOpacity(0.30),
                           ]
                         : [
                             Theme.of(context).colorScheme.surface.withOpacity(0.66),
@@ -324,7 +361,7 @@ class _PeerCardState extends State<_PeerCard>
                   ),
                   border: Border.all(
                     color: isWindows
-                        ? Colors.white.withOpacity(0.78)
+                        ? const Color(0xFFDDF4FF).withOpacity(0.82)
                         : Colors.white.withOpacity(0.72),
                     width: 1.15,
                   ),
@@ -332,10 +369,10 @@ class _PeerCardState extends State<_PeerCard>
                   boxShadow: isWindows
                       ? [
                           BoxShadow(
-                            color: const Color(0xFF607D9A).withOpacity(0.08),
-                            blurRadius: 18,
+                            color: const Color(0xFF168BFF).withOpacity(0.16),
+                            blurRadius: 20,
                             spreadRadius: 0,
-                            offset: const Offset(0, 5),
+                            offset: const Offset(0, 6),
                           ),
                           BoxShadow(
                             color: Colors.white.withOpacity(0.72),
@@ -365,7 +402,7 @@ class _PeerCardState extends State<_PeerCard>
                 Expanded(
                   child: Container(
                     color: isWindows
-                        ? Colors.white.withOpacity(0.10)
+                        ? const Color(0xFF65B9F5).withOpacity(0.20)
                         : Colors.white.withOpacity(0.10),
                     child: Row(
                       children: [
@@ -423,17 +460,22 @@ class _PeerCardState extends State<_PeerCard>
                 ),
                 Container(
                   color: isWindows
-                      ? Colors.white.withOpacity(0.14)
+                      ? const Color(0xFF2E8FEA).withOpacity(0.20)
                       : Theme.of(context).colorScheme.surface.withOpacity(0.20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                           child: Row(children: [
-                        getOnline(8, peer.online),
+                        _peerStatusBadge(context, peer.online),
+                        const SizedBox(width: 6),
                         Expanded(
                             child: Text(
                           peer.alias.isEmpty ? formatID(peer.id) : peer.alias,
+                          textDirection: peer.alias.isEmpty
+                              ? TextDirection.ltr
+                              : Directionality.of(context),
+                          textAlign: peer.alias.isEmpty ? TextAlign.left : null,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleSmall,
                         )),
@@ -654,7 +696,7 @@ abstract class BasePeerCard extends StatelessWidget {
   MenuEntryBase<String> _transferFileAction(BuildContext context) {
     return _connectCommonAction(
       context,
-      translate('Transfer file'),
+      'انتقال فایل',
       isFileTransfer: true,
     );
   }
@@ -663,7 +705,7 @@ abstract class BasePeerCard extends StatelessWidget {
   MenuEntryBase<String> _viewCameraAction(BuildContext context) {
     return _connectCommonAction(
       context,
-      translate('View camera'),
+      'مشاهده دوربین',
       isViewCamera: true,
     );
   }
@@ -672,7 +714,7 @@ abstract class BasePeerCard extends StatelessWidget {
   MenuEntryBase<String> _terminalAction(BuildContext context) {
     return _connectCommonAction(
       context,
-      '${translate('Terminal')} (beta)',
+      'ترمینال',
       isTerminal: true,
     );
   }
@@ -681,7 +723,7 @@ abstract class BasePeerCard extends StatelessWidget {
   MenuEntryBase<String> _terminalRunAsAdminAction(BuildContext context) {
     return _connectCommonAction(
       context,
-      '${translate('Terminal (Run as administrator)')} (beta)',
+      'ترمینال (اجرای به‌عنوان مدیر)',
       isTerminalRunAsAdmin: true,
     );
   }
@@ -690,7 +732,7 @@ abstract class BasePeerCard extends StatelessWidget {
   MenuEntryBase<String> _tcpTunnelingAction(BuildContext context) {
     return _connectCommonAction(
       context,
-      translate('TCP tunneling'),
+      'تونل TCP',
       isTcpTunneling: true,
     );
   }

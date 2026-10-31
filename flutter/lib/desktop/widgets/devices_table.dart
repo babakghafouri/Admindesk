@@ -44,6 +44,7 @@ class DevicesTableTabs extends StatelessWidget {
     required this.availableTabs,
     required this.onTabSelected,
     required this.onRefresh,
+    this.onViewModeChanged,
     this.showNavigation = true,
   }) : super(key: key);
 
@@ -51,6 +52,7 @@ class DevicesTableTabs extends StatelessWidget {
   final List<int> availableTabs;
   final ValueChanged<int> onTabSelected;
   final VoidCallback onRefresh;
+  final ValueChanged<PeerUiType>? onViewModeChanged;
   final bool showNavigation;
 
   static const _tabs = <({int index, String title, IconData icon})>[
@@ -187,6 +189,7 @@ class DevicesTableTabs extends StatelessWidget {
                 mode: PeerUiType.grid,
                 icon: Icons.grid_view_rounded,
                 label: 'کارتی',
+                onChanged: onViewModeChanged,
               ),
               _viewModeButton(
                 context,
@@ -194,6 +197,7 @@ class DevicesTableTabs extends StatelessWidget {
                 mode: PeerUiType.list,
                 icon: Icons.view_list_rounded,
                 label: 'لیستی',
+                onChanged: onViewModeChanged,
               ),
             ],
           ),
@@ -206,6 +210,7 @@ class DevicesTableTabs extends StatelessWidget {
     required PeerUiType mode,
     required IconData icon,
     required String label,
+    ValueChanged<PeerUiType>? onChanged,
   }) {
     final selected = peerCardUiType.value == mode;
     return Tooltip(
@@ -217,7 +222,7 @@ class DevicesTableTabs extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           onTap: () async {
             if (peerCardUiType.value == mode) return;
-            DevicesTableScope.maybeOf(context)?.onViewModeChanged(mode);
+            onChanged?.call(mode);
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
@@ -380,6 +385,38 @@ class DevicesTable extends StatelessWidget {
   }
 }
 
+String _lastConnectionLabel(DateTime? value) {
+  if (value == null) return '—';
+  final elapsed = DateTime.now().difference(value);
+  if (elapsed.isNegative || elapsed.inSeconds < 60) return 'همین الان';
+  if (elapsed.inMinutes < 60) {
+    return '${_persianDigits(elapsed.inMinutes.toString())} دقیقه پیش';
+  }
+  if (elapsed.inHours < 24) {
+    return '${_persianDigits(elapsed.inHours.toString())} ساعت پیش';
+  }
+  if (elapsed.inDays == 1) return 'دیروز، ${_clockLabel(value)}';
+  if (elapsed.inDays < 7) {
+    return '${_persianDigits(elapsed.inDays.toString())} روز پیش';
+  }
+  final date = '${value.year.toString().padLeft(4, '0')}/'
+      '${value.month.toString().padLeft(2, '0')}/'
+      '${value.day.toString().padLeft(2, '0')}';
+  return '${_persianDigits(date)}، ${_clockLabel(value)}';
+}
+
+String _clockLabel(DateTime value) => _persianDigits(
+    '${value.hour.toString().padLeft(2, '0')}:'
+    '${value.minute.toString().padLeft(2, '0')}');
+
+String _persianDigits(String value) {
+  const digits = '۰۱۲۳۴۵۶۷۸۹';
+  return value.replaceAllMapped(
+    RegExp(r'[0-9]'),
+    (match) => digits[int.parse(match.group(0)!)],
+  );
+}
+
 class _DeviceTableRow extends StatelessWidget {
   const _DeviceTableRow({required this.peer, required this.peerTab});
 
@@ -450,10 +487,15 @@ class _DeviceTableRow extends StatelessWidget {
                     color: online ? c.online : c.offline),
               )),
             ])),
-            // Peer currently has no authoritative last-connected timestamp.
-            // Leave it unspecified rather than inventing a Jalali date/time.
-            Expanded(flex: 3, child: Text('—',
-                style: AdminDeskTypography.caption(c))),
+            Expanded(
+              flex: 3,
+              child: Text(
+                _lastConnectionLabel(peer.lastConnected),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AdminDeskTypography.caption(c),
+              ),
+            ),
             SizedBox(
               width: 52,
               child: IconButton(

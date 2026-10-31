@@ -5,6 +5,12 @@ import 'platform_model.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
 
+DateTime? _parseLastConnected(dynamic value) {
+  final seconds = int.tryParse(value?.toString() ?? '');
+  if (seconds == null || seconds <= 0) return null;
+  return DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+}
+
 class Peer {
   final String id;
   String hash; // personal ab hash password
@@ -22,6 +28,7 @@ class Peer {
   String device_group_name;
   String note;
   bool? sameServer;
+  DateTime? lastConnected;
 
   String getId() {
     if (alias != '') {
@@ -45,7 +52,8 @@ class Peer {
         loginName = json['loginName'] ?? '',
         device_group_name = json['device_group_name'] ?? '',
         note = json['note'] is String ? json['note'] : '',
-        sameServer = json['same_server'];
+        sameServer = json['same_server'],
+        lastConnected = _parseLastConnected(json['last_connected']);
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -64,6 +72,9 @@ class Peer {
       'device_group_name': device_group_name,
       'note': note,
       'same_server': sameServer,
+      'last_connected': lastConnected == null
+          ? null
+          : (lastConnected!.millisecondsSinceEpoch ~/ 1000).toString(),
     };
   }
 
@@ -109,6 +120,7 @@ class Peer {
     required this.device_group_name,
     required this.note,
     this.sameServer,
+    this.lastConnected,
   });
 
   Peer.loading()
@@ -142,7 +154,8 @@ class Peer {
         rdpUsername == other.rdpUsername &&
         device_group_name == other.device_group_name &&
         loginName == other.loginName &&
-        note == other.note;
+        note == other.note &&
+        lastConnected == other.lastConnected;
   }
 
   factory Peer.copy(Peer other) {
@@ -161,7 +174,8 @@ class Peer {
         loginName: other.loginName,
         device_group_name: other.device_group_name,
         note: other.note,
-        sameServer: other.sameServer);
+        sameServer: other.sameServer,
+        lastConnected: other.lastConnected);
     peer.online = other.online;
     return peer;
   }
