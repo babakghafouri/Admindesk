@@ -221,6 +221,12 @@ class _PeerTabPageState extends State<PeerTabPage>
         await bind.setLocalFlutterOption(
             k: kOptionPeerTabIndex, v: tab.toString());
       },
+      onViewModeChanged: (mode) async {
+        await bind.setLocalFlutterOption(
+          k: kOptionPeerCardUiType,
+          v: mode.index.toString(),
+        );
+      },
       onRefresh: () {
         switch (model.currentTab) {
           case 0:
