@@ -104,7 +104,7 @@ class DevicesTableTabs extends StatelessWidget {
                   : Row(children: [
                       Expanded(child: search),
                       const SizedBox(width: AdminDeskMetrics.spaceXs),
-                      _viewModeControl(c),
+                      _viewModeControl(context, c),
                       _refresh(c),
                     ]))
               : compact
@@ -189,6 +189,7 @@ class DevicesTableTabs extends StatelessWidget {
                 label: 'کارتی',
               ),
               _viewModeButton(
+                context,
                 c,
                 mode: PeerUiType.list,
                 icon: Icons.view_list_rounded,
