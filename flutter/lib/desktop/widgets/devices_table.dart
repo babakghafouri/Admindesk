@@ -19,14 +19,17 @@ class DevicesTableScope extends InheritedWidget {
   const DevicesTableScope({
     Key? key,
     required this.enabled,
+    required this.onViewModeChanged,
     required Widget child,
   }) : super(key: key, child: child);
 
   final bool enabled;
+  final ValueChanged<PeerUiType> onViewModeChanged;
 
-  static bool enabledOf(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<DevicesTableScope>()?.enabled ??
-      false;
+  static DevicesTableScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<DevicesTableScope>();
+
+  static bool enabledOf(BuildContext context) => maybeOf(context)?.enabled ?? false;
 
   @override
   bool updateShouldNotify(DevicesTableScope oldWidget) =>
@@ -211,11 +214,7 @@ class DevicesTableTabs extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           onTap: () async {
             if (peerCardUiType.value == mode) return;
-            peerCardUiType.value = mode;
-            await bind.setLocalFlutterOption(
-              k: kOptionPeerCardUiType,
-              v: mode.index.toString(),
-            );
+            DevicesTableScope.maybeOf(context)?.onViewModeChanged(mode);
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
