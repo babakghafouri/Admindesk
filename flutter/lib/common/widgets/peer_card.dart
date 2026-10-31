@@ -27,6 +27,39 @@ final peerCardUiType = PeerUiType.grid.obs;
 
 bool? hideUsernameOnCard;
 
+// Keep favorite state shared by all peer cards so it survives tab changes and
+// is consistent between the home, recent, and favorites views.
+final RxList<String> _favoritePeerIds = <String>[].obs;
+Future<void>? _favoritePeerIdsLoadFuture;
+
+Future<void> _ensureFavoritePeerIdsLoaded() async {
+  final pending = _favoritePeerIdsLoadFuture;
+  if (pending != null) {
+    await pending;
+    return;
+  }
+
+  final loading = () async {
+    final favorites =
+        (await bind.mainGetFav()).map((id) => id.toString()).toList();
+    _favoritePeerIds.assignAll(favorites);
+  }();
+  _favoritePeerIdsLoadFuture = loading;
+  try {
+    await loading;
+  } catch (_) {
+    _favoritePeerIdsLoadFuture = null;
+    rethrow;
+  }
+}
+
+Future<void> _storeFavoritePeerIds(List favorites) async {
+  await bind.mainStoreFav(favs: favorites);
+  _favoritePeerIds.assignAll(
+    favorites.map((id) => id.toString()),
+  );
+}
+
 class _PeerCard extends StatefulWidget {
   final Peer peer;
   final PeerTabIndex tab;
@@ -52,6 +85,14 @@ class _PeerCardState extends State<_PeerCard>
   final double _cardRadius = 16;
   final double _tileRadius = 5;
   final double _borderWidth = 2;
+
+  @override
+  void initState() {
+    super.initState();
+    _ensureFavoritePeerIdsLoaded().catchError((error) {
+      debugPrint('Failed to load AdminDesk favorites: $error');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -327,8 +368,6 @@ class _PeerCardState extends State<_PeerCard>
     final displayName = peer.alias.isNotEmpty
         ? peer.alias
         : (fallbackName.isNotEmpty ? fallbackName : formatID(peer.id));
-    _isFavorite ??= widget.tab == PeerTabIndex.fav;
-    final isFavorite = _isFavorite == true;
     final tagColors = _frontN(peer.tags, 25)
         .map((e) => gFFI.abModel.getCurrentAbTagColor(e))
         .toList();
@@ -394,22 +433,26 @@ class _PeerCardState extends State<_PeerCard>
                     // Header: favorite, connection status, platform and menu.
                     Row(
                       children: [
-                        InkWell(
-                          borderRadius: BorderRadius.circular(18),
-                          onTap: () => _toggleFavorite(peer),
-                          child: Padding(
-                            padding: const EdgeInsets.all(2),
-                            child: Icon(
-                              isFavorite
-                                  ? Icons.star_rounded
-                                  : Icons.star_outline_rounded,
-                              color: isFavorite
-                                  ? const Color(0xFFE7A900)
-                                  : const Color(0xFF536A80),
-                              size: 22,
+                        Obx(() {
+                          final isFavorite =
+                              _favoritePeerIds.contains(peer.id);
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(18),
+                            onTap: () => _toggleFavorite(peer),
+                            child: Padding(
+                              padding: const EdgeInsets.all(2),
+                              child: Icon(
+                                isFavorite
+                                    ? Icons.star_rounded
+                                    : Icons.star_outline_rounded,
+                                color: isFavorite
+                                    ? const Color(0xFFE7A900)
+                                    : const Color(0xFF536A80),
+                                size: 22,
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        }),
                         const SizedBox(width: 7),
                         _peerStatusBadge(context, peer.online),
                         const Spacer(),
@@ -568,8 +611,6 @@ class _PeerCardState extends State<_PeerCard>
     );
   }
 
-  bool? _isFavorite;
-
   Widget _glassActionButton({
     required IconData icon,
     required String tooltip,
@@ -610,19 +651,17 @@ class _PeerCardState extends State<_PeerCard>
   }
 
   Future<void> _toggleFavorite(Peer peer) async {
+    await _ensureFavoritePeerIdsLoaded();
     final favorites = (await bind.mainGetFav()).toList();
     if (favorites.contains(peer.id)) {
       favorites.remove(peer.id);
-      _isFavorite = false;
     } else {
       favorites.add(peer.id);
-      _isFavorite = true;
     }
-    await bind.mainStoreFav(favs: favorites);
+    await _storeFavoritePeerIds(favorites);
     if (widget.tab == PeerTabIndex.fav) {
       await bind.mainLoadFavPeers();
     }
-    if (mounted) setState(() {});
   }
 
   Future<void> _connectInNewWindow(Peer peer) async {
@@ -1064,9 +1103,10 @@ abstract class BasePeerCard extends StatelessWidget {
               bind.mainLoadRecentPeers();
               break;
             case PeerTabIndex.fav:
+              await _ensureFavoritePeerIdsLoaded();
               final favs = (await bind.mainGetFav()).toList();
               if (favs.remove(id)) {
-                await bind.mainStoreFav(favs: favs);
+                await _storeFavoritePeerIds(favs);
                 bind.mainLoadFavPeers();
               }
               break;
@@ -1138,10 +1178,11 @@ abstract class BasePeerCard extends StatelessWidget {
       ),
       proc: () {
         () async {
+          await _ensureFavoritePeerIdsLoaded();
           final favs = (await bind.mainGetFav()).toList();
           if (!favs.contains(id)) {
             favs.add(id);
-            await bind.mainStoreFav(favs: favs);
+            await _storeFavoritePeerIds(favs);
           }
           showToast(translate('Successful'));
         }();
@@ -1173,9 +1214,10 @@ abstract class BasePeerCard extends StatelessWidget {
       ),
       proc: () {
         () async {
+          await _ensureFavoritePeerIdsLoaded();
           final favs = (await bind.mainGetFav()).toList();
           if (favs.remove(id)) {
-            await bind.mainStoreFav(favs: favs);
+            await _storeFavoritePeerIds(favs);
             await reloadFunc();
           }
           showToast(translate('Successful'));
