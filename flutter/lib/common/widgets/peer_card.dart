@@ -413,6 +413,26 @@ class _PeerCardState extends State<_PeerCard>
                         const SizedBox(width: 7),
                         _peerStatusBadge(context, peer.online),
                         const Spacer(),
+                        if (_shouldBuildPasswordIcon(peer))
+                          const Padding(
+                            padding: EdgeInsets.only(right: 5),
+                            child: Icon(
+                              Icons.key_rounded,
+                              size: 14,
+                              color: Color(0xFF66819A),
+                            ),
+                          ),
+                        if (tagColors.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 5),
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CustomPaint(
+                                painter: TagPainter(radius: 3, colors: tagColors),
+                              ),
+                            ),
+                          ),
                         getPlatformImage(peer.platform, size: 26),
                         const SizedBox(width: 6),
                         SizedBox(
@@ -438,6 +458,22 @@ class _PeerCardState extends State<_PeerCard>
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+                    if (_showNote(peer))
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          peer.note,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.58),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 5),
                     // Remote ID is always rendered LTR, independently of the
                     // Persian application direction.
