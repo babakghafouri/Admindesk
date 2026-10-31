@@ -2,6 +2,8 @@ lazy_static::lazy_static! {
 pub static ref T: std::collections::HashMap<&'static str, &'static str> =
     [
         ("Status", ""),
+        ("Online", ""),
+        ("Offline", ""),
         ("Your Desktop", ""),
         ("desk_tip", ""),
         ("Password", ""),
@@ -316,6 +318,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Restarting remote device", ""),
         ("remote_restarting_tip", ""),
         ("Copied", ""),
+        ("Device ID copied", ""),
         ("Exit Fullscreen", ""),
         ("Fullscreen", ""),
         ("Mobile Actions", ""),

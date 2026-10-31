@@ -191,7 +191,7 @@ class _PeerCardState extends State<_PeerCard>
           ),
           const SizedBox(width: 4),
           Text(
-            online ? 'آنلاین' : 'آفلاین',
+            online ? translate('Online') : translate('Offline'),
             style: TextStyle(
               color: color,
               fontSize: 10,
@@ -590,13 +590,13 @@ class _PeerCardState extends State<_PeerCard>
                         const SizedBox(width: 7),
                         _glassActionButton(
                           icon: Icons.desktop_windows_outlined,
-                          tooltip: 'اتصال در پنجره جدید',
+                          tooltip: translate('Open in new window'),
                           onTap: () => _connectInNewWindow(peer),
                         ),
                         const SizedBox(width: 7),
                         _glassActionButton(
                           icon: Icons.edit_outlined,
-                          tooltip: 'تغییر نام دستگاه',
+                          tooltip: translate('Rename'),
                           onTap: () => _renamePeer(peer),
                         ),
                       ],
@@ -647,7 +647,7 @@ class _PeerCardState extends State<_PeerCard>
 
   Future<void> _copyPeerId(Peer peer) async {
     await Clipboard.setData(ClipboardData(text: peer.id));
-    showToast('شناسه دستگاه کپی شد');
+    showToast(translate('Device ID copied'));
   }
 
   Future<void> _toggleFavorite(Peer peer) async {
@@ -882,7 +882,7 @@ abstract class BasePeerCard extends StatelessWidget {
   MenuEntryBase<String> _transferFileAction(BuildContext context) {
     return _connectCommonAction(
       context,
-      'انتقال فایل',
+      translate('Transfer file'),
       isFileTransfer: true,
     );
   }
@@ -891,7 +891,7 @@ abstract class BasePeerCard extends StatelessWidget {
   MenuEntryBase<String> _viewCameraAction(BuildContext context) {
     return _connectCommonAction(
       context,
-      'مشاهده دوربین',
+      translate('View camera'),
       isViewCamera: true,
     );
   }
@@ -900,7 +900,7 @@ abstract class BasePeerCard extends StatelessWidget {
   MenuEntryBase<String> _terminalAction(BuildContext context) {
     return _connectCommonAction(
       context,
-      'ترمینال',
+      translate('Terminal'),
       isTerminal: true,
     );
   }
@@ -909,7 +909,7 @@ abstract class BasePeerCard extends StatelessWidget {
   MenuEntryBase<String> _terminalRunAsAdminAction(BuildContext context) {
     return _connectCommonAction(
       context,
-      'ترمینال (اجرای به‌عنوان مدیر)',
+      translate('Terminal (Run as administrator)'),
       isTerminalRunAsAdmin: true,
     );
   }
@@ -918,7 +918,7 @@ abstract class BasePeerCard extends StatelessWidget {
   MenuEntryBase<String> _tcpTunnelingAction(BuildContext context) {
     return _connectCommonAction(
       context,
-      'تونل TCP',
+      translate('TCP tunneling'),
       isTcpTunneling: true,
     );
   }

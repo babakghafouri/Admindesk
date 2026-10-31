@@ -2,6 +2,8 @@ lazy_static::lazy_static! {
 pub static ref T: std::collections::HashMap<&'static str, &'static str> =
     [
         ("Status", "وضعیت"),
+        ("Online", "آنلاین"),
+        ("Offline", "آفلاین"),
         ("Your Desktop", "دسکتاپ شما"),
         ("desk_tip", "دسکتاپ شما با این شناسه و رمز عبور قابل دسترسی است"),
         ("Password", "رمز عبور"),
@@ -318,6 +320,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Restarting remote device", "در حال راه اندازی مجدد دستگاه راه دور"),
         ("remote_restarting_tip", "دستگاه راه دور در حال راه اندازی مجدد است. این پیام را ببندید و پس از مدتی با استفاده از یک رمز عبور دائمی دوباره وصل شوید."),
         ("Copied", "کپی شده است"),
+        ("Device ID copied", "شناسه دستگاه کپی شد"),
         ("Exit Fullscreen", "از حالت تمام صفحه خارج شوید"),
         ("Fullscreen", "تمام صفحه"),
         ("Mobile Actions", "اقدامات موبایل"),
