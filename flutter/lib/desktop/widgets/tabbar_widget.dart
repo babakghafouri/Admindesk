@@ -611,20 +611,23 @@ class _DesktopTabState extends State<DesktopTab>
 
   Widget _buildBar() {
     final isIncomingHomePage = bind.isIncomingOnly() && isInHomePage();
+    final moveWindowControlsRight =
+        isWindows && tabType == DesktopTabType.main;
+    // On the Windows home titlebar, keep the three AdminDesk actions on the
+    // left and place only the native-behavior window controls on the right.
+    // The titlebar inherits RTL direction: first child is rightmost.
     final actionPanel = WindowActionPanel(
       isMainWindow: isMainWindow,
       state: state,
       tabController: controller,
       invisibleTabKeys: invisibleTabKeys,
-      tail: tail,
+      tail: moveWindowControlsRight ? null : tail,
       showMinimize: showMinimize,
       showMaximize: showMaximize,
       showClose: showClose,
       onClose: onWindowCloseButton,
       labelGetter: labelGetter,
     ).paddingOnly(left: 10);
-    final moveWindowControlsRight =
-        isWindows && tabType == DesktopTabType.main;
     return Row(
       children: [
         if (moveWindowControlsRight) actionPanel,
@@ -713,6 +716,7 @@ class _DesktopTabState extends State<DesktopTab>
                             ))),
                   ],
                 ))),
+        if (moveWindowControlsRight && tail != null) tail!,
         if (!moveWindowControlsRight) actionPanel
       ],
     );
