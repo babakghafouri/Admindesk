@@ -342,6 +342,25 @@ jobs:
       - name: Pin AdminDesk Windows rendezvous defaults
         run: python3 res/admindesk/patch_server_defaults.py
 
+      - name: Diagnose AdminDesk server reachability
+        if: env.UPLOAD_ARTIFACT == 'true'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $hostName = "desk.admin98.ir"
+          $dns = Resolve-DnsName $hostName -ErrorAction SilentlyContinue
+          if (-not $dns) {
+            Write-Warning "DNS lookup failed for $hostName from the GitHub Windows runner."
+            exit 0
+          }
+          $dns | Where-Object { $_.Type -in @('A', 'AAAA') } | ForEach-Object {
+            Write-Host "Resolved $hostName -> $($_.IPAddress)"
+          }
+          foreach ($port in @(21116, 21117)) {
+            $reachable = Test-NetConnection $hostName -Port $port -InformationLevel Quiet -WarningAction SilentlyContinue
+            Write-Host ("TCP {0}:{1} reachable = {2}" -f $hostName, $port, $reachable)
+          }
+
       - name: Build rustdesk
         env:
           # Set both values under GitHub Settings > Secrets and variables > Actions.
