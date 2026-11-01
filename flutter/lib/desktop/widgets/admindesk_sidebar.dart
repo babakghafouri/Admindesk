@@ -12,13 +12,11 @@ class AdminDeskSideBar extends StatelessWidget {
     Key? key,
     required this.selectedMenu,
     required this.onNavigate,
-    required this.onSettings,
     required this.versionLabel,
   }) : super(key: key);
 
   final int selectedMenu;
   final void Function(int menu, int peerTab) onNavigate;
-  final VoidCallback onSettings;
   final String versionLabel;
 
   @override
@@ -40,16 +38,12 @@ class AdminDeskSideBar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: AdminDeskMetrics.spaceMd),
-            _entry(context, Icons.devices_outlined, 'دستگاه‌های من', 1,
-                () => onNavigate(1, 4)),
-            _entry(context, Icons.history_rounded, 'اتصالات اخیر', 2,
-                () => onNavigate(2, 0)),
-            _entry(context, Icons.contacts_outlined, 'مخاطبین', 3,
-                () => onNavigate(3, 3)),
-            _entry(context, Icons.star_border_rounded, 'دستگاه‌های ستاره‌دار', 4,
-                () => onNavigate(4, 1)),
-            _entry(context, Icons.settings_outlined, 'تنظیمات', -1,
-                onSettings),
+            _entry(context, Icons.history_rounded, 'اتصالات اخیر', 0,
+                () => onNavigate(0, 0)),
+            _entry(context, Icons.star_border_rounded, 'علاقه‌مندی‌ها', 1,
+                () => onNavigate(1, 1)),
+            _entry(context, Icons.lan_outlined, 'شبکه داخلی', 2,
+                () => onNavigate(2, 2)),
             const Spacer(),
             Padding(
               padding: const EdgeInsets.fromLTRB(

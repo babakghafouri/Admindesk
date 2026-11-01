@@ -611,8 +611,23 @@ class _DesktopTabState extends State<DesktopTab>
 
   Widget _buildBar() {
     final isIncomingHomePage = bind.isIncomingOnly() && isInHomePage();
+    final actionPanel = WindowActionPanel(
+      isMainWindow: isMainWindow,
+      state: state,
+      tabController: controller,
+      invisibleTabKeys: invisibleTabKeys,
+      tail: tail,
+      showMinimize: showMinimize,
+      showMaximize: showMaximize,
+      showClose: showClose,
+      onClose: onWindowCloseButton,
+      labelGetter: labelGetter,
+    ).paddingOnly(left: 10);
+    final moveWindowControlsRight =
+        isWindows && tabType == DesktopTabType.main;
     return Row(
       children: [
+        if (moveWindowControlsRight) actionPanel,
         Expanded(
             child: GestureDetector(
                 // custom double tap handler
@@ -698,19 +713,7 @@ class _DesktopTabState extends State<DesktopTab>
                             ))),
                   ],
                 ))),
-        // hide simulated action buttons when we in compatible ui mode, because of reusing system title bar.
-        WindowActionPanel(
-          isMainWindow: isMainWindow,
-          state: state,
-          tabController: controller,
-          invisibleTabKeys: invisibleTabKeys,
-          tail: tail,
-          showMinimize: showMinimize,
-          showMaximize: showMaximize,
-          showClose: showClose,
-          onClose: onWindowCloseButton,
-          labelGetter: labelGetter,
-        ).paddingOnly(left: 10)
+        if (!moveWindowControlsRight) actionPanel
       ],
     );
   }

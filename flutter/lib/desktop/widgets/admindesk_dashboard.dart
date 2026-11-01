@@ -55,12 +55,6 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
     _requestedPeerTab.value = peerTab;
   }
 
-  void _openSettings() {
-    if (!bind.isDisableSettings()) {
-      DesktopTabPage.onAddSetting();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = AdminDeskColors.of(context);
@@ -105,7 +99,6 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
               selectedMenu: _selectedMenu,
               versionLabel: version.isEmpty ? 'AdminDesk' : 'نسخه $version',
               onNavigate: _openTab,
-              onSettings: _openSettings,
             ),
           ],
         ),
@@ -201,15 +194,11 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
   int _menuForPeerTab(int peerTab) {
     switch (peerTab) {
       case 0:
-        return 2; // Recent sessions
       case 1:
-        return 4; // Starred devices
-      case 3:
-        return 3; // Contacts
-      case 4:
-        return 1; // My devices
+      case 2:
+        return peerTab;
       default:
-        return 1;
+        return 0;
     }
   }
 
