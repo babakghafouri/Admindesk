@@ -360,6 +360,16 @@ jobs:
             $reachable = Test-NetConnection $hostName -Port $port -InformationLevel Quiet -WarningAction SilentlyContinue
             Write-Host ("TCP {0}:{1} reachable = {2}" -f $hostName, $port, $reachable)
           }
+          try {
+            $feed = Invoke-RestMethod -Uri "https://admin98.ir/ads-admin/ads.php" -TimeoutSec 12
+            if ($feed.ads -is [System.Collections.IEnumerable] -and $feed.ads -isnot [string]) {
+              Write-Host ("Admin98 ads feed reachable; entries returned = {0}" -f @($feed.ads).Count)
+            } else {
+              Write-Warning "Admin98 ads endpoint responded, but its JSON does not contain an ads array."
+            }
+          } catch {
+            Write-Warning ("Admin98 ads feed diagnostic failed: {0}" -f $_.Exception.Message)
+          }
 
       - name: Build rustdesk
         env:
