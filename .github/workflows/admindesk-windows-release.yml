@@ -9,6 +9,7 @@ on:
     paths:
       - ".github/workflows/admindesk-windows-release.yml"
       - ".github/workflows/flutter-build.yml"
+      - ".github/scripts/sign-windows-artifacts.ps1"
       - ".github/workflows/third-party-RustDeskTempTopMostWindow.yml"
       - "flutter/lib/**"
       - "flutter/assets/**"
