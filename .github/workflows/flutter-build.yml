@@ -671,6 +671,9 @@ jobs:
           head -n 100 "${VCPKG_ROOT}/buildtrees/ffmpeg/build-${{ matrix.job.vcpkg-triplet }}-rel-out.log" || true
         shell: bash
 
+      - name: Pin AdminDesk Windows rendezvous defaults
+        run: python3 res/admindesk/patch_server_defaults.py
+
       - name: Build rustdesk
         id: build
         shell: bash
