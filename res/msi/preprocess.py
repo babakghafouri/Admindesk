@@ -535,6 +535,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     app_name = args.app_name
+    if app_name == "AdminDesk":
+        # Do not leave upstream RustDesk support links in Windows Apps & Features.
+        for key in ("Contact", "HelpLink", "ReadMe"):
+            g_arpsystemcomponent[key]["v"] = "https://admin98.ir"
     dist_dir = Path(sys.argv[0]).parent.joinpath(args.dist_dir).resolve()
 
     if not prepare_resources():
