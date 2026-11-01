@@ -102,7 +102,7 @@ try {
             "/f", $pfxPath,
             "/p", $pfxPassword,
             "/d", "AdminDesk",
-            "/tr", "https://timestamp.digicert.com",
+            "/tr", "http://timestamp.digicert.com",
             "/td", "SHA256",
             $file.FullName
         )
