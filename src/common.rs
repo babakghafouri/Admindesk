@@ -1202,12 +1202,22 @@ pub async fn do_check_software_update() -> hbb_common::ResultType<()> {
 
 #[inline]
 pub fn get_app_name() -> String {
-    hbb_common::config::APP_NAME.read().unwrap().clone()
+    // Keep the upstream APP_NAME storage namespace intact so existing
+    // RustDesk-based profiles, IDs, address books, and settings remain usable.
+    // Only the Windows-facing product identity is rebranded for AdminDesk.
+    #[cfg(windows)]
+    {
+        "AdminDesk".to_owned()
+    }
+    #[cfg(not(windows))]
+    {
+        hbb_common::config::APP_NAME.read().unwrap().clone()
+    }
 }
 
 #[inline]
 pub fn is_rustdesk() -> bool {
-    hbb_common::config::APP_NAME.read().unwrap().eq("RustDesk")
+    get_app_name() == "RustDesk"
 }
 
 #[inline]
