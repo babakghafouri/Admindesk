@@ -63,7 +63,7 @@ env:
   MACOS_P12_BASE64: "${{ secrets.MACOS_P12_BASE64 }}"
   UPLOAD_ARTIFACT: "${{ inputs.upload-artifact }}"
   PUBLISH_UPDATE_METADATA: "${{ inputs.publish-update-metadata }}"
-  SIGN_BASE_URL: "${{ secrets.SIGN_BASE_URL }}-2"
+  SIGN_BASE_URL: "${{ secrets.SIGN_BASE_URL }}"
 
 jobs:
   validate-update-metadata-keys:
@@ -184,6 +184,25 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           submodules: recursive
+
+      - name: Validate Windows code-signing configuration
+        if: env.UPLOAD_ARTIFACT == 'true'
+        env:
+          SIGN_BASE_URL: ${{ secrets.SIGN_BASE_URL }}
+          SIGN_SECRET_KEY: ${{ secrets.SIGN_SECRET_KEY }}
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:SIGN_BASE_URL)) {
+            throw "Windows code-signing service URL is not configured (SIGN_BASE_URL). Refusing to publish an unsigned installer."
+          }
+          if ([string]::IsNullOrWhiteSpace($env:SIGN_SECRET_KEY)) {
+            throw "Windows code-signing service key is not configured (SIGN_SECRET_KEY). Refusing to publish an unsigned installer."
+          }
+          $signingUri = [Uri]$env:SIGN_BASE_URL
+          if ($signingUri.Scheme -notin @('http', 'https')) {
+            throw "SIGN_BASE_URL must be an HTTP(S) URL."
+          }
+          Write-Host "Windows signing service configured at host: $($signingUri.Host)"
 
       - name: Restore bridge files
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -323,6 +342,35 @@ jobs:
       - name: Pin AdminDesk Windows rendezvous defaults
         run: python3 res/admindesk/patch_server_defaults.py
 
+      - name: Diagnose AdminDesk server reachability
+        if: env.UPLOAD_ARTIFACT == 'true'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $hostName = "desk.admin98.ir"
+          $dns = Resolve-DnsName $hostName -ErrorAction SilentlyContinue
+          if (-not $dns) {
+            Write-Warning "DNS lookup failed for $hostName from the GitHub Windows runner."
+            exit 0
+          }
+          $dns | Where-Object { $_.Type -in @('A', 'AAAA') } | ForEach-Object {
+            Write-Host "Resolved $hostName -> $($_.IPAddress)"
+          }
+          foreach ($port in @(21116, 21117)) {
+            $reachable = Test-NetConnection $hostName -Port $port -InformationLevel Quiet -WarningAction SilentlyContinue
+            Write-Host ("TCP {0}:{1} reachable = {2}" -f $hostName, $port, $reachable)
+          }
+          try {
+            $feed = Invoke-RestMethod -Uri "https://admin98.ir/ads-admin/ads.php" -TimeoutSec 12
+            if ($feed.ads -is [System.Collections.IEnumerable] -and $feed.ads -isnot [string]) {
+              Write-Host ("Admin98 ads feed reachable; entries returned = {0}" -f @($feed.ads).Count)
+            } else {
+              Write-Warning "Admin98 ads endpoint responded, but its JSON does not contain an ads array."
+            }
+          } catch {
+            Write-Warning ("Admin98 ads feed diagnostic failed: {0}" -f $_.Exception.Message)
+          }
+
       - name: Build rustdesk
         env:
           # Set both values under GitHub Settings > Secrets and variables > Actions.
@@ -411,11 +459,42 @@ jobs:
           path: rustdesk
 
       - name: Sign rustdesk files
-        if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != '-2'
+        if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != ''
+        env:
+          BASE_URL: ${{ env.SIGN_BASE_URL }}
+          SECRET_KEY: ${{ secrets.SIGN_SECRET_KEY }}
         shell: bash
         run: |
           pip3 install requests argparse
-          BASE_URL=${{ env.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./rustdesk/
+          python3 res/job.py sign_files ./rustdesk/
+
+      - name: Verify signed Windows application binaries
+        if: env.UPLOAD_ARTIFACT == 'true'
+        shell: pwsh
+        run: |
+          $extensions = @('.exe', '.dll', '.sys', '.vxd', '.msix', '.msixbundle', '.appx', '.appxbundle', '.msi', '.msp', '.msm', '.cab', '.ps1', '.psm1')
+          $files = @(Get-ChildItem ./rustdesk -Recurse -File | Where-Object { $extensions -contains $_.Extension.ToLowerInvariant() })
+          if ($files.Count -eq 0) {
+            throw "No signable Windows application binaries were found."
+          }
+          $thumbprint = $null
+          foreach ($file in $files) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $file.FullName
+            if ($signature.Status.ToString() -ne 'Valid') {
+              throw "Invalid or missing Authenticode signature: $($file.FullName) ($($signature.Status))"
+            }
+            $certificate = $signature.SignerCertificate
+            if ($null -eq $certificate) {
+              throw "Signer certificate missing for $($file.FullName)"
+            }
+            if ($null -eq $thumbprint) {
+              $thumbprint = $certificate.Thumbprint
+            } elseif ($certificate.Thumbprint -ne $thumbprint) {
+              throw "Mixed signing certificates detected in Windows application binaries."
+            }
+            Write-Host "Verified $($file.Name) | $($certificate.Subject) | Thumbprint $($certificate.Thumbprint) | Expires $($certificate.NotAfter.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss UTC'))"
+          }
+          "ADMIN_DESK_SIGNER_THUMBPRINT=$thumbprint" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Verify Windows Flutter version
         if: env.UPLOAD_ARTIFACT == 'true' && env.PUBLISH_UPDATE_METADATA == 'true'
@@ -518,13 +597,39 @@ jobs:
           path: ./msi-template
 
       - name: Sign rustdesk self-extracted file
-        if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != '-2'
+        if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != ''
+        env:
+          BASE_URL: ${{ env.SIGN_BASE_URL }}
+          SECRET_KEY: ${{ secrets.SIGN_SECRET_KEY }}
         shell: bash
         run: |
-          BASE_URL=${{ env.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./SignOutput
+          python3 res/job.py sign_files ./SignOutput
+
+      - name: Verify signed Admin Desk installers
+        if: env.UPLOAD_ARTIFACT == 'true'
+        shell: pwsh
+        run: |
+          $files = @(Get-ChildItem ./SignOutput -File | Where-Object { $_.Extension.ToLowerInvariant() -in @('.exe', '.msi') })
+          if ($files.Count -ne 2) {
+            throw "Expected exactly one Windows EXE and one MSI installer; found $($files.Count) signable files."
+          }
+          foreach ($file in $files) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $file.FullName
+            if ($signature.Status.ToString() -ne 'Valid') {
+              throw "Invalid or missing Authenticode signature: $($file.Name) ($($signature.Status))"
+            }
+            $certificate = $signature.SignerCertificate
+            if ($null -eq $certificate) {
+              throw "Signer certificate missing for $($file.Name)"
+            }
+            if ($env:ADMIN_DESK_SIGNER_THUMBPRINT -and $certificate.Thumbprint -ne $env:ADMIN_DESK_SIGNER_THUMBPRINT) {
+              throw "Installer signer does not match the application binary signer: $($file.Name)"
+            }
+            Write-Host "Verified installer $($file.Name) | $($certificate.Subject) | Thumbprint $($certificate.Thumbprint) | Expires $($certificate.NotAfter.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss UTC'))"
+          }
 
       - name: Upload signed Windows Flutter EXE
-        if: env.UPLOAD_ARTIFACT == 'true' && env.PUBLISH_UPDATE_METADATA == 'true' && env.SIGN_BASE_URL != '-2'
+        if: env.UPLOAD_ARTIFACT == 'true' && env.PUBLISH_UPDATE_METADATA == 'true' && env.SIGN_BASE_URL != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: windows-flutter-${{ matrix.job.arch }}-exe
@@ -532,7 +637,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload signed Windows Flutter MSI
-        if: env.UPLOAD_ARTIFACT == 'true' && env.PUBLISH_UPDATE_METADATA == 'true' && env.SIGN_BASE_URL != '-2'
+        if: env.UPLOAD_ARTIFACT == 'true' && env.PUBLISH_UPDATE_METADATA == 'true' && env.SIGN_BASE_URL != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: windows-flutter-${{ matrix.job.arch }}-msi
@@ -575,19 +680,19 @@ jobs:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
           body: |
-            Admin Desk Windows preview installers, built from the AdminDesk repository.
+            Admin Desk Windows x64 preview installers, built from the AdminDesk repository.
             Installer filenames are branded AdminDesk. Internal RustDesk executable
             and DLL names are preserved for compatibility.
-            Packages may be unsigned if Windows signing is not configured.
-            Windows SmartScreen may warn for unsigned installers.
+            Publication requires valid Authenticode signatures on the application binaries,
+            portable EXE, and MSI. Windows SmartScreen reputation may still take time to establish.
           files: |
             ./SignOutput/*.msi
             ./SignOutput/*.exe
 
   # The fallback for the flutter version, we use Sciter for 32bit Windows.
   build-for-windows-sciter:
-    # x86 uses Sciter; native Windows Flutter is currently x64-only.
-    if: ${{ !inputs.windows-android-only }}
+    # Keep legacy x86 Sciter builds out of the Windows x64-only release workflow.
+    if: ${{ !inputs.windows-android-only && !inputs.windows-only }}
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
     needs: [validate-update-metadata-keys]
     runs-on: ${{ matrix.job.os }}
@@ -671,6 +776,9 @@ jobs:
           head -n 100 "${VCPKG_ROOT}/buildtrees/ffmpeg/build-${{ matrix.job.vcpkg-triplet }}-rel-out.log" || true
         shell: bash
 
+      - name: Pin AdminDesk Windows rendezvous defaults
+        run: python3 res/admindesk/patch_server_defaults.py
+
       - name: Build rustdesk
         id: build
         shell: bash
@@ -716,11 +824,14 @@ jobs:
           path: Release
 
       - name: Sign rustdesk files
-        if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != '-2'
+        if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != ''
+        env:
+          BASE_URL: ${{ env.SIGN_BASE_URL }}
+          SECRET_KEY: ${{ secrets.SIGN_SECRET_KEY }}
         shell: bash
         run: |
           pip3 install requests argparse
-          BASE_URL=${{ env.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./Release/
+          python3 res/job.py sign_files ./Release/
 
       - name: Verify Windows Sciter version
         if: env.UPLOAD_ARTIFACT == 'true' && env.PUBLISH_UPDATE_METADATA == 'true'
@@ -743,20 +854,23 @@ jobs:
           python3 ./generate.py -f ../../Release/ -o . -e ../../Release/rustdesk.exe
           popd
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/AdminDesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
 
       - name: Sign rustdesk self-extracted file
-        if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != '-2'
+        if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != ''
+        env:
+          BASE_URL: ${{ env.SIGN_BASE_URL }}
+          SECRET_KEY: ${{ secrets.SIGN_SECRET_KEY }}
         shell: bash
         run: |
-          BASE_URL=${{ env.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./SignOutput/
+          python3 res/job.py sign_files ./SignOutput/
 
       - name: Upload signed Windows Sciter EXE
-        if: env.UPLOAD_ARTIFACT == 'true' && env.PUBLISH_UPDATE_METADATA == 'true' && env.SIGN_BASE_URL != '-2'
+        if: env.UPLOAD_ARTIFACT == 'true' && env.PUBLISH_UPDATE_METADATA == 'true' && env.SIGN_BASE_URL != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: windows-sciter-x86-exe
-          path: ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+          path: ./SignOutput/AdminDesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
           if-no-files-found: error
 
       - name: Publish Release
@@ -766,7 +880,7 @@ jobs:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
           files: |
-            ./SignOutput/rustdesk-*.exe
+            ./SignOutput/AdminDesk-*.exe
 
   build-rustdesk-ios:
     if: ${{ !inputs.windows-android-only && (!inputs.windows-only && (inputs.upload-artifact)) }}

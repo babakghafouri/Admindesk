@@ -1036,7 +1036,9 @@ pub fn is_modifier(evt: &KeyEvent) -> bool {
 }
 
 pub fn check_software_update() {
-    if is_custom_client() {
+    // AdminDesk uses its own update channel. Keep the upstream RustDesk
+    // release updater disabled on Windows until update.admin98.ir is live.
+    if is_custom_client() || cfg!(windows) {
         return;
     }
     let opt = LocalConfig::get_option(keys::OPTION_ENABLE_CHECK_UPDATE);
@@ -1208,6 +1210,20 @@ pub fn get_app_name() -> String {
 #[inline]
 pub fn is_rustdesk() -> bool {
     hbb_common::config::APP_NAME.read().unwrap().eq("RustDesk")
+}
+
+#[inline]
+pub fn get_app_display_name() -> String {
+    // Branding must not change hbb_common::config::APP_NAME: that namespace is
+    // still used to locate existing user profiles and preserve their settings.
+    #[cfg(windows)]
+    {
+        "AdminDesk".to_owned()
+    }
+    #[cfg(not(windows))]
+    {
+        get_app_name()
+    }
 }
 
 #[inline]
@@ -2685,7 +2701,9 @@ pub fn get_builtin_option(key: &str) -> String {
 
 #[inline]
 pub fn is_custom_client() -> bool {
-    get_app_name() != "RustDesk"
+    // This Windows target is the AdminDesk product even though the legacy
+    // storage/service namespace is retained for profile compatibility.
+    cfg!(windows) || get_app_name() != "RustDesk"
 }
 
 pub fn verify_login(_raw: &str, _id: &str) -> bool {

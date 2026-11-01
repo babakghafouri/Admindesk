@@ -131,6 +131,11 @@ pub(crate) fn is_cjk_lang(lang_or_locale: &str) -> bool {
 fn resolve_lang(saved_lang: &str, locale: &str, cjk_fallback: bool) -> String {
     let locale = locale.to_lowercase();
     let mut lang = saved_lang.to_lowercase();
+    // Custom clients expose a "default" language choice. Treat it like an
+    // unset preference so the platform-specific default can be applied.
+    if lang == "default" {
+        lang.clear();
+    }
     if cjk_fallback && is_cjk_lang(&lang) {
         return "en".to_owned();
     }
@@ -187,7 +192,14 @@ fn resolve_lang(saved_lang: &str, locale: &str, cjk_fallback: bool) -> String {
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn translate(name: String) -> String {
-    let locale = sys_locale::get_locale().unwrap_or_default();
+    let saved_lang = hbb_common::config::LocalConfig::get_option("lang");
+    let locale = if cfg!(target_os = "windows")
+        && (saved_lang.is_empty() || saved_lang.eq_ignore_ascii_case("default"))
+    {
+        "fa".to_owned()
+    } else {
+        sys_locale::get_locale().unwrap_or_default()
+    };
     translate_locale(name, &locale)
 }
 
@@ -260,12 +272,12 @@ pub fn translate_locale(name: String, locale: &str) -> String {
         if let Some(value) = placeholder_value.as_ref() {
             s = s.replace("{}", &value);
         }
-        if !crate::is_rustdesk() {
+        if !crate::is_rustdesk() || cfg!(windows) {
             if s.contains("RustDesk")
                 && !name.starts_with("upgrade_rustdesk_server_pro")
                 && name != "powered_by_me"
             {
-                let app_name = crate::get_app_name();
+                let app_name = crate::get_app_display_name();
                 if !app_name.contains("RustDesk") {
                     s = s.replace("RustDesk", &app_name);
                 } else {
@@ -353,6 +365,14 @@ mod test {
         assert_eq!(f("", "zh_CN", true), "en");
         assert_eq!(f("", "ja-JP", true), "en");
         assert_eq!(f("", "ko_KR", true), "en");
+    }
+
+    #[test]
+    fn test_resolve_lang_treats_custom_default_as_unset() {
+        use super::resolve_lang as f;
+
+        assert_eq!(f("default", "fa-IR", false), "fa");
+        assert_eq!(f("default", "en-US", false), "en");
     }
 
     #[test]

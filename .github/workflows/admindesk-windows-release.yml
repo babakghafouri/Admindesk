@@ -11,17 +11,26 @@ on:
       - ".github/workflows/flutter-build.yml"
       - ".github/workflows/third-party-RustDeskTempTopMostWindow.yml"
       - "flutter/lib/**"
+      - "flutter/assets/**"
+      - "flutter/windows/**"
+      - "flutter/pubspec.yaml"
+      - "res/icon.ico"
       - "src/lang/fa.rs"
+      - "src/lang.rs"
       - "src/common.rs"
       - "src/client.rs"
+      - "src/flutter.rs"
+      - "src/flutter_ffi.rs"
+      - "src/platform/windows.rs"
       - "res/admindesk/**"
+      - "res/job.py"
       - "res/msi/**"
 
 permissions:
   contents: write
 
 concurrency:
-  group: admindesk-windows-release-1.5.1-preview3
+  group: admindesk-windows-release-1.5.1-preview5
   cancel-in-progress: false
 
 jobs:
@@ -32,6 +41,6 @@ jobs:
     with:
       windows-only: true
       upload-artifact: true
-      upload-tag: admindesk-win-v1.5.1-preview.3
+      upload-tag: admindesk-win-v1.5.1-preview.5
       publish-update-metadata: false
     secrets: inherit

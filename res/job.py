@@ -15,10 +15,10 @@ logging.basicConfig(
 )
 
 # The URL of your Flask server
-BASE_URL = os.getenv("BASE_URL") or "http://localhost:5000"
+BASE_URL = (os.getenv("BASE_URL") or "http://localhost:5000").rstrip("/")
 
-# The secret key for API authentication
-SECRET_KEY = os.getenv("SECRET_KEY") or "worldpeace2024"
+# The secret key for API authentication. Never fall back to a known default.
+SECRET_KEY = os.getenv("SECRET_KEY") or ""
 
 # The headers for API requests
 HEADERS = {"Authorization": f"Bearer {SECRET_KEY}"}
@@ -164,9 +164,12 @@ def sign_one_file(file_path):
         n += 1
         status = get_status(task_id)
         if status and status.get("state") == "done":
-            download_one_file(
+            if not download_one_file(
                 task_id, os.path.basename(file_path), os.path.dirname(file_path)
-            )
+            ):
+                delete_task(task_id)
+                logging.error(f"Failed to download signed output for {file_path}")
+                return False
             delete_task(task_id)
             logging.info(f"Signed {file_path}")
             return True
@@ -217,10 +220,13 @@ def sign_files(dir_path, only_ext=None):
             if ext in SIGN_EXTENSIONS:
                 if not sign_one_file(file_path):
                     logging.error(f"Failed to sign {file_path}")
-                    break
+                    raise SystemExit(1)
 
 
 def main():
+    if not SECRET_KEY:
+        raise SystemExit("SECRET_KEY must be configured; refusing to call the signing service.")
+
     parser = argparse.ArgumentParser(
         description="Command line interface for task operations."
     )

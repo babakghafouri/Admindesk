@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
-import '../../common.dart';
 import '../../models/state_model.dart';
 import '../theme/admindesk_theme.dart';
 
@@ -48,68 +47,6 @@ class AdminDeskTitleBrand extends StatelessWidget {
   }
 }
 
-/// Only a view over MyTheme's existing local preference mechanism.
-class AdminDeskThemeToggle extends StatelessWidget {
-  const AdminDeskThemeToggle({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AdminDeskColors.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      height: 30,
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: colors.selectedBackground,
-        border: Border.all(color: colors.border),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _mode(context, colors, Icons.light_mode_outlined,
-              'روشن', !isDark, ThemeMode.light),
-          _mode(context, colors, Icons.dark_mode_outlined,
-              'تاریک', isDark, ThemeMode.dark),
-        ],
-      ),
-    );
-  }
-
-  Widget _mode(BuildContext context, AdminDeskColors colors, IconData icon,
-      String label, bool active, ThemeMode mode) {
-    return Tooltip(
-      message: label,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () => MyTheme.changeDarkMode(mode),
-        child: Container(
-          decoration: BoxDecoration(
-            color: active ? colors.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-            border: active ? Border.all(color: colors.border) : null,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 9),
-          child: Row(
-            children: [
-              Icon(icon, size: 15,
-                  color: active ? colors.primary : colors.textSecondary),
-              const SizedBox(width: 4),
-              Text(label, style: AdminDeskTypography.caption(colors).copyWith(
-                fontSize: 10,
-                fontWeight: active
-                    ? AdminDeskTypography.bold
-                    : AdminDeskTypography.medium,
-                color: active ? colors.primary : colors.textSecondary,
-              )),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// App actions placed immediately before the existing native-behavior
 /// simulated Windows controls in DesktopTab's WindowActionPanel.
 class AdminDeskTitleActions extends StatelessWidget {
@@ -129,8 +66,6 @@ class AdminDeskTitleActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const AdminDeskServerHealth(),
-        const SizedBox(width: AdminDeskMetrics.spaceXs),
-        const AdminDeskThemeToggle(),
         const SizedBox(width: AdminDeskMetrics.spaceXs),
         Obx(() {
           final hasUpdate = stateGlobal.updateUrl.value.isNotEmpty;

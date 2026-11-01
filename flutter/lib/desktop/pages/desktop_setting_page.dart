@@ -28,6 +28,25 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../../common/widgets/dialog.dart';
 import '../../common/widgets/login.dart';
 
+extension _DirectionalWidgetMargin on Widget {
+  Widget marginDirectional({
+    double start = 0,
+    double end = 0,
+    double top = 0,
+    double bottom = 0,
+  }) {
+    return Container(
+      margin: EdgeInsetsDirectional.only(
+        start: start,
+        end: end,
+        top: top,
+        bottom: bottom,
+      ),
+      child: this,
+    );
+  }
+}
+
 const double _kTabWidth = 200;
 const double _kTabHeight = 42;
 const double _kCardFixedWidth = 540;
@@ -308,7 +327,7 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
   Widget _header(BuildContext context) {
     final settingsText = Text(
       translate('Settings'),
-      textAlign: TextAlign.left,
+      textAlign: TextAlign.start,
       style: const TextStyle(
         color: _accentColor,
         fontSize: _kTitleFontSize,
@@ -325,7 +344,7 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
               }
             },
             icon: Icon(Icons.arrow_back),
-          ).marginOnly(left: 5),
+          ).marginDirectional(start: 5),
         if (isWeb)
           SizedBox(
             height: 62,
@@ -333,12 +352,12 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
               alignment: Alignment.center,
               child: settingsText,
             ),
-          ).marginOnly(left: 20),
+          ).marginDirectional(start: 20),
         if (!isWeb)
           SizedBox(
             height: 62,
             child: settingsText,
-          ).marginOnly(left: 20, top: 10),
+          ).marginDirectional(start: 20, top: 10),
         const Spacer(),
       ],
     );
@@ -379,7 +398,7 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
               selected ? tab.selected : tab.unselected,
               color: selected ? _accentColor : null,
               size: 20,
-            ).marginOnly(left: 13, right: 10),
+            ).marginDirectional(start: 13, end: 10),
             Text(
               translate(tab.label),
               style: TextStyle(
@@ -416,7 +435,7 @@ class _GeneralState extends State<_General> {
       controller: scrollController,
       children: [
         if (!isWeb) service(),
-        theme(),
+        if (!isWindows) theme(),
         if (!isWindows) _Card(title: 'Language', children: [language()]),
         if (!isWeb) hwcodec(),
         if (!isWeb) audio(context),
@@ -425,7 +444,7 @@ class _GeneralState extends State<_General> {
         other(),
         if (!bind.isIncomingOnly()) keyboardShortcuts(),
       ],
-    ).marginOnly(bottom: _kListViewBottomMargin);
+    ).marginDirectional(bottom: _kListViewBottomMargin);
   }
 
   Widget keyboardShortcuts() {
@@ -709,7 +728,7 @@ class _GeneralState extends State<_General> {
           update: (_) {
             reloadAllWindows();
           },
-        ).marginOnly(left: _kCheckBoxLeftMargin * 3),
+        ).marginDirectional(start: _kCheckBoxLeftMargin * 3),
       ));
     }
     return _Card(title: 'Other', children: children);
@@ -788,7 +807,7 @@ class _GeneralState extends State<_General> {
           setDevice(key);
           setState(() {});
         },
-      ).marginOnly(left: _kContentHMargin);
+      ).marginDirectional(start: _kContentHMargin);
       return _Card(title: 'Audio Input Device', children: [child]);
     }
 
@@ -834,17 +853,21 @@ class _GeneralState extends State<_General> {
                     onTap: root_dir_exists
                         ? () => launchUrl(Uri.file(root_dir))
                         : null,
-                    child: Text(
-                      root_dir,
-                      softWrap: true,
-                      style: root_dir_exists
-                          ? const TextStyle(
-                              decoration: TextDecoration.underline)
-                          : null,
-                    )).marginOnly(left: 10),
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        root_dir,
+                        textAlign: TextAlign.left,
+                        softWrap: true,
+                        style: root_dir_exists
+                            ? const TextStyle(
+                                decoration: TextDecoration.underline)
+                            : null,
+                      ),
+                    )).marginDirectional(start: 10),
               ),
             ],
-          ).marginOnly(left: _kContentHMargin),
+          ).marginDirectional(start: _kContentHMargin),
         if (!(showRootDir && bind.isIncomingOnly()))
           Row(
             children: [
@@ -855,14 +878,18 @@ class _GeneralState extends State<_General> {
                     onTap: user_dir_exists
                         ? () => launchUrl(Uri.file(user_dir))
                         : null,
-                    child: Text(
-                      user_dir,
-                      softWrap: true,
-                      style: user_dir_exists
-                          ? const TextStyle(
-                              decoration: TextDecoration.underline)
-                          : null,
-                    )).marginOnly(left: 10),
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        user_dir,
+                        textAlign: TextAlign.left,
+                        softWrap: true,
+                        style: user_dir_exists
+                            ? const TextStyle(
+                                decoration: TextDecoration.underline)
+                            : null,
+                      ),
+                    )).marginDirectional(start: 10),
               ),
               ElevatedButton(
                       onPressed: isOptionFixed(kOptionVideoSaveDirectory)
@@ -885,9 +912,9 @@ class _GeneralState extends State<_General> {
                               }
                             },
                       child: Text(translate('Change')))
-                  .marginOnly(left: 5),
+                  .marginDirectional(start: 5),
             ],
-          ).marginOnly(left: _kContentHMargin),
+          ).marginDirectional(start: _kContentHMargin),
       ]);
     });
   }
@@ -920,7 +947,7 @@ class _GeneralState extends State<_General> {
           if (!isWeb) bind.mainChangeLanguage(lang: key);
         },
         enabled: !isOptFixed,
-      ).marginOnly(left: _kContentHMargin);
+      ).marginDirectional(start: _kContentHMargin);
     });
   }
 
@@ -973,7 +1000,7 @@ class _GeneralState extends State<_General> {
                       contentPadding:
                           EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                     ),
-                  ).workaroundFreezeLinuxMint().marginOnly(right: 15),
+                  ).workaroundFreezeLinuxMint().marginDirectional(end: 15),
                 ),
                 Obx(() => Offstage(
                       offstage: typed.value.trim() == saved.value.trim(),
@@ -1046,7 +1073,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               ]),
             ),
           ],
-        )).marginOnly(bottom: _kListViewBottomMargin);
+        )).marginDirectional(bottom: _kListViewBottomMargin);
   }
 
   Widget tfa() {
@@ -1078,7 +1105,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                   Checkbox(
                           value: has2fa.value,
                           onChanged: enabled ? onChanged : null)
-                      .marginOnly(right: 5),
+                      .marginDirectional(end: 5),
                   Expanded(
                       child: Text(
                     translate('enable-2fa-title'),
@@ -1091,7 +1118,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
         onTap: () {
           onChanged(!has2fa.value);
         },
-      ).marginOnly(left: _kCheckBoxLeftMargin);
+      ).marginDirectional(start: _kCheckBoxLeftMargin);
       if (!has2fa.value) {
         return tfa;
       }
@@ -1121,7 +1148,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                       Checkbox(
                               value: hasBot.value,
                               onChanged: enabled ? onChangedBot : null)
-                          .marginOnly(right: 5),
+                          .marginDirectional(end: 5),
                       Expanded(
                           child: Text(
                         translate('Telegram bot'),
@@ -1134,7 +1161,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
         onTap: () {
           onChangedBot(!hasBot.value);
         },
-      ).marginOnly(left: _kCheckBoxLeftMargin + 30);
+      ).marginDirectional(start: _kCheckBoxLeftMargin + 30);
 
       final trust = Row(
         children: [
@@ -1158,7 +1185,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                       },
                 child: Text(translate('Manage trusted devices')))
         ],
-      ).marginOnly(left: 30);
+      ).marginDirectional(start: 30);
 
       return Column(
         children: [tfa, bot, trust],
@@ -1224,7 +1251,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
             onChanged: (mode) async {
               await bind.mainSetOption(key: kOptionAccessMode, value: mode);
               setState(() {});
-            }).marginOnly(left: _kContentHMargin),
+            }).marginDirectional(start: _kContentHMargin),
         Column(
           children: [
             _OptionCheckBox(
@@ -1368,7 +1395,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                                 model.switchAllowNumericOneTimePassword();
                               }
                             : null)
-                    .marginOnly(right: 5),
+                    .marginDirectional(end: 5),
                 Expanded(
                     child: Text(
                   translate('Numeric one-time password'),
@@ -1380,7 +1407,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
             onTap: isNumOPTChangable
                 ? () => model.switchAllowNumericOneTimePassword()
                 : null,
-          ).marginOnly(left: _kContentHSubMargin - 5);
+          ).marginDirectional(start: _kContentHSubMargin - 5);
 
           final modeKeys = <String>[
             'password',
@@ -1406,7 +1433,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               values: modeValues,
               initialKey: modeInitialKey,
               onChanged: (key) => model.setApproveMode(key),
-            ).marginOnly(left: _kContentHMargin),
+            ).marginDirectional(start: _kContentHMargin),
             if (usePassword) radios[0],
             if (usePassword)
               _SubLabeledWidget(
@@ -1424,7 +1451,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               _SubButton('Set permanent password', setPasswordDialog,
                   permEnabled && !locked),
             // if (usePassword)
-            //   hide_cm(!locked).marginOnly(left: _kContentHSubMargin - 6),
+            //   hide_cm(!locked).marginDirectional(start: _kContentHSubMargin - 6),
             if (usePassword) radios[2],
           ]);
         })));
@@ -1466,14 +1493,14 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               Checkbox(
                       value: value,
                       onChanged: enabled ? (_) => onChanged(!value) : null)
-                  .marginOnly(right: 5),
+                  .marginDirectional(end: 5),
               Expanded(
                 child: Text(translate('Enable RDP session sharing'),
                     style:
                         TextStyle(color: disabledTextColor(context, enabled))),
               )
             ],
-          ).marginOnly(left: _kCheckBoxLeftMargin),
+          ).marginDirectional(start: _kCheckBoxLeftMargin),
           onTap: enabled ? () => onChanged(!value) : null),
     );
   }
@@ -1515,7 +1542,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                       contentPadding:
                           EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                     ),
-                  ).workaroundFreezeLinuxMint().marginOnly(right: 15),
+                  ).workaroundFreezeLinuxMint().marginDirectional(end: 15),
                 ),
                 Obx(() => ElevatedButton(
                       onPressed: applyEnabled.value &&
@@ -1566,13 +1593,13 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                   Checkbox(
                           value: hasWhitelist.value,
                           onChanged: enabled && !isOptFixed ? onChanged : null)
-                      .marginOnly(right: 5),
+                      .marginDirectional(end: 5),
                   Offstage(
                     offstage: !hasWhitelist.value,
                     child: MouseRegion(
                       child: const Icon(Icons.warning_amber_rounded,
                               color: Color.fromARGB(255, 255, 204, 0))
-                          .marginOnly(right: 5),
+                          .marginDirectional(end: 5),
                       cursor: SystemMouseCursors.click,
                     ),
                   ),
@@ -1590,7 +1617,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                 onChanged(!hasWhitelist.value);
               }
             : null,
-      ).marginOnly(left: _kCheckBoxLeftMargin);
+      ).marginDirectional(start: _kCheckBoxLeftMargin);
     }
 
     return tmpWrapper();
@@ -1616,13 +1643,13 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                 Checkbox(
                         value: hasIdWhitelist.value,
                         onChanged: enabled && !isOptFixed ? onChanged : null)
-                    .marginOnly(right: 5),
+                    .marginDirectional(end: 5),
                 Offstage(
                   offstage: !hasIdWhitelist.value,
                   child: MouseRegion(
                     child: const Icon(Icons.warning_amber_rounded,
                             color: Color.fromARGB(255, 255, 204, 0))
-                        .marginOnly(right: 5),
+                        .marginDirectional(end: 5),
                     cursor: SystemMouseCursors.click,
                   ),
                 ),
@@ -1639,7 +1666,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               onChanged(!hasIdWhitelist.value);
             }
           : null,
-    ).marginOnly(left: _kCheckBoxLeftMargin);
+    ).marginDirectional(start: _kCheckBoxLeftMargin);
   }
 
   Widget hide_cm(bool enabled) {
@@ -1667,7 +1694,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                             onChanged: enabled && enableHideCm
                                 ? onHideCmChanged
                                 : null)
-                        .marginOnly(right: 5),
+                        .marginDirectional(end: 5),
                     Expanded(
                       child: Text(
                         translate('Hide connection management window'),
@@ -1718,7 +1745,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                     contentPadding:
                         EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                   ),
-                ).workaroundFreezeLinuxMint().marginOnly(right: 15),
+                ).workaroundFreezeLinuxMint().marginDirectional(end: 15),
               ),
               Obx(() => ElevatedButton(
                     onPressed:
@@ -1760,7 +1787,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               Checkbox(
                       value: unlockPin.isNotEmpty,
                       onChanged: enabled && !isOptFixed ? onChanged : null)
-                  .marginOnly(right: 5),
+                  .marginDirectional(end: 5),
               Expanded(
                   child: Text(
                 translate('Unlock with PIN'),
@@ -1773,7 +1800,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               onChanged(!unlockPin.isNotEmpty);
             }
           : null,
-    ).marginOnly(left: _kCheckBoxLeftMargin);
+    ).marginDirectional(start: _kCheckBoxLeftMargin);
   }
 }
 
@@ -1805,7 +1832,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
           network(context),
         ]),
       ),
-    ]).marginOnly(bottom: _kListViewBottomMargin);
+    ]).marginDirectional(bottom: _kListViewBottomMargin);
   }
 
   Widget network(BuildContext context) {
@@ -1995,7 +2022,7 @@ class _DisplayState extends State<_Display> {
       if (isDesktop) trackpadSpeed(context),
       if (!isWeb) privacyModeImpl(context),
       other(context),
-    ]).marginOnly(bottom: _kListViewBottomMargin);
+    ]).marginDirectional(bottom: _kListViewBottomMargin);
   }
 
   Widget viewStyle(BuildContext context) {
@@ -2234,12 +2261,12 @@ class _DisplayState extends State<_Display> {
             Checkbox(
                     value: value,
                     onChanged: isOptFixed ? null : (_) => onChanged(!value))
-                .marginOnly(right: 5),
+                .marginDirectional(end: 5),
             Expanded(
               child: Text(translate(label)),
             )
           ],
-        ).marginOnly(left: _kCheckBoxLeftMargin),
+        ).marginDirectional(start: _kCheckBoxLeftMargin),
         onTap: isOptFixed ? null : () => onChanged(!value));
   }
 
@@ -2266,7 +2293,7 @@ class _AccountState extends State<_Account> {
       children: [
         _Card(title: 'Account', children: [accountAction(), useInfo()]),
       ],
-    ).marginOnly(bottom: _kListViewBottomMargin);
+    ).marginDirectional(bottom: _kListViewBottomMargin);
   }
 
   Widget accountAction() {
@@ -2329,7 +2356,7 @@ class _AccountState extends State<_Account> {
               );
             }),
           ),
-        )).marginOnly(left: 18, top: 16);
+        )).marginDirectional(start: 18, top: 16);
   }
 
   Widget? _buildUserAvatar() {
@@ -2383,12 +2410,12 @@ class _CheckboxState extends State<_Checkbox> {
           Checkbox(
             value: value,
             onChanged: (_) => onChanged(!value),
-          ).marginOnly(right: 5),
+          ).marginDirectional(end: 5),
           Expanded(
             child: Text(translate(widget.label)),
           )
         ],
-      ).marginOnly(left: _kCheckBoxLeftMargin),
+      ).marginDirectional(start: _kCheckBoxLeftMargin),
       onTap: () => onChanged(!value),
     );
   }
@@ -2408,7 +2435,7 @@ class __PrinterState extends State<_Printer> {
     return ListView(controller: scrollController, children: [
       outgoing(context),
       incoming(context),
-    ]).marginOnly(bottom: _kListViewBottomMargin);
+    ]).marginDirectional(bottom: _kListViewBottomMargin);
   }
 
   Widget outgoing(BuildContext context) {
@@ -2417,17 +2444,17 @@ class __PrinterState extends State<_Printer> {
 
     Widget tipOsNotSupported() {
       return Align(
-        alignment: Alignment.topLeft,
+        alignment: AlignmentDirectional.topStart,
         child: Text(translate('printer-os-requirement-tip')),
-      ).marginOnly(left: _kCardLeftMargin);
+      ).marginDirectional(start: _kCardLeftMargin);
     }
 
     Widget tipClientNotInstalled() {
       return Align(
-        alignment: Alignment.topLeft,
+        alignment: AlignmentDirectional.topStart,
         child:
             Text(translate('printer-requires-installed-{$appName}-client-tip')),
-      ).marginOnly(left: _kCardLeftMargin);
+      ).marginDirectional(start: _kCardLeftMargin);
     }
 
     Widget tipPrinterNotInstalled() {
@@ -2445,34 +2472,34 @@ class __PrinterState extends State<_Printer> {
           () => failedMsg.value.isNotEmpty
               ? Offstage()
               : Align(
-                  alignment: Alignment.topLeft,
+                  alignment: AlignmentDirectional.topStart,
                   child: Text(translate('printer-{$appName}-not-installed-tip'))
-                      .marginOnly(bottom: 10.0),
+                      .marginDirectional(bottom: 10.0),
                 ),
         ),
         Obx(
           () => failedMsg.value.isEmpty
               ? Offstage()
               : Align(
-                  alignment: Alignment.topLeft,
+                  alignment: AlignmentDirectional.topStart,
                   child: Text(failedMsg.value,
                           style: DefaultTextStyle.of(context)
                               .style
                               .copyWith(color: Colors.red))
-                      .marginOnly(bottom: 10.0)),
+                      .marginDirectional(bottom: 10.0)),
         ),
         _Button('Install {$appName} Printer', () {
           failedMsg.value = '';
           bind.mainSetCommon(key: 'install-printer', value: '');
         })
-      ]).marginOnly(left: _kCardLeftMargin, bottom: 2.0);
+      ]).marginDirectional(start: _kCardLeftMargin, bottom: 2.0);
     }
 
     Widget tipReady() {
       return Align(
-        alignment: Alignment.topLeft,
+        alignment: AlignmentDirectional.topStart,
         child: Text(translate('printer-{$appName}-ready-tip')),
-      ).marginOnly(left: _kCardLeftMargin);
+      ).marginDirectional(start: _kCardLeftMargin);
     }
 
     final installed = bind.mainIsInstalled();
@@ -2529,7 +2556,7 @@ class __PrinterState extends State<_Printer> {
                 key: kKeyPrinterSelected, value: value);
             setState(() {});
           },
-        ).marginOnly(left: 10),
+        ).marginDirectional(start: 10),
       _OptionCheckBox(
         context,
         'auto-print-tip',
@@ -2632,7 +2659,7 @@ class _AboutState extends State<_About> {
                 )),
               ).marginSymmetric(vertical: 4.0)
             ],
-          ).marginOnly(left: _kContentHMargin)
+          ).marginDirectional(start: _kContentHMargin)
         ]),
       );
     });
@@ -2668,12 +2695,12 @@ Widget _Card(
                     )),
                     ...?title_suffix
                   ],
-                ).marginOnly(left: _kContentHMargin, top: 10, bottom: 10),
+                ).marginDirectional(start: _kContentHMargin, top: 10, bottom: 10),
                 ...children
-                    .map((e) => e.marginOnly(top: 4, right: _kContentHMargin)),
+                    .map((e) => e.marginDirectional(top: 4, end: _kContentHMargin)),
               ],
-            ).marginOnly(bottom: 10),
-          ).marginOnly(left: _kCardLeftMargin, top: 15),
+            ).marginDirectional(bottom: 10),
+          ).marginDirectional(start: _kCardLeftMargin, top: 15),
         ),
       ),
     ],
@@ -2733,10 +2760,10 @@ Widget _OptionCheckBox(
           Checkbox(
                   value: ref.value,
                   onChanged: enabled && !isOptFixed ? onChanged : null)
-              .marginOnly(right: 5),
+              .marginDirectional(end: 5),
           Offstage(
             offstage: !ref.value || checkedIcon == null,
-            child: checkedIcon?.marginOnly(right: 5),
+            child: checkedIcon?.marginDirectional(end: 5),
           ),
           // Without `trailing`, keep the original Expanded(Text) layout.
           if (trailing == null)
@@ -2757,7 +2784,7 @@ Widget _OptionCheckBox(
           ],
         ],
       ),
-    ).marginOnly(left: _kCheckBoxLeftMargin),
+    ).marginDirectional(start: _kCheckBoxLeftMargin),
     onTap: enabled && !isOptFixed
         ? () {
             onChanged(!ref.value);
@@ -2790,10 +2817,10 @@ Widget _Radio<T>(BuildContext context,
                   style: TextStyle(
                       fontSize: _kContentFontSize,
                       color: disabledTextColor(context, onChange2 != null)))
-              .marginOnly(left: 5),
+              .marginDirectional(start: 5),
         ),
       ],
-    ).marginOnly(left: _kRadioLeftMargin),
+    ).marginDirectional(start: _kRadioLeftMargin),
     onTap: () => onChange2?.call(value),
   );
 }
@@ -2937,12 +2964,12 @@ class _WaylandCardState extends State<WaylandCard> {
         () => _clearShortcutsInhibitorFailedMsg.value.isEmpty
             ? Offstage()
             : Align(
-                alignment: Alignment.topLeft,
+                alignment: AlignmentDirectional.topStart,
                 child: Text(_clearShortcutsInhibitorFailedMsg.value,
                         style: DefaultTextStyle.of(context)
                             .style
                             .copyWith(color: Colors.red))
-                    .marginOnly(bottom: 10.0)),
+                    .marginDirectional(bottom: 10.0)),
       ),
       _Button(
         'Reset keyboard shortcuts permission',
@@ -2975,7 +3002,7 @@ Widget _Button(String label, Function() onPressed,
   }
   return Row(children: [
     child,
-  ]).marginOnly(left: _kContentHMargin);
+  ]).marginDirectional(start: _kContentHMargin);
 }
 
 // ignore: non_constant_identifier_names
@@ -2989,7 +3016,7 @@ Widget _SubButton(String label, Function() onPressed, [bool enabled = true]) {
         ).marginSymmetric(horizontal: 15),
       ),
     ],
-  ).marginOnly(left: _kContentHSubMargin);
+  ).marginDirectional(start: _kContentHSubMargin);
 }
 
 // ignore: non_constant_identifier_names
@@ -3006,7 +3033,7 @@ Widget _SubLabeledWidget(BuildContext context, String label, Widget child,
       ),
       child,
     ],
-  ).marginOnly(left: _kContentHSubMargin);
+  ).marginDirectional(start: _kContentHSubMargin);
 }
 
 Widget _lock(
@@ -3032,7 +3059,7 @@ Widget _lock(
                               Icons.security_sharp,
                               size: 20,
                             ),
-                            Text(translate(label)).marginOnly(left: 5),
+                            Text(translate(label)).marginDirectional(start: 5),
                           ]).marginSymmetric(vertical: 2)),
                   onPressed: () async {
                     final unlockPin = bind.mainGetUnlockPin();
@@ -3046,8 +3073,8 @@ Widget _lock(
                     }
                   },
                 ).marginSymmetric(horizontal: 2, vertical: 4),
-              ).marginOnly(left: _kCardLeftMargin),
-            ).marginOnly(top: 10),
+              ).marginDirectional(start: _kCardLeftMargin),
+            ).marginDirectional(top: 10),
           ),
         ],
       ));
@@ -3070,10 +3097,10 @@ _LabeledTextField(
       TableRow(
         children: [
           Padding(
-            padding: const EdgeInsets.only(right: 10),
+            padding: const EdgeInsetsDirectional.only(end: 10),
             child: Text(
               '${translate(label)}:',
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.start,
               style: TextStyle(
                 fontSize: 16,
                 color: disabledTextColor(context, enabled),
@@ -3095,7 +3122,7 @@ _LabeledTextField(
         ],
       ),
     ],
-  ).marginOnly(bottom: 8);
+  ).marginDirectional(bottom: 8);
 }
 
 class _CountDownButton extends StatefulWidget {
@@ -3181,10 +3208,10 @@ class _ShortcutsConfigureRow extends StatelessWidget {
           ),
           Icon(Icons.arrow_forward_ios,
                   size: 16, color: disabledTextColor(context, true))
-              .marginOnly(right: 4),
+              .marginDirectional(end: 4),
         ],
-      ).marginOnly(
-        left: _kCheckBoxLeftMargin,
+      ).marginDirectional(
+        start: _kCheckBoxLeftMargin,
         top: 6,
         bottom: 6,
       ),
@@ -3267,12 +3294,12 @@ void changeSocks5Proxy() async {
                   ConstrainedBox(
                     constraints: const BoxConstraints(minWidth: 140),
                     child: Align(
-                        alignment: Alignment.centerRight,
+                        alignment: AlignmentDirectional.centerEnd,
                         child: Row(
                           children: [
                             Text(
                               translate('Server'),
-                            ).marginOnly(right: 4),
+                            ).marginDirectional(end: 4),
                             Tooltip(
                               waitDuration: Duration(milliseconds: 0),
                               message: translate("default_proxy_tip"),
@@ -3287,7 +3314,7 @@ void changeSocks5Proxy() async {
                               ),
                             ),
                           ],
-                        )).marginOnly(right: 10),
+                        )).marginDirectional(end: 10),
                   ),
                 Expanded(
                   child: TextField(
@@ -3304,7 +3331,7 @@ void changeSocks5Proxy() async {
                   ).workaroundFreezeLinuxMint(),
                 ),
               ],
-            ).marginOnly(bottom: 8),
+            ).marginDirectional(bottom: 8),
             Row(
               children: [
                 if (!isMobile)
@@ -3312,8 +3339,8 @@ void changeSocks5Proxy() async {
                       constraints: const BoxConstraints(minWidth: 140),
                       child: Text(
                         '${translate("Username")}:',
-                        textAlign: TextAlign.right,
-                      ).marginOnly(right: 10)),
+                        textAlign: TextAlign.start,
+                      ).marginDirectional(end: 10)),
                 Expanded(
                   child: TextField(
                     controller: userController,
@@ -3324,7 +3351,7 @@ void changeSocks5Proxy() async {
                   ).workaroundFreezeLinuxMint(),
                 ),
               ],
-            ).marginOnly(bottom: 8),
+            ).marginDirectional(bottom: 8),
             Row(
               children: [
                 if (!isMobile)
@@ -3332,8 +3359,8 @@ void changeSocks5Proxy() async {
                       constraints: const BoxConstraints(minWidth: 140),
                       child: Text(
                         '${translate("Password")}:',
-                        textAlign: TextAlign.right,
-                      ).marginOnly(right: 10)),
+                        textAlign: TextAlign.start,
+                      ).marginDirectional(end: 10)),
                 Expanded(
                   child: Obx(() => TextField(
                         obscureText: obscure.value,
@@ -3353,7 +3380,7 @@ void changeSocks5Proxy() async {
             ),
             // NOT use Offstage to wrap LinearProgressIndicator
             if (isInProgress)
-              const LinearProgressIndicator().marginOnly(top: 8),
+              const LinearProgressIndicator().marginDirectional(top: 8),
           ],
         ),
       ),
