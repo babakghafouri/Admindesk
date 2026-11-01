@@ -4060,7 +4060,8 @@ fn get_create_service(exe: &str) -> String {
     let stop = Config::get_option("stop-service") == "Y";
     if stop {
         format!("
-if exist \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{display_name} Tray.lnk\" del /f /q \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{app_name} Tray.lnk\"
+if exist \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{display_name} Tray.lnk\" del /f /q \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{display_name} Tray.lnk\"
+if exist \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\RustDesk Tray.lnk\" del /f /q \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\RustDesk Tray.lnk\"
 ", app_name = crate::get_app_name(), display_name = crate::get_app_display_name())
     } else {
         let exe = escape_nested_cmd_ampersands(exe);
