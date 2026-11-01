@@ -362,6 +362,16 @@ hideCmWindow({bool isStartup = false}) async {
   }
 }
 
+Locale _windowsAppLocale() {
+  final selected = bind.mainGetLocalOption(key: kCommConfKeyLang).toLowerCase();
+  if (selected.isEmpty || selected == 'default') {
+    return const Locale('fa');
+  }
+  if (selected == 'zh-cn') return const Locale('zh', 'CN');
+  if (selected == 'zh-tw') return const Locale('zh', 'TW');
+  return Locale(selected.split('-').first);
+}
+
 void _runApp(
   String title,
   Widget home,
@@ -373,7 +383,7 @@ void _runApp(
       navigatorKey: globalKey,
       debugShowCheckedModeBanner: false,
       title: title,
-      locale: isWindows ? const Locale('fa') : null,
+      locale: isWindows ? _windowsAppLocale() : null,
       theme: MyTheme.lightTheme,
       darkTheme: MyTheme.darkTheme,
       themeMode: themeMode,
@@ -509,7 +519,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           navigatorKey: globalKey,
           debugShowCheckedModeBanner: false,
           title: 'Admin Desk',
-          locale: isWindows ? const Locale('fa') : null,
+          locale: isWindows ? _windowsAppLocale() : null,
           theme: MyTheme.lightTheme,
           darkTheme: MyTheme.darkTheme,
           themeMode: MyTheme.currentThemeMode(),
