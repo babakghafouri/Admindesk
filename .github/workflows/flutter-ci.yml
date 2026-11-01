@@ -1,19 +1,10 @@
 name: Windows Flutter CI
 
-# Full native builds require a write-capable caller token because the existing
-# reusable build workflow has publishing jobs that request contents: write.
-# Keep pull requests on the separate read-only CI workflow (ci.yml).
+# Manual-only diagnostic build. The dedicated AdminDesk Windows release
+# workflow is the sole automatic publisher, preventing duplicate Windows builds
+# and duplicate nightly/release assets on every master push.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - ".github/ISSUE_TEMPLATE/**"
-      - "docs/**"
-      - "README.md"
-      - "appimage/**"
-      - "flatpak/**"
 
 jobs:
   run-ci:
