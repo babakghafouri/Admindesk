@@ -2701,7 +2701,9 @@ pub fn get_builtin_option(key: &str) -> String {
 
 #[inline]
 pub fn is_custom_client() -> bool {
-    get_app_name() != "RustDesk"
+    // This Windows target is the AdminDesk product even though the legacy
+    // storage/service namespace is retained for profile compatibility.
+    cfg!(windows) || get_app_name() != "RustDesk"
 }
 
 pub fn verify_login(_raw: &str, _id: &str) -> bool {
