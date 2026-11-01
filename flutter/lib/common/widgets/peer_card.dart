@@ -390,7 +390,7 @@ class _PeerCardState extends State<_PeerCard>
                 sigmaY: isWindows ? 22 : 16,
               ),
               child: Container(
-                padding: const EdgeInsets.all(13),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -488,7 +488,7 @@ class _PeerCardState extends State<_PeerCard>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 9),
+                    const SizedBox(height: 5),
                     // Device title.
                     Text(
                       displayName,
@@ -497,7 +497,7 @@ class _PeerCardState extends State<_PeerCard>
                       textDirection: Directionality.of(context),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 15,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -517,7 +517,7 @@ class _PeerCardState extends State<_PeerCard>
                           ),
                         ),
                       ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 2),
                     // Remote ID is always rendered LTR, independently of the
                     // Persian application direction.
                     Row(
@@ -534,7 +534,7 @@ class _PeerCardState extends State<_PeerCard>
                                   .colorScheme
                                   .onSurface
                                   .withOpacity(0.82),
-                              fontSize: 13,
+                              fontSize: 11,
                               fontWeight: FontWeight.w500,
                               letterSpacing: 0.25,
                             ),
@@ -554,46 +554,17 @@ class _PeerCardState extends State<_PeerCard>
                         ),
                       ],
                     ),
-                    const Spacer(),
-                    // Main connect action and two compact device actions.
+                    const SizedBox(height: 5),
+                    // Keep compact device actions; double-click the card to connect.
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Expanded(
-                          child: SizedBox(
-                            height: 38,
-                            child: ElevatedButton.icon(
-                              onPressed: () => widget.connect(context, peer.id),
-                              icon: const Icon(
-                                Icons.compare_arrows_rounded,
-                                size: 17,
-                              ),
-                              label: Text(translate('Connect')),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF168BFA),
-                                foregroundColor: Colors.white,
-                                elevation: 2,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 7,
-                                ),
-                                textStyle: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 7),
                         _glassActionButton(
                           icon: Icons.desktop_windows_outlined,
                           tooltip: translate('Open in new window'),
                           onTap: () => _connectInNewWindow(peer),
                         ),
-                        const SizedBox(width: 7),
+                        const SizedBox(width: 6),
                         _glassActionButton(
                           icon: Icons.edit_outlined,
                           tooltip: translate('Rename'),
@@ -624,8 +595,8 @@ class _PeerCardState extends State<_PeerCard>
           onTap: onTap,
           borderRadius: BorderRadius.circular(10),
           child: Container(
-            width: 39,
-            height: 38,
+            width: 31,
+            height: 30,
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.56),
               borderRadius: BorderRadius.circular(10),
@@ -636,7 +607,7 @@ class _PeerCardState extends State<_PeerCard>
             alignment: Alignment.center,
             child: Icon(
               icon,
-              size: 19,
+              size: 17,
               color: const Color(0xFF294B68),
             ),
           ),
