@@ -64,7 +64,7 @@ try {
         throw "The signing certificate changed between application and installer signing."
     }
 
-    $programFilesX86 = [Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86)
+    $programFilesX86 = [Environment]::GetFolderPath([System.Environment+SpecialFolder]::ProgramFilesX86)
     $kitRoot = Join-Path $programFilesX86 "Windows Kits\10\bin"
     $signTool = Get-ChildItem -Path $kitRoot -Filter "signtool.exe" -Recurse -File |
         Where-Object { $_.Directory.Name -eq "x64" } |
