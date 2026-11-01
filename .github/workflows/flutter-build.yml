@@ -796,10 +796,13 @@ jobs:
 
       - name: Sign rustdesk files
         if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != ''
+        env:
+          BASE_URL: ${{ env.SIGN_BASE_URL }}
+          SECRET_KEY: ${{ secrets.SIGN_SECRET_KEY }}
         shell: bash
         run: |
           pip3 install requests argparse
-          BASE_URL=${{ env.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./Release/
+          python3 res/job.py sign_files ./Release/
 
       - name: Verify Windows Sciter version
         if: env.UPLOAD_ARTIFACT == 'true' && env.PUBLISH_UPDATE_METADATA == 'true'
