@@ -264,10 +264,10 @@ class _PeersViewState extends State<_PeersView>
                       : peerCardUiType.value == PeerUiType.grid
                           ? SizedBox(
                               width: DevicesTableScope.enabledOf(context)
-                                  ? 278
+                                  ? 228
                                   : 220,
                               height: DevicesTableScope.enabledOf(context)
-                                  ? 166
+                                  ? 136
                                   : 140,
                               child: visibilityChild,
                             )
