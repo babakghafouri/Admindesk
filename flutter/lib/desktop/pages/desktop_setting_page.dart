@@ -308,7 +308,7 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
   Widget _header(BuildContext context) {
     final settingsText = Text(
       translate('Settings'),
-      textAlign: TextAlign.left,
+      textAlign: TextAlign.right,
       style: const TextStyle(
         color: _accentColor,
         fontSize: _kTitleFontSize,
@@ -325,7 +325,7 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
               }
             },
             icon: Icon(Icons.arrow_back),
-          ).marginOnly(left: 5),
+          ).marginOnly(right: 5),
         if (isWeb)
           SizedBox(
             height: 62,
@@ -333,12 +333,12 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
               alignment: Alignment.center,
               child: settingsText,
             ),
-          ).marginOnly(left: 20),
+          ).marginOnly(right: 20),
         if (!isWeb)
           SizedBox(
             height: 62,
             child: settingsText,
-          ).marginOnly(left: 20, top: 10),
+          ).marginOnly(right: 20, top: 10),
         const Spacer(),
       ],
     );
@@ -379,7 +379,7 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
               selected ? tab.selected : tab.unselected,
               color: selected ? _accentColor : null,
               size: 20,
-            ).marginOnly(left: 13, right: 10),
+            ).marginOnly(right: 13, left: 10),
             Text(
               translate(tab.label),
               style: TextStyle(
@@ -709,7 +709,7 @@ class _GeneralState extends State<_General> {
           update: (_) {
             reloadAllWindows();
           },
-        ).marginOnly(left: _kCheckBoxLeftMargin * 3),
+        ).marginOnly(right: _kCheckBoxLeftMargin * 3),
       ));
     }
     return _Card(title: 'Other', children: children);
@@ -788,7 +788,7 @@ class _GeneralState extends State<_General> {
           setDevice(key);
           setState(() {});
         },
-      ).marginOnly(left: _kContentHMargin);
+      ).marginOnly(right: _kContentHMargin);
       return _Card(title: 'Audio Input Device', children: [child]);
     }
 
@@ -834,17 +834,20 @@ class _GeneralState extends State<_General> {
                     onTap: root_dir_exists
                         ? () => launchUrl(Uri.file(root_dir))
                         : null,
-                    child: Text(
-                      root_dir,
-                      softWrap: true,
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        root_dir,
+                        textAlign: TextAlign.left,
+                        softWrap: true,
                       style: root_dir_exists
                           ? const TextStyle(
                               decoration: TextDecoration.underline)
                           : null,
-                    )).marginOnly(left: 10),
+                    ),).marginOnly(right: 10),
               ),
             ],
-          ).marginOnly(left: _kContentHMargin),
+          ).marginOnly(right: _kContentHMargin),
         if (!(showRootDir && bind.isIncomingOnly()))
           Row(
             children: [
@@ -855,14 +858,17 @@ class _GeneralState extends State<_General> {
                     onTap: user_dir_exists
                         ? () => launchUrl(Uri.file(user_dir))
                         : null,
-                    child: Text(
-                      user_dir,
-                      softWrap: true,
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        user_dir,
+                        textAlign: TextAlign.left,
+                        softWrap: true,
                       style: user_dir_exists
                           ? const TextStyle(
                               decoration: TextDecoration.underline)
                           : null,
-                    )).marginOnly(left: 10),
+                    )).marginOnly(right: 10),
               ),
               ElevatedButton(
                       onPressed: isOptionFixed(kOptionVideoSaveDirectory)
@@ -885,9 +891,9 @@ class _GeneralState extends State<_General> {
                               }
                             },
                       child: Text(translate('Change')))
-                  .marginOnly(left: 5),
+                  .marginOnly(right: 5),
             ],
-          ).marginOnly(left: _kContentHMargin),
+          ).marginOnly(right: _kContentHMargin),
       ]);
     });
   }
@@ -920,7 +926,7 @@ class _GeneralState extends State<_General> {
           if (!isWeb) bind.mainChangeLanguage(lang: key);
         },
         enabled: !isOptFixed,
-      ).marginOnly(left: _kContentHMargin);
+      ).marginOnly(right: _kContentHMargin);
     });
   }
 
@@ -1091,7 +1097,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
         onTap: () {
           onChanged(!has2fa.value);
         },
-      ).marginOnly(left: _kCheckBoxLeftMargin);
+      ).marginOnly(right: _kCheckBoxLeftMargin);
       if (!has2fa.value) {
         return tfa;
       }
@@ -1134,7 +1140,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
         onTap: () {
           onChangedBot(!hasBot.value);
         },
-      ).marginOnly(left: _kCheckBoxLeftMargin + 30);
+      ).marginOnly(right: _kCheckBoxLeftMargin + 30);
 
       final trust = Row(
         children: [
@@ -1158,7 +1164,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                       },
                 child: Text(translate('Manage trusted devices')))
         ],
-      ).marginOnly(left: 30);
+      ).marginOnly(right: 30);
 
       return Column(
         children: [tfa, bot, trust],
@@ -1224,7 +1230,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
             onChanged: (mode) async {
               await bind.mainSetOption(key: kOptionAccessMode, value: mode);
               setState(() {});
-            }).marginOnly(left: _kContentHMargin),
+            }).marginOnly(right: _kContentHMargin),
         Column(
           children: [
             _OptionCheckBox(
@@ -1380,7 +1386,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
             onTap: isNumOPTChangable
                 ? () => model.switchAllowNumericOneTimePassword()
                 : null,
-          ).marginOnly(left: _kContentHSubMargin - 5);
+          ).marginOnly(right: _kContentHSubMargin - 5);
 
           final modeKeys = <String>[
             'password',
@@ -1406,7 +1412,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               values: modeValues,
               initialKey: modeInitialKey,
               onChanged: (key) => model.setApproveMode(key),
-            ).marginOnly(left: _kContentHMargin),
+            ).marginOnly(right: _kContentHMargin),
             if (usePassword) radios[0],
             if (usePassword)
               _SubLabeledWidget(
@@ -1424,7 +1430,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               _SubButton('Set permanent password', setPasswordDialog,
                   permEnabled && !locked),
             // if (usePassword)
-            //   hide_cm(!locked).marginOnly(left: _kContentHSubMargin - 6),
+            //   hide_cm(!locked).marginOnly(right: _kContentHSubMargin - 6),
             if (usePassword) radios[2],
           ]);
         })));
@@ -1473,7 +1479,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                         TextStyle(color: disabledTextColor(context, enabled))),
               )
             ],
-          ).marginOnly(left: _kCheckBoxLeftMargin),
+          ).marginOnly(right: _kCheckBoxLeftMargin),
           onTap: enabled ? () => onChanged(!value) : null),
     );
   }
@@ -1590,7 +1596,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                 onChanged(!hasWhitelist.value);
               }
             : null,
-      ).marginOnly(left: _kCheckBoxLeftMargin);
+      ).marginOnly(right: _kCheckBoxLeftMargin);
     }
 
     return tmpWrapper();
@@ -1639,7 +1645,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               onChanged(!hasIdWhitelist.value);
             }
           : null,
-    ).marginOnly(left: _kCheckBoxLeftMargin);
+    ).marginOnly(right: _kCheckBoxLeftMargin);
   }
 
   Widget hide_cm(bool enabled) {
@@ -1773,7 +1779,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               onChanged(!unlockPin.isNotEmpty);
             }
           : null,
-    ).marginOnly(left: _kCheckBoxLeftMargin);
+    ).marginOnly(right: _kCheckBoxLeftMargin);
   }
 }
 
@@ -2239,7 +2245,7 @@ class _DisplayState extends State<_Display> {
               child: Text(translate(label)),
             )
           ],
-        ).marginOnly(left: _kCheckBoxLeftMargin),
+        ).marginOnly(right: _kCheckBoxLeftMargin),
         onTap: isOptFixed ? null : () => onChanged(!value));
   }
 
@@ -2329,7 +2335,7 @@ class _AccountState extends State<_Account> {
               );
             }),
           ),
-        )).marginOnly(left: 18, top: 16);
+        )).marginOnly(right: 18, top: 16);
   }
 
   Widget? _buildUserAvatar() {
@@ -2388,7 +2394,7 @@ class _CheckboxState extends State<_Checkbox> {
             child: Text(translate(widget.label)),
           )
         ],
-      ).marginOnly(left: _kCheckBoxLeftMargin),
+      ).marginOnly(right: _kCheckBoxLeftMargin),
       onTap: () => onChanged(!value),
     );
   }
@@ -2417,17 +2423,17 @@ class __PrinterState extends State<_Printer> {
 
     Widget tipOsNotSupported() {
       return Align(
-        alignment: Alignment.topLeft,
+        alignment: Alignment.topRight,
         child: Text(translate('printer-os-requirement-tip')),
-      ).marginOnly(left: _kCardLeftMargin);
+      ).marginOnly(right: _kCardLeftMargin);
     }
 
     Widget tipClientNotInstalled() {
       return Align(
-        alignment: Alignment.topLeft,
+        alignment: Alignment.topRight,
         child:
             Text(translate('printer-requires-installed-{$appName}-client-tip')),
-      ).marginOnly(left: _kCardLeftMargin);
+      ).marginOnly(right: _kCardLeftMargin);
     }
 
     Widget tipPrinterNotInstalled() {
@@ -2445,7 +2451,7 @@ class __PrinterState extends State<_Printer> {
           () => failedMsg.value.isNotEmpty
               ? Offstage()
               : Align(
-                  alignment: Alignment.topLeft,
+                  alignment: Alignment.topRight,
                   child: Text(translate('printer-{$appName}-not-installed-tip'))
                       .marginOnly(bottom: 10.0),
                 ),
@@ -2454,7 +2460,7 @@ class __PrinterState extends State<_Printer> {
           () => failedMsg.value.isEmpty
               ? Offstage()
               : Align(
-                  alignment: Alignment.topLeft,
+                  alignment: Alignment.topRight,
                   child: Text(failedMsg.value,
                           style: DefaultTextStyle.of(context)
                               .style
@@ -2465,14 +2471,14 @@ class __PrinterState extends State<_Printer> {
           failedMsg.value = '';
           bind.mainSetCommon(key: 'install-printer', value: '');
         })
-      ]).marginOnly(left: _kCardLeftMargin, bottom: 2.0);
+      ]).marginOnly(right: _kCardLeftMargin, bottom: 2.0);
     }
 
     Widget tipReady() {
       return Align(
-        alignment: Alignment.topLeft,
+        alignment: Alignment.topRight,
         child: Text(translate('printer-{$appName}-ready-tip')),
-      ).marginOnly(left: _kCardLeftMargin);
+      ).marginOnly(right: _kCardLeftMargin);
     }
 
     final installed = bind.mainIsInstalled();
@@ -2529,7 +2535,7 @@ class __PrinterState extends State<_Printer> {
                 key: kKeyPrinterSelected, value: value);
             setState(() {});
           },
-        ).marginOnly(left: 10),
+        ).marginOnly(right: 10),
       _OptionCheckBox(
         context,
         'auto-print-tip',
@@ -2632,7 +2638,7 @@ class _AboutState extends State<_About> {
                 )),
               ).marginSymmetric(vertical: 4.0)
             ],
-          ).marginOnly(left: _kContentHMargin)
+          ).marginOnly(right: _kContentHMargin)
         ]),
       );
     });
@@ -2668,12 +2674,12 @@ Widget _Card(
                     )),
                     ...?title_suffix
                   ],
-                ).marginOnly(left: _kContentHMargin, top: 10, bottom: 10),
+                ).marginOnly(right: _kContentHMargin, top: 10, bottom: 10),
                 ...children
                     .map((e) => e.marginOnly(top: 4, right: _kContentHMargin)),
               ],
             ).marginOnly(bottom: 10),
-          ).marginOnly(left: _kCardLeftMargin, top: 15),
+          ).marginOnly(right: _kCardLeftMargin, top: 15),
         ),
       ),
     ],
@@ -2757,7 +2763,7 @@ Widget _OptionCheckBox(
           ],
         ],
       ),
-    ).marginOnly(left: _kCheckBoxLeftMargin),
+    ).marginOnly(right: _kCheckBoxLeftMargin),
     onTap: enabled && !isOptFixed
         ? () {
             onChanged(!ref.value);
@@ -2790,10 +2796,10 @@ Widget _Radio<T>(BuildContext context,
                   style: TextStyle(
                       fontSize: _kContentFontSize,
                       color: disabledTextColor(context, onChange2 != null)))
-              .marginOnly(left: 5),
+              .marginOnly(right: 5),
         ),
       ],
-    ).marginOnly(left: _kRadioLeftMargin),
+    ).marginOnly(right: _kRadioLeftMargin),
     onTap: () => onChange2?.call(value),
   );
 }
@@ -2937,7 +2943,7 @@ class _WaylandCardState extends State<WaylandCard> {
         () => _clearShortcutsInhibitorFailedMsg.value.isEmpty
             ? Offstage()
             : Align(
-                alignment: Alignment.topLeft,
+                alignment: Alignment.topRight,
                 child: Text(_clearShortcutsInhibitorFailedMsg.value,
                         style: DefaultTextStyle.of(context)
                             .style
@@ -2975,7 +2981,7 @@ Widget _Button(String label, Function() onPressed,
   }
   return Row(children: [
     child,
-  ]).marginOnly(left: _kContentHMargin);
+  ]).marginOnly(right: _kContentHMargin);
 }
 
 // ignore: non_constant_identifier_names
@@ -2989,7 +2995,7 @@ Widget _SubButton(String label, Function() onPressed, [bool enabled = true]) {
         ).marginSymmetric(horizontal: 15),
       ),
     ],
-  ).marginOnly(left: _kContentHSubMargin);
+  ).marginOnly(right: _kContentHSubMargin);
 }
 
 // ignore: non_constant_identifier_names
@@ -3006,7 +3012,7 @@ Widget _SubLabeledWidget(BuildContext context, String label, Widget child,
       ),
       child,
     ],
-  ).marginOnly(left: _kContentHSubMargin);
+  ).marginOnly(right: _kContentHSubMargin);
 }
 
 Widget _lock(
@@ -3032,7 +3038,7 @@ Widget _lock(
                               Icons.security_sharp,
                               size: 20,
                             ),
-                            Text(translate(label)).marginOnly(left: 5),
+                            Text(translate(label)).marginOnly(right: 5),
                           ]).marginSymmetric(vertical: 2)),
                   onPressed: () async {
                     final unlockPin = bind.mainGetUnlockPin();
@@ -3046,7 +3052,7 @@ Widget _lock(
                     }
                   },
                 ).marginSymmetric(horizontal: 2, vertical: 4),
-              ).marginOnly(left: _kCardLeftMargin),
+              ).marginOnly(right: _kCardLeftMargin),
             ).marginOnly(top: 10),
           ),
         ],
