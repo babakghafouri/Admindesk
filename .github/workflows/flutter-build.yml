@@ -473,7 +473,14 @@ jobs:
         shell: pwsh
         run: |
           $extensions = @('.exe', '.dll', '.sys', '.vxd', '.msix', '.msixbundle', '.appx', '.appxbundle', '.msi', '.msp', '.msm', '.cab', '.ps1', '.psm1')
-          $files = @(Get-ChildItem ./rustdesk -Recurse -File | Where-Object { $extensions -contains $_.Extension.ToLowerInvariant() })
+          # Match res/job.py: driver payloads are signed separately, so only
+          # verify EXEs in these folders with the AdminDesk code-signing cert.
+          $files = @(Get-ChildItem ./rustdesk -Recurse -File | Where-Object {
+            $extension = $_.Extension.ToLowerInvariant()
+            $isSignable = $extensions -contains $extension
+            $isDriverPayload = $_.DirectoryName -match '(?i)(RustDeskPrinterDriver|usbmmidd_v2)'
+            $isSignable -and (-not $isDriverPayload -or $extension -eq '.exe')
+          })
           if ($files.Count -eq 0) {
             throw "No signable Windows application binaries were found."
           }
