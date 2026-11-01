@@ -26,7 +26,13 @@ class AdminDeskDashboard extends StatefulWidget {
 
 class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
   final ValueNotifier<int?> _requestedPeerTab = ValueNotifier<int?>(null);
-  int _selectedMenu = 0;
+  int _selectedMenu = 2;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMenu = _menuForPeerTab(gFFI.peerTabModel.currentTab);
+  }
 
   @override
   void dispose() {
