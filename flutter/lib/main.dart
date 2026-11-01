@@ -132,16 +132,13 @@ Future<void> initEnv(String appType) async {
 
 Future<void> _ensureDefaultPersianLanguage() async {
   if (!isWindows) return;
-  // Run this migration once: a user who later chooses "Default" must not be
-  // forced back to Persian on every launch.
-  const initializedKey = 'admindesk-language-default-initialized';
-  if (bind.mainGetLocalOption(key: initializedKey) == 'Y') return;
+  // AdminDesk Windows currently ships with Persian as its only supported UI
+  // language. Normalize existing installations as well as fresh installs.
   final savedLanguage = bind.mainGetLocalOption(key: kCommConfKeyLang);
-  if (savedLanguage.isEmpty) {
+  if (savedLanguage != 'fa') {
     await bind.mainSetLocalOption(key: kCommConfKeyLang, value: 'fa');
     await bind.mainChangeLanguage(lang: 'fa');
   }
-  await bind.mainSetLocalOption(key: initializedKey, value: 'Y');
 }
 
 void runMainApp(bool startService) async {
