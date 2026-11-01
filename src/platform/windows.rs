@@ -3815,7 +3815,7 @@ fn is_msi_uninstall_entry_in_view(subkey: &str, wow: bool, app_name: &str) -> Re
 }
 
 fn get_msi_uninstall_subkey(product_code: &str) -> ResultType<String> {
-    let app_name = crate::get_app_name();
+    let app_name = crate::get_app_display_name();
     let subkey = get_subkey(product_code, false);
     if is_msi_uninstall_entry_in_view(&subkey, false, &app_name)? {
         return Ok(subkey);
