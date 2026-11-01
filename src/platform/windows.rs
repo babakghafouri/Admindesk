@@ -1570,6 +1570,7 @@ fn get_after_install(
     reg_value_printer: Option<String>,
 ) -> String {
     let app_name = crate::get_app_name();
+    let display_name = crate::get_app_display_name();
     let ext = app_name.to_lowercase();
     let nested_exe = escape_nested_cmd_ampersands(exe);
 
@@ -1618,11 +1619,11 @@ fn get_after_install(
     reg add HKEY_CLASSES_ROOT\\{ext}\\shell\\open /f
     reg add HKEY_CLASSES_ROOT\\{ext}\\shell\\open\\command /f
     reg add HKEY_CLASSES_ROOT\\{ext}\\shell\\open\\command /f /ve /t REG_SZ /d \"\\\"{nested_exe}\\\" \\\"%%1\\\"\"
-    netsh advfirewall firewall add rule name=\"{app_name} Service\" dir=out action=allow program=\"{exe}\" enable=yes
-    netsh advfirewall firewall add rule name=\"{app_name} Service\" dir=in action=allow program=\"{exe}\" enable=yes
+    netsh advfirewall firewall add rule name=\"{display_name} Service\" dir=out action=allow program=\"{exe}\" enable=yes
+    netsh advfirewall firewall add rule name=\"{display_name} Service\" dir=in action=allow program=\"{exe}\" enable=yes
     {create_service}
     reg add HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /f /v SoftwareSASGeneration /t REG_DWORD /d 1
-    ", create_service=get_create_service(&exe))
+    ", create_service=get_create_service(&exe), display_name=display_name)
 }
 
 pub fn install_me(options: &str, path: String, silent: bool, debug: bool) -> ResultType<()> {
@@ -1841,6 +1842,7 @@ pub fn run_before_uninstall() -> ResultType<()> {
 
 fn get_before_uninstall(kill_self: bool) -> ResultType<String> {
     let app_name = crate::get_app_name();
+    let display_name = crate::get_app_display_name();
     let (_, _, _, exe) = get_install_info();
     let remove_service = service_control_command("remove", &exe, false)?;
     let ext = app_name.to_lowercase();
@@ -1857,9 +1859,10 @@ fn get_before_uninstall(kill_self: bool) -> ResultType<String> {
     taskkill /F /IM {app_name}.exe{filter}
     reg delete HKEY_CLASSES_ROOT\\.{ext} /f
     reg delete HKEY_CLASSES_ROOT\\{ext} /f
-    netsh advfirewall firewall delete rule name=\"{app_name} Service\"
+    netsh advfirewall firewall delete rule name=\"{display_name} Service\"
     ",
         broker_exe = WIN_TOPMOST_INJECTED_PROCESS_EXE,
+        display_name = display_name,
     ))
 }
 
