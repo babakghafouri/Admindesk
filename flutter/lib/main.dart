@@ -132,11 +132,11 @@ Future<void> initEnv(String appType) async {
 
 Future<void> _ensureDefaultPersianLanguage() async {
   if (!isWindows) return;
-  // Use Persian only as the first-run default. Never overwrite a language
-  // explicitly selected by the user on a later launch.
+  // AdminDesk Windows is Persian-only for this release. Normalize existing
+  // profiles as well as fresh installs before the first application frame.
   final savedLanguage =
       bind.mainGetLocalOption(key: kCommConfKeyLang).trim().toLowerCase();
-  if (savedLanguage.isEmpty || savedLanguage == 'default') {
+  if (savedLanguage != 'fa') {
     await bind.mainSetLocalOption(key: kCommConfKeyLang, value: 'fa');
     await bind.mainChangeLanguage(lang: 'fa');
   }
