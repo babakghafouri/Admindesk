@@ -142,10 +142,21 @@ Future<void> _ensureDefaultPersianLanguage() async {
   }
 }
 
+Future<void> _ensureWindowsLightTheme() async {
+  if (!isWindows) return;
+  final savedTheme =
+      bind.mainGetLocalOption(key: kCommConfKeyTheme).trim().toLowerCase();
+  if (savedTheme != 'light') {
+    await bind.mainSetLocalOption(key: kCommConfKeyTheme, value: 'light');
+    await bind.mainChangeTheme(dark: 'light');
+  }
+}
+
 void runMainApp(bool startService) async {
   // register uni links
   await initEnv(kAppTypeMain);
   await _ensureDefaultPersianLanguage();
+  await _ensureWindowsLightTheme();
   checkUpdate();
   // trigger connection status updater
   await bind.mainCheckConnectStatus();
