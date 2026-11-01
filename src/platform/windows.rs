@@ -1654,7 +1654,6 @@ pub fn install_me(options: &str, path: String, silent: bool, debug: bool) -> Res
     if versions.len() > 2 {
         version_build = versions[2];
     }
-    let app_name = crate::get_app_name();
     let display_name = crate::get_app_display_name();
 
     let current_exe = std::env::current_exe()?;
@@ -1733,6 +1732,10 @@ copy /Y \"{tmp_path}\\Uninstall {display_name}.lnk\" \"{start_menu}\\\"
 if exist \"{tmp_path}\\{shortcut_name}.lnk\" del /f /q \"{tmp_path}\\{shortcut_name}.lnk\"
 if exist \"{tmp_path}\\Uninstall {display_name}.lnk\" del /f /q \"{tmp_path}\\Uninstall {display_name}.lnk\"
 if exist \"{tmp_path}\\{display_name} Tray.lnk\" del /f /q \"{tmp_path}\\{display_name} Tray.lnk\"
+if exist \"{start_menu}\\RustDesk.lnk\" del /f /q \"{start_menu}\\RustDesk.lnk\"
+if exist \"{start_menu}\\Uninstall RustDesk.lnk\" del /f /q \"{start_menu}\\Uninstall RustDesk.lnk\"
+if exist \"%PUBLIC%\\Desktop\\RustDesk.lnk\" del /f /q \"%PUBLIC%\\Desktop\\RustDesk.lnk\"
+if exist \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\RustDesk Tray.lnk\" del /f /q \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\RustDesk Tray.lnk\"
         "
     );
     let src_exe = cur_exe.clone();
