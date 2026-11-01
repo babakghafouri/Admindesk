@@ -868,7 +868,7 @@ class _GeneralState extends State<_General> {
                           ? const TextStyle(
                               decoration: TextDecoration.underline)
                           : null,
-                    )).marginOnly(right: 10),
+                    ))).marginOnly(right: 10),
               ),
               ElevatedButton(
                       onPressed: isOptionFixed(kOptionVideoSaveDirectory)
