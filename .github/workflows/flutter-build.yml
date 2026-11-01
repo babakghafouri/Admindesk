@@ -431,10 +431,13 @@ jobs:
 
       - name: Sign rustdesk files
         if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != ''
+        env:
+          BASE_URL: ${{ env.SIGN_BASE_URL }}
+          SECRET_KEY: ${{ secrets.SIGN_SECRET_KEY }}
         shell: bash
         run: |
           pip3 install requests argparse
-          BASE_URL=${{ env.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./rustdesk/
+          python3 res/job.py sign_files ./rustdesk/
 
       - name: Verify signed Windows application binaries
         if: env.UPLOAD_ARTIFACT == 'true'
@@ -566,9 +569,12 @@ jobs:
 
       - name: Sign rustdesk self-extracted file
         if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != ''
+        env:
+          BASE_URL: ${{ env.SIGN_BASE_URL }}
+          SECRET_KEY: ${{ secrets.SIGN_SECRET_KEY }}
         shell: bash
         run: |
-          BASE_URL=${{ env.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./SignOutput
+          python3 res/job.py sign_files ./SignOutput
 
       - name: Verify signed Admin Desk installers
         if: env.UPLOAD_ARTIFACT == 'true'
@@ -820,9 +826,12 @@ jobs:
 
       - name: Sign rustdesk self-extracted file
         if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != ''
+        env:
+          BASE_URL: ${{ env.SIGN_BASE_URL }}
+          SECRET_KEY: ${{ secrets.SIGN_SECRET_KEY }}
         shell: bash
         run: |
-          BASE_URL=${{ env.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./SignOutput/
+          python3 res/job.py sign_files ./SignOutput/
 
       - name: Upload signed Windows Sciter EXE
         if: env.UPLOAD_ARTIFACT == 'true' && env.PUBLISH_UPDATE_METADATA == 'true' && env.SIGN_BASE_URL != ''
