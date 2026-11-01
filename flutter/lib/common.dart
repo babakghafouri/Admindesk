@@ -582,10 +582,14 @@ class MyTheme {
   );
 
   static ThemeMode getThemeModePreference() {
+    // AdminDesk Windows ships with a fixed light theme.
+    if (isWindows) return ThemeMode.light;
     return themeModeFromString(bind.mainGetLocalOption(key: kCommConfKeyTheme));
   }
 
   static Future<void> changeDarkMode(ThemeMode mode) async {
+    // Keep Windows light-only even if a stale preference or caller requests dark mode.
+    if (isWindows) mode = ThemeMode.light;
     Get.changeThemeMode(mode);
     if (desktopType == DesktopType.main || isAndroid || isIOS || isWeb) {
       if (mode == ThemeMode.system) {
