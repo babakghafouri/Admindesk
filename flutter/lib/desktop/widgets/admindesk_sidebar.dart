@@ -79,7 +79,7 @@ class AdminDeskSideBar extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Remote Access. Greater Control.',
+                      'دسترسی از راه دور، با کنترل بیشتر',
                       maxLines: 2,
                       textAlign: TextAlign.center,
                       textDirection: TextDirection.ltr,
