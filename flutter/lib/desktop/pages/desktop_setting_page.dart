@@ -13,6 +13,7 @@ import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart';
 import 'package:flutter_hbb/common/widgets/keyboard_shortcuts/page_body.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_keyboard_shortcuts_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
+import 'package:flutter_hbb/desktop/theme/admindesk_theme.dart';
 import 'package:flutter_hbb/desktop/widgets/remote_toolbar.dart';
 import 'package:flutter_hbb/mobile/widgets/dialog.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
@@ -47,7 +48,7 @@ extension _DirectionalWidgetMargin on Widget {
   }
 }
 
-const double _kTabWidth = 200;
+const double _kTabWidth = 220;
 const double _kTabHeight = 42;
 const double _kCardFixedWidth = 540;
 const double _kCardLeftMargin = 15;
@@ -57,7 +58,7 @@ const double _kCheckBoxLeftMargin = 10;
 const double _kRadioLeftMargin = 10;
 const double _kListViewBottomMargin = 15;
 const double _kTitleFontSize = 20;
-const double _kContentFontSize = 15;
+const double _kContentFontSize = 14;
 const Color _accentColor = MyTheme.accent;
 const String _kSettingPageControllerTag = 'settingPageController';
 const String _kSettingPageTabKeyTag = 'settingPageTabKey';
@@ -298,27 +299,39 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final colors = AdminDeskColors.of(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: colors.canvas,
       body: _buildBlock(
         children: <Widget>[
           SizedBox(
             width: _kTabWidth,
-            child: Column(
-              children: [
-                _header(context),
-                Flexible(child: _listView(tabs: _settingTabs())),
-              ],
+            child: Container(
+              color: colors.surface,
+              child: Column(
+                children: [
+                  _header(context),
+                  Flexible(child: _listView(tabs: _settingTabs())),
+                ],
+              ),
             ),
           ),
-          const VerticalDivider(width: 1),
+          VerticalDivider(width: 1, color: colors.border),
           Expanded(
             child: Container(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              child: PageView(
-                controller: controller,
-                physics: NeverScrollableScrollPhysics(),
-                children: _children(),
+              color: colors.canvas,
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: PageView(
+                  controller: controller,
+                  physics: NeverScrollableScrollPhysics(),
+                  children: _children()
+                      .map((child) => Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: child,
+                          ))
+                      .toList(),
+                ),
               ),
             ),
           )
@@ -328,13 +341,14 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
   }
 
   Widget _header(BuildContext context) {
+    final colors = AdminDeskColors.of(context);
     final settingsText = Text(
       translate('Settings'),
       textAlign: TextAlign.right,
       style: const TextStyle(
-        color: _accentColor,
+        color: colors.primary,
         fontSize: _kTitleFontSize,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w600,
       ),
     );
     return Directionality(
@@ -386,49 +400,63 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
 
   Widget _listItem({required _TabInfo tab}) {
     return Obx(() {
-      bool selected = tab.key == selectedTab.value;
-      return SizedBox(
-        width: _kTabWidth,
-        height: _kTabHeight,
-        child: InkWell(
-          onTap: () {
-            if (selectedTab.value != tab.key) {
-              int index = DesktopSettingPage.tabKeys.indexOf(tab.key);
-              if (index == -1) {
-                return;
+      final colors = AdminDeskColors.of(context);
+      final selected = tab.key == selectedTab.value;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        child: Material(
+          color: selected ? colors.selectedBackground : Colors.transparent,
+          borderRadius: AdminDeskMetrics.controlRadius,
+          child: InkWell(
+            borderRadius: AdminDeskMetrics.controlRadius,
+            onTap: () {
+              if (selectedTab.value != tab.key) {
+                final index = DesktopSettingPage.tabKeys.indexOf(tab.key);
+                if (index == -1) return;
+                controller.jumpToPage(index);
               }
-              controller.jumpToPage(index);
-            }
-            selectedTab.value = tab.key;
-          },
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Row(
-              textDirection: TextDirection.rtl,
-              children: [
-                Container(
-                  width: 4,
-                  height: _kTabHeight * 0.7,
-                  color: selected ? _accentColor : null,
-                ),
-                Icon(
-                  selected ? tab.selected : tab.unselected,
-                  color: selected ? _accentColor : null,
-                  size: 20,
-                ).marginDirectional(start: 13, end: 10),
-                Expanded(
-                  child: Text(
-                    translate(tab.label),
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(
-                      color: selected ? _accentColor : null,
-                      fontWeight: FontWeight.w400,
-                      fontSize: _kContentFontSize,
+              selectedTab.value = tab.key;
+            },
+            child: SizedBox(
+              height: _kTabHeight,
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: _kTabHeight * 0.68,
+                      decoration: BoxDecoration(
+                        color: selected ? colors.primary : Colors.transparent,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Icon(
+                      selected ? tab.selected : tab.unselected,
+                      color: selected ? colors.primary : colors.textSecondary,
+                      size: 19,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        translate(tab.label),
+                        textAlign: TextAlign.right,
+                        textDirection: TextDirection.rtl,
+                        style: TextStyle(
+                          color: selected
+                              ? colors.primary
+                              : colors.textPrimary,
+                          fontWeight:
+                              selected ? FontWeight.w600 : FontWeight.w500,
+                          fontSize: _kContentFontSize,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -2703,7 +2731,7 @@ Widget _Card(
     children: [
       Flexible(
         child: SizedBox(
-          width: _kCardFixedWidth,
+          width: double.infinity,
           child: Card(
             child: Column(
               children: [
@@ -2714,7 +2742,8 @@ Widget _Card(
                       translate(title),
                       textAlign: TextAlign.start,
                       style: const TextStyle(
-                        fontSize: _kTitleFontSize,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
                       ),
                     )),
                     ...?title_suffix
@@ -3071,7 +3100,7 @@ Widget _lock(
         children: [
           Flexible(
             child: SizedBox(
-              width: _kCardFixedWidth,
+              width: double.infinity,
               child: Card(
                 child: ElevatedButton(
                   child: SizedBox(
