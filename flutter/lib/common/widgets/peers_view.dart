@@ -255,6 +255,16 @@ class _PeersViewState extends State<_PeersView>
               peers = peers.where((peer) => !peer.online).toList();
             }
             gFFI.peerTabModel.setCurrentTabCachedPeers(peers);
+            if (peers.isEmpty) {
+              return Center(
+                child: Text(
+                  'دستگاهی با این فیلتر یافت نشد',
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.titleLarge?.color,
+                  ),
+                ),
+              );
+            }
             buildOnePeer(Peer peer, bool isPortrait) {
               final visibilityChild = VisibilityDetector(
                 key: ValueKey(_cardId(peer.id)),
