@@ -1,0 +1,39 @@
+name: AdminDesk Windows PR Validation
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "flutter/**"
+      - "src/**"
+      - "res/**"
+      - "libs/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "build.py"
+      - "vcpkg.json"
+      - ".github/workflows/flutter-build.yml"
+      - ".github/workflows/admindesk-windows-pr.yml"
+      - ".github/workflows/third-party-RustDeskTempTopMostWindow.yml"
+      - ".github/workflows/bridge.yml"
+      - ".github/patches/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admindesk-windows-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-pr-build:
+    name: Windows x64 Flutter + Rust build (no publishing)
+    uses: ./.github/workflows/flutter-build.yml
+    with:
+      windows-only: true
+      upload-artifact: false
+      upload-tag: admindesk-pr-validation
+      publish-update-metadata: false
+    secrets: inherit
