@@ -429,7 +429,6 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AdminDeskColors.of(context);
     final ms = _latencyMs;
     final Color signalColor;
     final String quality;
