@@ -68,7 +68,6 @@ class AdminDeskTitleActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AdminDeskColors.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
