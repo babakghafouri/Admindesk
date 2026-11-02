@@ -870,6 +870,39 @@ class _GeneralState extends State<_General> {
     final showRootDir = isWindows && bind.mainIsInstalled();
     return futureBuilder(future: () async {
       String user_dir = bind.mainVideoSaveDirectory(root: false);
+
+      // Migrate only the legacy default Videos/RustDesk folder. A manually
+      // selected recording directory is left untouched. Existing recordings
+      // remain in the old folder; new recordings use Videos/AdminDesk.
+      if (Platform.isWindows) {
+        final current = Directory(user_dir);
+        final folderName = current.path
+            .split(Platform.pathSeparator)
+            .where((part) => part.isNotEmpty)
+            .lastOrNull
+            ?.toLowerCase();
+        final parentName = current.parent.path
+            .split(Platform.pathSeparator)
+            .where((part) => part.isNotEmpty)
+            .lastOrNull
+            ?.toLowerCase();
+        if (folderName == 'rustdesk' && parentName == 'videos') {
+          final adminDeskDirectory = Directory(
+            '${current.parent.path}${Platform.pathSeparator}AdminDesk',
+          );
+          try {
+            await adminDeskDirectory.create(recursive: true);
+            await bind.mainSetLocalOption(
+              key: kOptionVideoSaveDirectory,
+              value: adminDeskDirectory.path,
+            );
+            user_dir = adminDeskDirectory.path;
+          } catch (error) {
+            debugPrint('Could not migrate default recording folder: $error');
+          }
+        }
+      }
+
       String root_dir =
           showRootDir ? bind.mainVideoSaveDirectory(root: true) : '';
       bool user_dir_exists = await Directory(user_dir).exists();
