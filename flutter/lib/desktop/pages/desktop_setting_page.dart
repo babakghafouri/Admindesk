@@ -876,16 +876,18 @@ class _GeneralState extends State<_General> {
       // remain in the old folder; new recordings use Videos/AdminDesk.
       if (Platform.isWindows) {
         final current = Directory(user_dir);
-        final folderName = current.path
+        final pathParts = current.path
             .split(Platform.pathSeparator)
             .where((part) => part.isNotEmpty)
-            .lastOrNull
-            ?.toLowerCase();
-        final parentName = current.parent.path
+            .toList();
+        final parentParts = current.parent.path
             .split(Platform.pathSeparator)
             .where((part) => part.isNotEmpty)
-            .lastOrNull
-            ?.toLowerCase();
+            .toList();
+        final folderName =
+            pathParts.isEmpty ? '' : pathParts.last.toLowerCase();
+        final parentName =
+            parentParts.isEmpty ? '' : parentParts.last.toLowerCase();
         if (folderName == 'rustdesk' && parentName == 'videos') {
           final adminDeskDirectory = Directory(
             '${current.parent.path}${Platform.pathSeparator}AdminDesk',
