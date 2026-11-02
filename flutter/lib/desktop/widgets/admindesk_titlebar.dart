@@ -17,7 +17,9 @@ class AdminDeskTitleBrand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AdminDeskColors.of(context);
-    return Row(
+    return Padding(
+      padding: const EdgeInsets.only(left: 19),
+      child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         SvgPicture.asset('assets/icon.svg', width: 32, height: 32),
@@ -43,6 +45,7 @@ class AdminDeskTitleBrand extends StatelessWidget {
           ],
         ),
       ],
+      ),
     );
   }
 }
@@ -105,14 +108,6 @@ class AdminDeskTitleActions extends StatelessWidget {
             onSelected: (_) => onSettings(),
           );
         }),
-        IconButton(
-          tooltip: 'تنظیمات',
-          constraints: const BoxConstraints(minWidth: 34, minHeight: 32),
-          padding: EdgeInsets.zero,
-          onPressed: settingsEnabled ? onSettings : null,
-          icon: Icon(Icons.settings_outlined,
-              size: 19, color: colors.textPrimary),
-        ),
       ],
     );
   }

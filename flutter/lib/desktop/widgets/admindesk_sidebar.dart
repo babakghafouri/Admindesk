@@ -12,11 +12,13 @@ class AdminDeskSideBar extends StatelessWidget {
     Key? key,
     required this.selectedMenu,
     required this.onNavigate,
+    required this.onSettings,
     required this.versionLabel,
   }) : super(key: key);
 
   final int selectedMenu;
   final void Function(int menu, int peerTab) onNavigate;
+  final VoidCallback onSettings;
   final String versionLabel;
 
   @override
@@ -44,6 +46,8 @@ class AdminDeskSideBar extends StatelessWidget {
                 () => onNavigate(1, 1)),
             _entry(context, Icons.lan_outlined, 'شبکه داخلی', 2,
                 () => onNavigate(2, 2)),
+            _entry(context, Icons.settings_outlined, 'تنظیمات', -1,
+                onSettings),
             const Spacer(),
             Padding(
               padding: const EdgeInsets.fromLTRB(

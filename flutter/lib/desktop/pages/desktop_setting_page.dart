@@ -280,7 +280,10 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
           mask: false,
           use: canBeBlocked,
           child: preventMouseKeyBuilder(
-            child: Row(children: children),
+            child: Directionality(
+              textDirection: isWindows ? TextDirection.rtl : Directionality.of(context),
+              child: Row(children: children),
+            ),
             block: videoConnBlock,
           ),
         ),

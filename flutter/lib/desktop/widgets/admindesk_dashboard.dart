@@ -55,6 +55,12 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
     _requestedPeerTab.value = peerTab;
   }
 
+  void _openSettings() {
+    if (!bind.isDisableSettings()) {
+      DesktopTabPage.onAddSetting();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AdminDeskColors.of(context);
@@ -99,6 +105,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
               selectedMenu: _selectedMenu,
               versionLabel: version.isEmpty ? 'AdminDesk' : 'نسخه $version',
               onNavigate: _openTab,
+              onSettings: _openSettings,
             ),
           ],
         ),

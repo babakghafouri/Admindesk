@@ -616,8 +616,8 @@ jobs:
 
   # The fallback for the flutter version, we use Sciter for 32bit Windows.
   build-for-windows-sciter:
-    # Keep legacy x86 Sciter builds out of the Windows x64-only release workflow.
-    if: ${{ !inputs.windows-android-only && !inputs.windows-only }}
+    # Windows x86 uses legacy Sciter; Flutter Windows installers remain x64.
+    if: ${{ inputs.windows-only || (!inputs.windows-android-only && !inputs.windows-only) }}
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
     needs: [validate-update-metadata-keys]
     runs-on: ${{ matrix.job.os }}
@@ -790,6 +790,14 @@ jobs:
         with:
           name: windows-sciter-x86-exe
           path: ./SignOutput/AdminDesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+          if-no-files-found: error
+
+      - name: Upload AdminDesk Windows x86 Sciter installer
+        if: ${{ inputs.windows-only && inputs.upload-artifact }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: AdminDesk-Windows-x86-legacy-sciter
+          path: ./SignOutput/AdminDesk-*-x86-sciter.exe
           if-no-files-found: error
 
       - name: Publish Release
