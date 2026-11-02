@@ -156,6 +156,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
                                 controller: model.serverPasswd,
                                 canRefresh: canRefresh,
                                 onRefresh: () => bind.mainUpdateTemporaryPassword(),
+                                onCopy: () => _copy(model.serverPasswd.text),
                                 onOpenSecuritySettings: () =>
                                     DesktopSettingPage.switch2page(
                                         SettingsTabKey.safety),
