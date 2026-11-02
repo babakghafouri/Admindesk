@@ -575,7 +575,6 @@ class _PeerCardState extends State<_PeerCard>
             ),
           ),
         ),
-      ),
     );
   }
 
