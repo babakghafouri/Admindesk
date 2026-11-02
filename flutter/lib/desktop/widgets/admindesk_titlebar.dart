@@ -400,6 +400,7 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
     'Rendezvous (TCP 21116)': null,
     'Relay (TCP 21117)': null,
     'Notifications (HTTPS)': null,
+    'Update hosting (HTTPS)': null,
   };
 
   bool get _allAvailable =>
@@ -454,6 +455,22 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
     }
   }
 
+  Future<int?> _checkUpdateHosting() async {
+    final watch = Stopwatch()..start();
+    try {
+      final response = await http.head(
+        Uri.parse('https://update.admindesk.ir/'),
+      ).timeout(const Duration(seconds: 5));
+      watch.stop();
+      // A 4xx response still proves that the HTTPS host is reachable.
+      return response.statusCode < HttpStatus.internalServerError
+          ? watch.elapsedMilliseconds
+          : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _check() async {
     if (_checking) return;
     _checking = true;
@@ -462,12 +479,14 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
       _checkTcp(21116),
       _checkTcp(21117),
       _checkNotifications(),
+      _checkUpdateHosting(),
     ]);
     if (mounted) {
       setState(() {
         _latencies['Rendezvous (TCP 21116)'] = results[0];
         _latencies['Relay (TCP 21117)'] = results[1];
         _latencies['Notifications (HTTPS)'] = results[2];
+        _latencies['Update hosting (HTTPS)'] = results[3];
         _checking = false;
       });
     } else {
@@ -493,7 +512,7 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
       'وضعیت سرویس‌های AdminDesk',
       for (final entry in _latencies.entries)
         _serviceLabel(entry.key, entry.value),
-      'این بررسی سلامت کامل یک نشست ریموت را تضمین نمی‌کند.',
+      'این بررسی دسترسی TCP/HTTPS را می‌سنجد و سلامت کامل نشست یا UDP را تضمین نمی‌کند.',
     ].join('\n');
 
     return Tooltip(
