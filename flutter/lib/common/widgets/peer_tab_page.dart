@@ -210,6 +210,8 @@ class _PeerTabPageState extends State<PeerTabPage>
       showNavigation: false,
       currentTab: model.currentTab,
       availableTabs: model.visibleEnabledOrderedIndexs,
+      statusFilter: peerStatusFilter.value,
+      onStatusFilterChanged: (value) => peerStatusFilter.value = value,
       onTabSelected: (tab) async {
         if (isOptionFixed(kOptionPeerTabIndex) ||
             !model.visibleEnabledOrderedIndexs.contains(tab)) {
