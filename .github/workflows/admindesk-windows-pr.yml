@@ -34,6 +34,7 @@ jobs:
     with:
       windows-only: true
       upload-artifact: false
+      pr-preview-installers: true
       upload-tag: admindesk-pr-validation
       publish-update-metadata: false
     secrets: inherit
