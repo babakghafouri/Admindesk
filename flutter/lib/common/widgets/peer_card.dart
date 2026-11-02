@@ -1,5 +1,4 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -385,7 +384,7 @@ class _PeerCardState extends State<_PeerCard>
           child: ClipRRect(
             borderRadius: BorderRadius.circular(_cardRadius - 1),
             child: Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -483,7 +482,7 @@ class _PeerCardState extends State<_PeerCard>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 5),
                     // Device title.
                     Tooltip(
                       message: displayName,
@@ -515,7 +514,7 @@ class _PeerCardState extends State<_PeerCard>
                           ),
                         ),
                       ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     // Remote ID is always rendered LTR, independently of the
                     // Persian application direction.
                     Row(
@@ -552,7 +551,7 @@ class _PeerCardState extends State<_PeerCard>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 5),
                     // Keep compact device actions; double-click the card to connect.
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
