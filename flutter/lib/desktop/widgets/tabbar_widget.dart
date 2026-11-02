@@ -611,8 +611,9 @@ class _DesktopTabState extends State<DesktopTab>
 
   Widget _buildBar() {
     final isIncomingHomePage = bind.isIncomingOnly() && isInHomePage();
-    final moveWindowControlsRight =
-        isWindows && tabType == DesktopTabType.main;
+    // Apply the same left-to-right titlebar layout to every Windows
+    // window, including remote-session and file-transfer windows.
+    final moveWindowControlsRight = isWindows;
     // On the Windows home titlebar, keep the three AdminDesk actions on the
     // left and place only the native-behavior window controls on the right.
     // The titlebar inherits RTL direction: first child is rightmost.
@@ -628,11 +629,15 @@ class _DesktopTabState extends State<DesktopTab>
       onClose: onWindowCloseButton,
       labelGetter: labelGetter,
     ).paddingOnly(left: 10);
-    return Row(
-      children: [
-        if (moveWindowControlsRight) actionPanel,
-        Expanded(
-            child: GestureDetector(
+    return Directionality(
+      textDirection:
+          moveWindowControlsRight ? TextDirection.ltr : Directionality.of(context),
+      child: Row(
+        children: [
+          // In remote windows, keep the session actions on the left.
+          if (moveWindowControlsRight && !isMainWindow && tail != null) tail!,
+          Expanded(
+              child: GestureDetector(
                 // custom double tap handler
                 onTap: !isIncomingHomePage && showMaximize
                     ? () {
@@ -684,6 +689,12 @@ class _DesktopTabState extends State<DesktopTab>
                         right: 10,
                       ),
                     ),
+                    // On the main window, place AdminDesk's three actions
+                    // immediately after the brand, before the flexible tabs.
+                    if (moveWindowControlsRight &&
+                        isMainWindow &&
+                        tail != null)
+                      tail!,
                     Expanded(
                         child: Listener(
                             // handle mouse wheel
@@ -716,9 +727,11 @@ class _DesktopTabState extends State<DesktopTab>
                             ))),
                   ],
                 ))),
-        if (moveWindowControlsRight && tail != null) tail!,
-        if (!moveWindowControlsRight) actionPanel
-      ],
+          // Only the main window's app actions are placed beside its brand.
+          // For every Windows window, native-behavior controls stay at far right.
+          actionPanel
+        ],
+      ),
     );
   }
 }
