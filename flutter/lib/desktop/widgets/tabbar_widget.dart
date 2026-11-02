@@ -635,7 +635,11 @@ class _DesktopTabState extends State<DesktopTab>
       child: Row(
         children: [
           // In remote windows, keep the session actions on the left.
-          if (moveWindowControlsRight && !isMainWindow && tail != null) tail!,
+          if (moveWindowControlsRight && !isMainWindow && tail != null)
+            Directionality(
+              textDirection: TextDirection.rtl,
+              child: tail!,
+            ),
           Expanded(
               child: GestureDetector(
                 // custom double tap handler
@@ -673,20 +677,23 @@ class _DesktopTabState extends State<DesktopTab>
                         )),
                     Offstage(
                       offstage: kUseCompatibleUiMode || isMacOS,
-                      child: widget.leading ?? Row(children: [
-                        Offstage(
-                          offstage: !showLogo,
-                          child: loadIcon(16),
+                      child: Directionality(
+                        textDirection: TextDirection.rtl,
+                        child: widget.leading ?? Row(children: [
+                          Offstage(
+                            offstage: !showLogo,
+                            child: loadIcon(16),
+                          ),
+                          Offstage(
+                              offstage: !showTitle,
+                              child: const Text(
+                                "RustDesk",
+                                style: TextStyle(fontSize: 13),
+                              ).marginOnly(left: 2))
+                        ]).marginOnly(
+                          left: 5,
+                          right: 10,
                         ),
-                        Offstage(
-                            offstage: !showTitle,
-                            child: const Text(
-                              "RustDesk",
-                              style: TextStyle(fontSize: 13),
-                            ).marginOnly(left: 2))
-                      ]).marginOnly(
-                        left: 5,
-                        right: 10,
                       ),
                     ),
                     // On the main window, place AdminDesk's three actions
@@ -694,7 +701,10 @@ class _DesktopTabState extends State<DesktopTab>
                     if (moveWindowControlsRight &&
                         isMainWindow &&
                         tail != null)
-                      tail!,
+                      Directionality(
+                        textDirection: TextDirection.rtl,
+                        child: tail!,
+                      ),
                     Expanded(
                         child: Listener(
                             // handle mouse wheel
