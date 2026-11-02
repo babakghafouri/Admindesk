@@ -344,7 +344,7 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
     final settingsText = Text(
       translate('Settings'),
       textAlign: TextAlign.right,
-      style: const TextStyle(
+      style: TextStyle(
         color: colors.primary,
         fontSize: _kTitleFontSize,
         fontWeight: FontWeight.w600,
