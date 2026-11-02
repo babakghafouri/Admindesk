@@ -1,0 +1,66 @@
+name: AdminDesk Windows PR Validation
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "flutter/**"
+      - "src/**"
+      - "res/**"
+      - "libs/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "build.py"
+      - "vcpkg.json"
+      - ".github/workflows/flutter-build.yml"
+      - ".github/workflows/admindesk-windows-pr.yml"
+      - ".github/workflows/third-party-RustDeskTempTopMostWindow.yml"
+      - ".github/workflows/bridge.yml"
+      - ".github/patches/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: admindesk-windows-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-pr-build:
+    name: Windows x64 Flutter + Rust build (no publishing)
+    uses: ./.github/workflows/flutter-build.yml
+    with:
+      windows-only: true
+      upload-artifact: false
+      pr-preview-installers: true
+      upload-tag: admindesk-pr-validation
+      publish-update-metadata: false
+    secrets: inherit
+
+  flutter-analyze:
+    name: Flutter analyze (Windows)
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install Flutter 3.24.5
+        uses: subosito/flutter-action@2783a3f08e1baf891508463f8c6653c258246225 # v2.12.0
+        with:
+          channel: stable
+          flutter-version: "3.24.5"
+          cache: true
+
+      - name: Resolve Flutter dependencies
+        working-directory: flutter
+        run: flutter pub get
+
+      - name: Analyze changed Notification widget
+        working-directory: flutter
+        run: flutter analyze --no-pub lib/desktop/widgets/admindesk_titlebar.dart
