@@ -330,47 +330,57 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
   Widget _header(BuildContext context) {
     final settingsText = Text(
       translate('Settings'),
-      textAlign: TextAlign.start,
+      textAlign: TextAlign.right,
       style: const TextStyle(
         color: _accentColor,
         fontSize: _kTitleFontSize,
         fontWeight: FontWeight.w400,
       ),
     );
-    return Row(
-      children: [
-        if (isWeb)
-          IconButton(
-            onPressed: () {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              }
-            },
-            icon: Icon(Icons.arrow_back),
-          ).marginDirectional(start: 5),
-        if (isWeb)
-          SizedBox(
-            height: 62,
-            child: Align(
-              alignment: Alignment.center,
-              child: settingsText,
-            ),
-          ).marginDirectional(start: 20),
-        if (!isWeb)
-          SizedBox(
-            height: 62,
-            child: settingsText,
-          ).marginDirectional(start: 20, top: 10),
-        const Spacer(),
-      ],
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Row(
+        textDirection: TextDirection.rtl,
+        children: [
+          if (isWeb)
+            IconButton(
+              onPressed: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
+              },
+              icon: Icon(Icons.arrow_back),
+            ).marginDirectional(start: 5),
+          if (isWeb)
+            SizedBox(
+              height: 62,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: settingsText,
+              ),
+            ).marginDirectional(start: 20),
+          if (!isWeb)
+            SizedBox(
+              height: 62,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: settingsText,
+              ),
+            ).marginDirectional(start: 20, top: 10),
+          const Spacer(),
+        ],
+      ),
     );
   }
 
   Widget _listView({required List<_TabInfo> tabs}) {
     final scrollController = ScrollController();
-    return ListView(
-      controller: scrollController,
-      children: tabs.map((tab) => _listItem(tab: tab)).toList(),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: ListView(
+        controller: scrollController,
+        children: tabs.map((tab) => _listItem(tab: tab)).toList(),
+      ),
     );
   }
 
@@ -391,25 +401,36 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
             }
             selectedTab.value = tab.key;
           },
-          child: Row(children: [
-            Container(
-              width: 4,
-              height: _kTabHeight * 0.7,
-              color: selected ? _accentColor : null,
-            ),
-            Icon(
-              selected ? tab.selected : tab.unselected,
-              color: selected ? _accentColor : null,
-              size: 20,
-            ).marginDirectional(start: 13, end: 10),
-            Text(
-              translate(tab.label),
-              style: TextStyle(
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Row(
+              textDirection: TextDirection.rtl,
+              children: [
+                Container(
+                  width: 4,
+                  height: _kTabHeight * 0.7,
                   color: selected ? _accentColor : null,
-                  fontWeight: FontWeight.w400,
-                  fontSize: _kContentFontSize),
+                ),
+                Icon(
+                  selected ? tab.selected : tab.unselected,
+                  color: selected ? _accentColor : null,
+                  size: 20,
+                ).marginDirectional(start: 13, end: 10),
+                Expanded(
+                  child: Text(
+                    translate(tab.label),
+                    textAlign: TextAlign.right,
+                    textDirection: TextDirection.rtl,
+                    style: TextStyle(
+                      color: selected ? _accentColor : null,
+                      fontWeight: FontWeight.w400,
+                      fontSize: _kContentFontSize,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ]),
+          ),
         ),
       );
     });
