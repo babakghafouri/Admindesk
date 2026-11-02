@@ -248,7 +248,9 @@ class _PeersViewState extends State<_PeersView>
           if (snapshot.hasData) {
             var peers = snapshot.data!;
             if (peers.length > 1000) peers = peers.sublist(0, 1000);
-            final statusFilter = filters[2].value;
+            final statusFilter = DevicesTableScope.enabledOf(context)
+                ? filters[2].value
+                : 'all';
             if (statusFilter == 'online') {
               peers = peers.where((peer) => peer.online).toList();
             } else if (statusFilter == 'offline') {
