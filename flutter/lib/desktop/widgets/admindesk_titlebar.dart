@@ -387,7 +387,7 @@ class AdminDeskServerHealth extends StatefulWidget {
 
 class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
   static const String _host = 'desk.admin98.ir';
-  static const Uri _notificationsEndpoint = Uri(
+  static final Uri _notificationsEndpoint = Uri(
     scheme: 'https',
     host: 'admindesk.ir',
     path: '/wp-json/admindesk/v1/notifications',
