@@ -50,7 +50,6 @@ extension _DirectionalWidgetMargin on Widget {
 
 const double _kTabWidth = 220;
 const double _kTabHeight = 42;
-const double _kCardFixedWidth = 540;
 const double _kCardLeftMargin = 15;
 const double _kContentHMargin = 15;
 const double _kContentHSubMargin = _kContentHMargin + 33;
