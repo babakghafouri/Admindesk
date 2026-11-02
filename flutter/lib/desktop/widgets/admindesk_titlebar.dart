@@ -375,8 +375,9 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
 }
 
 
-/// Live TCP reachability/latency indicator for the AdminDesk rendezvous server.
-/// This measures the TCP handshake to port 21116 (not ICMP echo ping).
+/// Independent reachability checks for the rendezvous, relay, and
+/// WordPress notification services. These checks do not claim to test a
+/// complete remote session; they only report each service endpoint.
 class AdminDeskServerHealth extends StatefulWidget {
   const AdminDeskServerHealth({Key? key}) : super(key: key);
 
@@ -386,16 +387,31 @@ class AdminDeskServerHealth extends StatefulWidget {
 
 class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
   static const String _host = 'desk.admin98.ir';
-  static const int _port = 21116;
+  static const Uri _notificationsEndpoint = Uri(
+    scheme: 'https',
+    host: 'admindesk.ir',
+    path: '/wp-json/admindesk/v1/notifications',
+    queryParameters: {'audience': 'all'},
+  );
+
   Timer? _timer;
-  int? _latencyMs;
   bool _checking = false;
+  final Map<String, int?> _latencies = {
+    'Rendezvous (TCP 21116)': null,
+    'Relay (TCP 21117)': null,
+    'Notifications (HTTPS)': null,
+  };
+
+  bool get _allAvailable =>
+      _latencies.values.every((latency) => latency != null);
+  bool get _anyAvailable =>
+      _latencies.values.any((latency) => latency != null);
 
   @override
   void initState() {
     super.initState();
     _check();
-    _timer = Timer.periodic(const Duration(seconds: 20), (_) => _check());
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) => _check());
   }
 
   @override
@@ -404,70 +420,105 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
     super.dispose();
   }
 
-  Future<void> _check() async {
-    if (_checking) return;
-    _checking = true;
+  Future<int?> _checkTcp(int port) async {
     final watch = Stopwatch()..start();
-    int? result;
     Socket? socket;
     try {
       socket = await Socket.connect(
         _host,
-        _port,
+        port,
         timeout: const Duration(seconds: 3),
       );
       watch.stop();
-      result = watch.elapsedMilliseconds;
+      return watch.elapsedMilliseconds;
     } catch (_) {
-      result = null;
+      return null;
     } finally {
       socket?.destroy();
+    }
+  }
+
+  Future<int?> _checkNotifications() async {
+    final watch = Stopwatch()..start();
+    try {
+      final response = await http.get(
+        _notificationsEndpoint,
+        headers: const {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 5));
+      watch.stop();
+      return response.statusCode == HttpStatus.ok
+          ? watch.elapsedMilliseconds
+          : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _check() async {
+    if (_checking) return;
+    _checking = true;
+    if (mounted) setState(() {});
+    final results = await Future.wait<int?>([
+      _checkTcp(21116),
+      _checkTcp(21117),
+      _checkNotifications(),
+    ]);
+    if (mounted) {
+      setState(() {
+        _latencies['Rendezvous (TCP 21116)'] = results[0];
+        _latencies['Relay (TCP 21117)'] = results[1];
+        _latencies['Notifications (HTTPS)'] = results[2];
+        _checking = false;
+      });
+    } else {
       _checking = false;
     }
-    if (mounted) setState(() => _latencyMs = result);
+  }
+
+  String _serviceLabel(String name, int? latency) {
+    if (latency == null) return '$name: در دسترس نیست';
+    return '$name: متصل · $latency ms';
   }
 
   @override
   Widget build(BuildContext context) {
-    final ms = _latencyMs;
-    final Color signalColor;
-    final String quality;
-    if (ms == null) {
-      signalColor = const Color(0xFFE34D4D);
-      quality = 'قطع ارتباط';
-    } else if (ms < 50) {
-      signalColor = const Color(0xFF16A765);
-      quality = 'عالی';
-    } else if (ms < 100) {
-      signalColor = const Color(0xFF79BF45);
-      quality = 'خوب';
-    } else if (ms < 200) {
-      signalColor = const Color(0xFFE6B91E);
-      quality = 'متوسط';
-    } else if (ms <= 400) {
-      signalColor = const Color(0xFFEF8B25);
-      quality = 'ضعیف';
-    } else {
-      signalColor = const Color(0xFFE34D4D);
-      quality = 'بسیار ضعیف';
-    }
+    final Color signalColor = _checking
+        ? AdminDeskColors.light.textSecondary
+        : _allAvailable
+            ? const Color(0xFF16A765)
+            : _anyAvailable
+                ? const Color(0xFFE6A323)
+                : const Color(0xFFE34D4D);
+    final tooltip = [
+      'وضعیت سرویس‌های AdminDesk',
+      for (final entry in _latencies.entries)
+        _serviceLabel(entry.key, entry.value),
+      'این بررسی سلامت کامل یک نشست ریموت را تضمین نمی‌کند.',
+    ].join('\n');
 
-    // One compact icon only; its color communicates server reachability
-    // and TCP handshake latency. Tap to run an immediate check.
     return Tooltip(
-      message: ms == null
-          ? 'سرور $_host در دسترس نیست'
-          : 'سرور $_host\nکیفیت: $quality\nزمان اتصال TCP: $ms ms',
+      message: tooltip,
+      waitDuration: const Duration(milliseconds: 250),
       child: IconButton(
-        tooltip: 'وضعیت اتصال به سرور',
+        tooltip: 'بررسی سرویس‌های سرور',
         constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
         padding: EdgeInsets.zero,
-        onPressed: _check,
-        icon: Icon(
-          Icons.wifi_tethering_rounded,
-          size: 21,
-          color: signalColor,
-        ),
+        onPressed: _checking ? null : _check,
+        icon: _checking
+            ? SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: signalColor,
+                ),
+              )
+            : Icon(
+                Icons.wifi_tethering_rounded,
+                size: 21,
+                color: signalColor,
+              ),
       ),
     );
-  }}
+  }
+}
