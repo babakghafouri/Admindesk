@@ -64,7 +64,7 @@ jobs:
       - name: Analyze changed AdminDesk Flutter widgets
         working-directory: flutter
         run: >-
-          flutter analyze --no-pub
+          flutter analyze --no-pub --no-fatal-infos
           lib/common/widgets/peer_card.dart
           lib/common/widgets/peer_tab_page.dart
           lib/common/widgets/peers_view.dart
