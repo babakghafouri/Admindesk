@@ -486,10 +486,16 @@ class _GeneralState extends State<_General> {
       controller: scrollController,
       padding: const EdgeInsetsDirectional.fromSTEB(10, 10, 10, 18),
       children: [
-        if (!isWeb) service(),
+        if (!isWeb)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: service()),
+              Expanded(child: hwcodec()),
+            ],
+          ),
         if (!isWindows) theme(),
         if (!isWindows) _Card(title: 'Language', children: [language()]),
-        if (!isWeb) hwcodec(),
         if (!isWeb) audio(context),
         if (!isWeb) record(context),
         if (!isWeb) WaylandCard(),
@@ -2757,6 +2763,37 @@ class _AboutState extends State<_About> {
 
 //#region components
 
+IconData _settingCardIcon(String title) {
+  switch (title.toLowerCase()) {
+    case 'service':
+      return Icons.play_circle_outline_rounded;
+    case 'hardware codec':
+      return Icons.memory_rounded;
+    case 'audio input device':
+      return Icons.volume_up_outlined;
+    case 'recording':
+      return Icons.videocam_outlined;
+    case 'other':
+      return Icons.tune_rounded;
+    case 'keyboard shortcuts':
+      return Icons.keyboard_outlined;
+    case 'theme':
+      return Icons.palette_outlined;
+    case 'language':
+      return Icons.language_rounded;
+    case 'account':
+      return Icons.person_outline_rounded;
+    case 'about admin desk':
+      return Icons.info_outline_rounded;
+    case 'security':
+      return Icons.lock_outline_rounded;
+    case 'network':
+      return Icons.hub_outlined;
+    default:
+      return Icons.settings_outlined;
+  }
+}
+
 // ignore: non_constant_identifier_names
 Widget _Card(
     {required String title,
@@ -2795,6 +2832,20 @@ Widget _Card(
                       ),
                     ),
                     ...?title_suffix,
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: colors.selectedBackground,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        _settingCardIcon(title),
+                        color: colors.primary,
+                        size: 22,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
