@@ -484,6 +484,7 @@ class _GeneralState extends State<_General> {
     final scrollController = ScrollController();
     return ListView(
       controller: scrollController,
+      padding: const EdgeInsetsDirectional.fromSTEB(10, 10, 10, 18),
       children: [
         if (!isWeb) service(),
         if (!isWindows) theme(),
@@ -2761,36 +2762,54 @@ Widget _Card(
     {required String title,
     required List<Widget> children,
     List<Widget>? title_suffix}) {
-  return Row(
-    children: [
-      Flexible(
-        child: SizedBox(
+  return Padding(
+    padding: const EdgeInsetsDirectional.only(
+      start: 10,
+      end: 10,
+      top: 8,
+      bottom: 2,
+    ),
+    child: Builder(
+      builder: (context) {
+        final colors = AdminDeskColors.of(context);
+        return Container(
           width: double.infinity,
-          child: Card(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: AdminDeskMetrics.cardDecoration(colors),
+          child: Directionality(
+            textDirection: TextDirection.rtl,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
+                  textDirection: TextDirection.rtl,
                   children: [
                     Expanded(
-                        child: Text(
-                      translate(title),
-                      textAlign: TextAlign.start,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                      child: Text(
+                        translate(title),
+                        textAlign: TextAlign.right,
+                        style: AdminDeskTypography.title(colors).copyWith(
+                          fontSize: 16,
+                          fontWeight: AdminDeskTypography.semibold,
+                        ),
                       ),
-                    )),
-                    ...?title_suffix
+                    ),
+                    ...?title_suffix,
                   ],
-                ).marginDirectional(start: _kContentHMargin, top: 10, bottom: 10),
-                ...children
-                    .map((e) => e.marginDirectional(top: 4, end: _kContentHMargin)),
+                ),
+                const SizedBox(height: 10),
+                ...children.map(
+                  (child) => Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: child,
+                  ),
+                ),
               ],
-            ).marginDirectional(bottom: 10),
-          ).marginDirectional(start: _kCardLeftMargin, top: 15),
-        ),
-      ),
-    ],
+            ),
+          ),
+        );
+      },
+    ),
   );
 }
 
