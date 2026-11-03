@@ -28,6 +28,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Validate the independent AdminDesk product and RustDesk core versions in the
+  # reusable Windows build before generating the preview installers.
   windows-pr-build:
     name: Windows x64 Flutter + Rust build (no publishing)
     uses: ./.github/workflows/flutter-build.yml
