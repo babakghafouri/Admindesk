@@ -1,5 +1,3 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_hbb/common/widgets/peer_card.dart';
@@ -495,12 +493,10 @@ class _DeviceTableRow extends StatelessWidget {
     final online = peer.online;
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Material(
+      child: Material(
           color: selected && peerTabs.multiSelectionMode
-              ? c.selectedBackground.withOpacity(0.72)
-              : c.surface.withOpacity(0.48),
+              ? c.selectedBackground
+              : c.surface,
           child: InkWell(
         hoverColor: c.hoverBackground,
         onDoubleTap: peerTabs.multiSelectionMode
@@ -509,7 +505,7 @@ class _DeviceTableRow extends StatelessWidget {
             ? () => peerTabs.select(peer) : null,
         onLongPress: () => peerTabs.select(peer),
         child: SizedBox(
-          height: 51,
+          height: 58,
           child: Row(children: [
             const SizedBox(width: 12),
             Expanded(flex: 4, child: Row(children: [
@@ -576,7 +572,6 @@ class _DeviceTableRow extends StatelessWidget {
           ]),
           ),
         ),
-      ),
     ));
   }
 
