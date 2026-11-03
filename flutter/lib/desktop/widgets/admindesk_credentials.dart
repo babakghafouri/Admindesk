@@ -89,7 +89,6 @@ class _OtpCardState extends State<OtpCard> {
       title: 'رمز عبور یک‌بارمصرف',
       controller: widget.controller,
       obscureText: _obscurePassword,
-      centerValue: true,
       action: const SizedBox.shrink(),
       valueActions: Column(
         mainAxisSize: MainAxisSize.min,
@@ -159,7 +158,6 @@ class _CredentialSurface extends StatelessWidget {
     required this.action,
     required this.footer,
     this.obscureText = false,
-    this.centerValue = true,
     this.valueActions,
   });
 
@@ -168,7 +166,6 @@ class _CredentialSurface extends StatelessWidget {
   final Widget action;
   final Widget footer;
   final bool obscureText;
-  final bool centerValue;
   final Widget? valueActions;
 
   @override
