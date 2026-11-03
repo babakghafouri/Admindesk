@@ -287,7 +287,7 @@ class _PeersViewState extends State<_PeersView>
                                   ? 228
                                   : 220,
                               height: DevicesTableScope.enabledOf(context)
-                                  ? 136
+                                  ? 144
                                   : 140,
                               child: visibilityChild,
                             )
