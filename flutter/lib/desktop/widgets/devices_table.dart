@@ -354,10 +354,17 @@ class DevicesTableTabs extends StatelessWidget {
   }
 
   Widget _refresh(AdminDeskColors c) {
-    return IconButton(
-      tooltip: 'تازه‌سازی دستگاه‌ها',
-      onPressed: onRefresh,
-      icon: Icon(Icons.refresh_rounded, color: c.textSecondary),
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: IconButton(
+        tooltip: 'تازه‌سازی دستگاه‌ها',
+        constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+        padding: EdgeInsets.zero,
+        visualDensity: VisualDensity.compact,
+        onPressed: onRefresh,
+        icon: Icon(Icons.refresh_rounded, color: c.textSecondary),
+      ),
     );
   }
 }
