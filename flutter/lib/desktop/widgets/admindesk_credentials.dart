@@ -97,7 +97,7 @@ class _OtpCardState extends State<OtpCard> {
           IconButton(
             tooltip: 'کپی رمز عبور',
             onPressed: widget.onCopy,
-            constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             icon: Icon(Icons.copy_rounded, size: 17, color: c.textSecondary),
