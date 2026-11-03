@@ -105,7 +105,7 @@ class _OtpCardState extends State<OtpCard> {
             tooltip: _obscurePassword ? 'نمایش رمز' : 'مخفی‌کردن رمز',
             onPressed: () => setState(
                 () => _obscurePassword = !_obscurePassword),
-            constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             icon: Icon(
@@ -121,7 +121,7 @@ class _OtpCardState extends State<OtpCard> {
             onPressed: widget.canRefresh
                 ? widget.onRefresh
                 : widget.onOpenSecuritySettings,
-            constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             icon: Icon(
