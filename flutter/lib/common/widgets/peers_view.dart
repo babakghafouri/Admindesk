@@ -65,9 +65,6 @@ RxString get peerSort {
   return _peerSort!;
 }
 
-// list for listener
-RxList<RxString> get obslist => [peerSearchText, peerSort, peerStatusFilter].obs;
-
 final peerSearchTextController =
     TextEditingController(text: peerSearchText.value);
 
@@ -242,15 +239,17 @@ class _PeersViewState extends State<_PeersView>
 
   Widget _buildPeersView(Peers peers) {
     final updateEvent = peers.event;
-    final body = ObxValue<RxList>((filters) {
+    final body = Obx(() {
+      final searchText = peerSearchText.value;
+      final sortedBy = peerSort.value;
+      final statusFilter = DevicesTableScope.enabledOf(context)
+          ? peerStatusFilter.value
+          : 'all';
       return FutureBuilder<List<Peer>>(
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             var peers = snapshot.data!;
             if (peers.length > 1000) peers = peers.sublist(0, 1000);
-            final statusFilter = DevicesTableScope.enabledOf(context)
-                ? filters[2].value
-                : 'all';
             if (statusFilter == 'online') {
               peers = peers.where((peer) => peer.online).toList();
             } else if (statusFilter == 'offline') {
@@ -362,9 +361,9 @@ class _PeersViewState extends State<_PeersView>
             );
           }
         },
-        future: matchPeers(filters[0].value, filters[1].value, peers.peers),
+        future: matchPeers(searchText, sortedBy, peers.peers),
       );
-    }, obslist);
+    });
 
     return body;
   }
