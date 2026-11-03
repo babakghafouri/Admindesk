@@ -59,7 +59,10 @@ env:
   VCPKG_COMMIT_ID: "9e593bb18ea69cc5095e012465dcd675a822ed0d"
   VCPKG_CMAKE_VERSION: "4.3.0"
   ARMV7_VCPKG_COMMIT_ID: "6f29f12e82a8293156836ad81cc9bf5af41fe836" # 2025.01.13, got "/opt/artifacts/vcpkg/vcpkg: No such file or directory" with latest version
+  # RustDesk engine version (must match Cargo.toml and rustdesk --version).
   VERSION: "1.5.1"
+  # AdminDesk product version (independent from the RustDesk engine).
+  ADMINDESK_VERSION: "1.5.2"
   NDK_VERSION: "r28c"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: "${{ secrets.ANDROID_SIGNING_KEY }}"
@@ -578,7 +581,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $arch = "${{ matrix.job.arch }}"
-          $version = "${{ env.VERSION }}"
+          $version = "${{ env.ADMINDESK_VERSION }}"
           foreach ($ext in @('exe', 'msi')) {
             $old = "./SignOutput/rustdesk-$version-$arch.$ext"
             if (-not (Test-Path $old)) { throw "Expected installer missing: $old" }
@@ -780,7 +783,7 @@ jobs:
           python3 ./generate.py -f ../../Release/ -o . -e ../../Release/rustdesk.exe
           popd
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/AdminDesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/AdminDesk-${{ env.ADMINDESK_VERSION }}-${{ matrix.job.arch }}-sciter.exe
 
       - name: Sign AdminDesk Sciter installer with GitHub Actions certificate
         if: env.UPLOAD_ARTIFACT == 'true'
@@ -792,7 +795,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: windows-sciter-x86-exe
-          path: ./SignOutput/AdminDesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+          path: ./SignOutput/AdminDesk-${{ env.ADMINDESK_VERSION }}-${{ matrix.job.arch }}-sciter.exe
           if-no-files-found: error
 
       - name: Upload AdminDesk Windows x86 Sciter installer
