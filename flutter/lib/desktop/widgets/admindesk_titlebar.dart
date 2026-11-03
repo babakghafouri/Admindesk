@@ -499,6 +499,64 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
     return '$name: متصل · $latency ms';
   }
 
+  void _showDetails() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final colors = AdminDeskColors.of(dialogContext);
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text('وضعیت سرویس‌های AdminDesk'),
+            content: SizedBox(
+              width: 390,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final entry in _latencies.entries)
+                    ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        entry.value == null
+                            ? Icons.error_outline_rounded
+                            : Icons.check_circle_outline_rounded,
+                        color: entry.value == null
+                            ? const Color(0xFFE34D4D)
+                            : const Color(0xFF16A765),
+                      ),
+                      title: Text(
+                        entry.key,
+                        style: AdminDeskTypography.body(colors),
+                      ),
+                      subtitle: Text(
+                        entry.value == null
+                            ? 'در دسترس نیست'
+                            : 'متصل · ${entry.value} ms',
+                        style: AdminDeskTypography.caption(colors),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'این بررسی فقط دسترسی TCP و HTTPS را می‌سنجد؛ سلامت کامل نشست ریموت، ارتباط UDP یا عملکرد واقعی انتقال فایل را تضمین نمی‌کند.',
+                    style: AdminDeskTypography.caption(colors),
+                    textAlign: TextAlign.right,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('بستن'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final Color signalColor = _checking
@@ -519,10 +577,15 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
       message: tooltip,
       waitDuration: const Duration(milliseconds: 250),
       child: IconButton(
-        tooltip: 'بررسی سرویس‌های سرور',
+        tooltip: 'نمایش وضعیت سرویس‌های سرور',
         constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
         padding: EdgeInsets.zero,
-        onPressed: _checking ? null : _check,
+        onPressed: _checking
+            ? null
+            : () async {
+                await _check();
+                if (mounted) _showDetails();
+              },
         icon: _checking
             ? SizedBox(
                 width: 16,
