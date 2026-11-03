@@ -206,7 +206,7 @@ class _PeerTabPageState extends State<PeerTabPage>
   // The dashboard table is a presentation of the existing native peer tabs.
   // Keep tab visibility restrictions, persistent tab index and original loads.
   Widget _dashboardHeader(BuildContext context, PeerTabModel model) {
-    return DevicesTableTabs(
+    return Obx(() => DevicesTableTabs(
       showNavigation: false,
       currentTab: model.currentTab,
       availableTabs: model.visibleEnabledOrderedIndexs,
@@ -246,7 +246,7 @@ class _PeerTabPageState extends State<PeerTabPage>
             break;
         }
       },
-    );
+    ));
   }
 
   Widget _createSwitchBar(BuildContext context) {
