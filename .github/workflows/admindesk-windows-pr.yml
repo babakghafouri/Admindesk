@@ -28,6 +28,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Validate the independent AdminDesk product and RustDesk core versions in the
+  # reusable Windows build before generating the preview installers.
   windows-pr-build:
     name: Windows x64 Flutter + Rust build (no publishing)
     uses: ./.github/workflows/flutter-build.yml
@@ -61,6 +63,16 @@ jobs:
         working-directory: flutter
         run: flutter pub get
 
-      - name: Analyze changed Notification widget
+      - name: Analyze changed AdminDesk Flutter widgets
         working-directory: flutter
-        run: flutter analyze --no-pub lib/desktop/widgets/admindesk_titlebar.dart
+        run: >-
+          flutter analyze --no-pub --no-fatal-infos
+          lib/common/widgets/peer_card.dart
+          lib/common/widgets/peer_tab_page.dart
+          lib/common/widgets/peers_view.dart
+          lib/desktop/pages/connection_page.dart
+          lib/desktop/pages/desktop_setting_page.dart
+          lib/desktop/widgets/admindesk_credentials.dart
+          lib/desktop/widgets/admindesk_dashboard.dart
+          lib/desktop/widgets/admindesk_titlebar.dart
+          lib/desktop/widgets/devices_table.dart

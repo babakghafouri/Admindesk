@@ -1,8 +1,4 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:flutter_hbb/common.dart';
-import 'package:flutter_hbb/consts.dart';
 import 'package:get/get.dart';
 import 'package:flutter_hbb/common/widgets/peer_card.dart';
 import 'package:flutter_hbb/common/widgets/peers_view.dart';
@@ -45,6 +41,8 @@ class DevicesTableTabs extends StatelessWidget {
     required this.onTabSelected,
     required this.onRefresh,
     this.onViewModeChanged,
+    this.statusFilter,
+    this.onStatusFilterChanged,
     this.showNavigation = true,
   }) : super(key: key);
 
@@ -53,6 +51,8 @@ class DevicesTableTabs extends StatelessWidget {
   final ValueChanged<int> onTabSelected;
   final VoidCallback onRefresh;
   final ValueChanged<PeerUiType>? onViewModeChanged;
+  final String? statusFilter;
+  final ValueChanged<String>? onStatusFilterChanged;
   final bool showNavigation;
 
   static const _tabs = <({int index, String title, IconData icon})>[
@@ -95,7 +95,12 @@ class DevicesTableTabs extends StatelessWidget {
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(children: [Expanded(child: search), _refresh(c)]),
+                        Row(children: [
+                          Expanded(child: search),
+                          if (statusFilter != null && onStatusFilterChanged != null)
+                            _statusFilter(c),
+                          _refresh(c),
+                        ]),
                         const SizedBox(height: AdminDeskMetrics.spaceXs),
                         Align(
                           alignment: Alignment.centerRight,
@@ -105,6 +110,8 @@ class DevicesTableTabs extends StatelessWidget {
                     )
                   : Row(children: [
                       Expanded(child: search),
+                      if (statusFilter != null && onStatusFilterChanged != null)
+                        _statusFilter(c),
                       const SizedBox(width: AdminDeskMetrics.spaceXs),
                       _viewModeControl(context, c),
                       _refresh(c),
@@ -119,6 +126,8 @@ class DevicesTableTabs extends StatelessWidget {
                     const SizedBox(height: AdminDeskMetrics.spaceXs),
                     Row(children: [
                       Expanded(child: search),
+                      if (statusFilter != null && onStatusFilterChanged != null)
+                        _statusFilter(c),
                       _refresh(c),
                     ]),
                   ],
@@ -127,6 +136,8 @@ class DevicesTableTabs extends StatelessWidget {
                   ...tabs,
                   const SizedBox(width: AdminDeskMetrics.spaceSm),
                   Expanded(child: search),
+                  if (statusFilter != null && onStatusFilterChanged != null)
+                    _statusFilter(c),
                   _refresh(c),
                 ]),
         ),
@@ -294,11 +305,66 @@ class DevicesTableTabs extends StatelessWidget {
     );
   }
 
+  Widget _statusFilter(AdminDeskColors c) {
+    final value = statusFilter ?? 'all';
+    final label = value == 'online'
+        ? 'آنلاین'
+        : value == 'offline'
+            ? 'آفلاین'
+            : 'همه';
+    final icon = value == 'online'
+        ? Icons.circle
+        : value == 'offline'
+            ? Icons.circle_outlined
+            : Icons.filter_list_rounded;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: 6),
+      child: PopupMenuButton<String>(
+        tooltip: 'فیلتر وضعیت دستگاه',
+        onSelected: onStatusFilterChanged,
+        itemBuilder: (_) => const [
+          PopupMenuItem(value: 'all', child: Text('همه دستگاه‌ها')),
+          PopupMenuItem(value: 'online', child: Text('فقط آنلاین')),
+          PopupMenuItem(value: 'offline', child: Text('فقط آفلاین')),
+        ],
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: c.inputBackground,
+            border: Border.all(color: c.border),
+            borderRadius: AdminDeskMetrics.controlRadius,
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(icon, size: 15,
+                color: value == 'online'
+                    ? c.online
+                    : value == 'offline'
+                        ? c.offline
+                        : c.textSecondary),
+            const SizedBox(width: 6),
+            Text(label, style: AdminDeskTypography.caption(c)),
+            const SizedBox(width: 3),
+            Icon(Icons.expand_more_rounded,
+                size: 16, color: c.textSecondary),
+          ]),
+        ),
+      ),
+    );
+  }
+
   Widget _refresh(AdminDeskColors c) {
-    return IconButton(
-      tooltip: 'تازه‌سازی دستگاه‌ها',
-      onPressed: onRefresh,
-      icon: Icon(Icons.refresh_rounded, color: c.textSecondary),
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: IconButton(
+        tooltip: 'تازه‌سازی دستگاه‌ها',
+        constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+        padding: EdgeInsets.zero,
+        visualDensity: VisualDensity.compact,
+        onPressed: onRefresh,
+        icon: Icon(Icons.refresh_rounded, color: c.textSecondary),
+      ),
     );
   }
 }
@@ -434,12 +500,10 @@ class _DeviceTableRow extends StatelessWidget {
     final online = peer.online;
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Material(
+      child: Material(
           color: selected && peerTabs.multiSelectionMode
-              ? c.selectedBackground.withOpacity(0.72)
-              : c.surface.withOpacity(0.48),
+              ? c.selectedBackground
+              : c.surface,
           child: InkWell(
         hoverColor: c.hoverBackground,
         onDoubleTap: peerTabs.multiSelectionMode
@@ -448,18 +512,22 @@ class _DeviceTableRow extends StatelessWidget {
             ? () => peerTabs.select(peer) : null,
         onLongPress: () => peerTabs.select(peer),
         child: SizedBox(
-          height: 51,
+          height: 58,
           child: Row(children: [
             const SizedBox(width: 12),
             Expanded(flex: 4, child: Row(children: [
               Icon(_deviceIcon(peer.platform), size: 20, color: c.primary),
               const SizedBox(width: 7),
-              Expanded(child: Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AdminDeskTypography.body(c).copyWith(
-                    fontWeight: AdminDeskTypography.semibold),
+              Expanded(child: Tooltip(
+                message: name,
+                waitDuration: const Duration(milliseconds: 350),
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AdminDeskTypography.body(c).copyWith(
+                      fontWeight: AdminDeskTypography.semibold),
+                ),
               )),
             ])),
             Expanded(flex: 3, child: Align(
@@ -515,7 +583,6 @@ class _DeviceTableRow extends StatelessWidget {
           ]),
           ),
         ),
-      ),
     ));
   }
 

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/common/widgets/audio_input.dart';
@@ -13,6 +14,7 @@ import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart';
 import 'package:flutter_hbb/common/widgets/keyboard_shortcuts/page_body.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_keyboard_shortcuts_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
+import 'package:flutter_hbb/desktop/theme/admindesk_theme.dart';
 import 'package:flutter_hbb/desktop/widgets/remote_toolbar.dart';
 import 'package:flutter_hbb/mobile/widgets/dialog.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
@@ -47,9 +49,8 @@ extension _DirectionalWidgetMargin on Widget {
   }
 }
 
-const double _kTabWidth = 200;
+const double _kTabWidth = 220;
 const double _kTabHeight = 42;
-const double _kCardFixedWidth = 540;
 const double _kCardLeftMargin = 15;
 const double _kContentHMargin = 15;
 const double _kContentHSubMargin = _kContentHMargin + 33;
@@ -57,7 +58,7 @@ const double _kCheckBoxLeftMargin = 10;
 const double _kRadioLeftMargin = 10;
 const double _kListViewBottomMargin = 15;
 const double _kTitleFontSize = 20;
-const double _kContentFontSize = 15;
+const double _kContentFontSize = 14;
 const Color _accentColor = MyTheme.accent;
 const String _kSettingPageControllerTag = 'settingPageController';
 const String _kSettingPageTabKeyTag = 'settingPageTabKey';
@@ -94,7 +95,6 @@ class DesktopSettingPage extends StatefulWidget {
         bind.mainGetBuildinOption(key: kOptionHideNetworkSetting) != 'Y')
       SettingsTabKey.network,
     if (!bind.isIncomingOnly()) SettingsTabKey.display,
-    if (!bind.isDisableAccount()) SettingsTabKey.account,
     if (isWindows &&
         !bind.isDisableSettings() &&
         bind.mainGetBuildinOption(key: kOptionHideRemotePrinterSetting) != 'Y')
@@ -298,27 +298,39 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final colors = AdminDeskColors.of(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: colors.canvas,
       body: _buildBlock(
         children: <Widget>[
           SizedBox(
             width: _kTabWidth,
-            child: Column(
-              children: [
-                _header(context),
-                Flexible(child: _listView(tabs: _settingTabs())),
-              ],
+            child: Container(
+              color: colors.surface,
+              child: Column(
+                children: [
+                  _header(context),
+                  Flexible(child: _listView(tabs: _settingTabs())),
+                ],
+              ),
             ),
           ),
-          const VerticalDivider(width: 1),
+          VerticalDivider(width: 1, color: colors.border),
           Expanded(
             child: Container(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              child: PageView(
-                controller: controller,
-                physics: NeverScrollableScrollPhysics(),
-                children: _children(),
+              color: colors.canvas,
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: PageView(
+                  controller: controller,
+                  physics: NeverScrollableScrollPhysics(),
+                  children: _children()
+                      .map((child) => Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: child,
+                          ))
+                      .toList(),
+                ),
               ),
             ),
           )
@@ -328,13 +340,14 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
   }
 
   Widget _header(BuildContext context) {
+    final colors = AdminDeskColors.of(context);
     final settingsText = Text(
       translate('Settings'),
       textAlign: TextAlign.right,
-      style: const TextStyle(
-        color: _accentColor,
+      style: TextStyle(
+        color: colors.primary,
         fontSize: _kTitleFontSize,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w600,
       ),
     );
     return Directionality(
@@ -386,49 +399,63 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
 
   Widget _listItem({required _TabInfo tab}) {
     return Obx(() {
-      bool selected = tab.key == selectedTab.value;
-      return SizedBox(
-        width: _kTabWidth,
-        height: _kTabHeight,
-        child: InkWell(
-          onTap: () {
-            if (selectedTab.value != tab.key) {
-              int index = DesktopSettingPage.tabKeys.indexOf(tab.key);
-              if (index == -1) {
-                return;
+      final colors = AdminDeskColors.of(context);
+      final selected = tab.key == selectedTab.value;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        child: Material(
+          color: selected ? colors.selectedBackground : Colors.transparent,
+          borderRadius: AdminDeskMetrics.controlRadius,
+          child: InkWell(
+            borderRadius: AdminDeskMetrics.controlRadius,
+            onTap: () {
+              if (selectedTab.value != tab.key) {
+                final index = DesktopSettingPage.tabKeys.indexOf(tab.key);
+                if (index == -1) return;
+                controller.jumpToPage(index);
               }
-              controller.jumpToPage(index);
-            }
-            selectedTab.value = tab.key;
-          },
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Row(
-              textDirection: TextDirection.rtl,
-              children: [
-                Container(
-                  width: 4,
-                  height: _kTabHeight * 0.7,
-                  color: selected ? _accentColor : null,
-                ),
-                Icon(
-                  selected ? tab.selected : tab.unselected,
-                  color: selected ? _accentColor : null,
-                  size: 20,
-                ).marginDirectional(start: 13, end: 10),
-                Expanded(
-                  child: Text(
-                    translate(tab.label),
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(
-                      color: selected ? _accentColor : null,
-                      fontWeight: FontWeight.w400,
-                      fontSize: _kContentFontSize,
+              selectedTab.value = tab.key;
+            },
+            child: SizedBox(
+              height: _kTabHeight,
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: _kTabHeight * 0.68,
+                      decoration: BoxDecoration(
+                        color: selected ? colors.primary : Colors.transparent,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Icon(
+                      selected ? tab.selected : tab.unselected,
+                      color: selected ? colors.primary : colors.textSecondary,
+                      size: 19,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        translate(tab.label),
+                        textAlign: TextAlign.right,
+                        textDirection: TextDirection.rtl,
+                        style: TextStyle(
+                          color: selected
+                              ? colors.primary
+                              : colors.textPrimary,
+                          fontWeight:
+                              selected ? FontWeight.w600 : FontWeight.w500,
+                          fontSize: _kContentFontSize,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -457,11 +484,18 @@ class _GeneralState extends State<_General> {
     final scrollController = ScrollController();
     return ListView(
       controller: scrollController,
+      padding: const EdgeInsetsDirectional.fromSTEB(10, 10, 10, 18),
       children: [
-        if (!isWeb) service(),
+        if (!isWeb)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: service()),
+              Expanded(child: hwcodec()),
+            ],
+          ),
         if (!isWindows) theme(),
         if (!isWindows) _Card(title: 'Language', children: [language()]),
-        if (!isWeb) hwcodec(),
         if (!isWeb) audio(context),
         if (!isWeb) record(context),
         if (!isWeb) WaylandCard(),
@@ -842,6 +876,41 @@ class _GeneralState extends State<_General> {
     final showRootDir = isWindows && bind.mainIsInstalled();
     return futureBuilder(future: () async {
       String user_dir = bind.mainVideoSaveDirectory(root: false);
+
+      // Migrate only the legacy default Videos/RustDesk folder. A manually
+      // selected recording directory is left untouched. Existing recordings
+      // remain in the old folder; new recordings use Videos/AdminDesk.
+      if (Platform.isWindows) {
+        final current = Directory(user_dir);
+        final pathParts = current.path
+            .split(Platform.pathSeparator)
+            .where((part) => part.isNotEmpty)
+            .toList();
+        final parentParts = current.parent.path
+            .split(Platform.pathSeparator)
+            .where((part) => part.isNotEmpty)
+            .toList();
+        final folderName =
+            pathParts.isEmpty ? '' : pathParts.last.toLowerCase();
+        final parentName =
+            parentParts.isEmpty ? '' : parentParts.last.toLowerCase();
+        if (folderName == 'rustdesk' && parentName == 'videos') {
+          final adminDeskDirectory = Directory(
+            '${current.parent.path}${Platform.pathSeparator}AdminDesk',
+          );
+          try {
+            await adminDeskDirectory.create(recursive: true);
+            await bind.mainSetLocalOption(
+              key: kOptionVideoSaveDirectory,
+              value: adminDeskDirectory.path,
+            );
+            user_dir = adminDeskDirectory.path;
+          } catch (error) {
+            debugPrint('Could not migrate default recording folder: $error');
+          }
+        }
+      }
+
       String root_dir =
           showRootDir ? bind.mainVideoSaveDirectory(root: true) : '';
       bool user_dir_exists = await Directory(user_dir).exists();
@@ -2604,20 +2673,25 @@ class _AboutState extends State<_About> {
   Widget build(BuildContext context) {
     return futureBuilder(future: () async {
       final license = await bind.mainGetLicense();
-      final version = await bind.mainGetVersion();
+      final coreVersion = await bind.mainGetVersion();
+      final packageInfo = await PackageInfo.fromPlatform();
       final buildDate = await bind.mainGetBuildDate();
       final fingerprint = await bind.mainGetFingerprint();
       final myId = await bind.mainGetMyId();
       return {
         'license': license,
-        'version': version,
+        'coreVersion': coreVersion,
+        'adminDeskVersion': packageInfo.version,
+        'buildNumber': packageInfo.buildNumber,
         'buildDate': buildDate,
         'fingerprint': fingerprint,
         'myId': myId
       };
     }(), hasData: (data) {
       final license = data['license'].toString();
-      final version = data['version'].toString();
+      final coreVersion = data['coreVersion'].toString();
+      final adminDeskVersion = data['adminDeskVersion'].toString();
+      final buildNumber = data['buildNumber'].toString();
       final buildDate = data['buildDate'].toString();
       final fingerprint = data['fingerprint'].toString();
       final myId = data['myId'].toString();
@@ -2637,7 +2711,13 @@ class _AboutState extends State<_About> {
               ]),
               const SizedBox(height: 12),
               SelectionArea(
-                  child: Text('${translate('Version')}: $version')
+                  child: Text('نسخه AdminDesk: $adminDeskVersion')
+                      .marginSymmetric(vertical: 4.0)),
+              SelectionArea(
+                  child: Text('نسخه هسته RustDesk: $coreVersion')
+                      .marginSymmetric(vertical: 4.0)),
+              SelectionArea(
+                  child: Text('شماره ساخت: $buildNumber')
                       .marginSymmetric(vertical: 4.0)),
               SelectionArea(
                   child: Text('${translate('Build Date')}: $buildDate')
@@ -2694,40 +2774,104 @@ class _AboutState extends State<_About> {
 
 //#region components
 
+IconData _settingCardIcon(String title) {
+  switch (title.toLowerCase()) {
+    case 'service':
+      return Icons.play_circle_outline_rounded;
+    case 'hardware codec':
+      return Icons.memory_rounded;
+    case 'audio input device':
+      return Icons.volume_up_outlined;
+    case 'recording':
+      return Icons.videocam_outlined;
+    case 'other':
+      return Icons.tune_rounded;
+    case 'keyboard shortcuts':
+      return Icons.keyboard_outlined;
+    case 'theme':
+      return Icons.palette_outlined;
+    case 'language':
+      return Icons.language_rounded;
+    case 'account':
+      return Icons.person_outline_rounded;
+    case 'about admin desk':
+      return Icons.info_outline_rounded;
+    case 'security':
+      return Icons.lock_outline_rounded;
+    case 'network':
+      return Icons.hub_outlined;
+    default:
+      return Icons.settings_outlined;
+  }
+}
+
 // ignore: non_constant_identifier_names
 Widget _Card(
     {required String title,
     required List<Widget> children,
     List<Widget>? title_suffix}) {
-  return Row(
-    children: [
-      Flexible(
-        child: SizedBox(
-          width: _kCardFixedWidth,
-          child: Card(
+  return Padding(
+    padding: const EdgeInsetsDirectional.only(
+      start: 10,
+      end: 10,
+      top: 8,
+      bottom: 2,
+    ),
+    child: Builder(
+      builder: (context) {
+        final colors = AdminDeskColors.of(context);
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: AdminDeskMetrics.cardDecoration(colors),
+          child: Directionality(
+            textDirection: TextDirection.rtl,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
+                  textDirection: TextDirection.rtl,
                   children: [
                     Expanded(
-                        child: Text(
-                      translate(title),
-                      textAlign: TextAlign.start,
-                      style: const TextStyle(
-                        fontSize: _kTitleFontSize,
+                      child: Text(
+                        translate(title),
+                        textAlign: TextAlign.right,
+                        style: AdminDeskTypography.title(colors).copyWith(
+                          fontSize: 16,
+                          fontWeight: AdminDeskTypography.semibold,
+                        ),
                       ),
-                    )),
-                    ...?title_suffix
+                    ),
+                    ...?title_suffix,
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: colors.selectedBackground,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        _settingCardIcon(title),
+                        color: colors.primary,
+                        size: 22,
+                      ),
+                    ),
                   ],
-                ).marginDirectional(start: _kContentHMargin, top: 10, bottom: 10),
-                ...children
-                    .map((e) => e.marginDirectional(top: 4, end: _kContentHMargin)),
+                ),
+                const SizedBox(height: 10),
+                ...children.map(
+                  (child) => Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: child,
+                  ),
+                ),
               ],
-            ).marginDirectional(bottom: 10),
-          ).marginDirectional(start: _kCardLeftMargin, top: 15),
-        ),
-      ),
-    ],
+            ),
+          ),
+        );
+      },
+    ),
   );
 }
 
@@ -3071,7 +3215,7 @@ Widget _lock(
         children: [
           Flexible(
             child: SizedBox(
-              width: _kCardFixedWidth,
+              width: double.infinity,
               child: Card(
                 child: ElevatedButton(
                   child: SizedBox(

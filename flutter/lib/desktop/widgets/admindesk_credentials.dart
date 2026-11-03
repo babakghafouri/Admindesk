@@ -57,37 +57,80 @@ class IdCard extends StatelessWidget {
   }
 }
 
-/// Only displays the password and calls the existing password-refresh action.
-class OtpCard extends StatelessWidget {
+/// Displays the temporary password masked by default, with explicit reveal,
+/// copy, and refresh actions. The controller remains owned by ServerModel.
+class OtpCard extends StatefulWidget {
   const OtpCard({
     Key? key,
     required this.controller,
     required this.canRefresh,
     required this.onRefresh,
+    required this.onCopy,
     required this.onOpenSecuritySettings,
   }) : super(key: key);
 
   final TextEditingController controller;
   final bool canRefresh;
   final VoidCallback onRefresh;
+  final VoidCallback onCopy;
   final VoidCallback? onOpenSecuritySettings;
+
+  @override
+  State<OtpCard> createState() => _OtpCardState();
+}
+
+class _OtpCardState extends State<OtpCard> {
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
     final c = AdminDeskColors.of(context);
     return _CredentialSurface(
       title: 'رمز عبور یک‌بارمصرف',
-      controller: controller,
-      action: IconButton(
-        tooltip: canRefresh ? 'تولید رمز جدید' : 'تنظیمات رمز',
-        onPressed: canRefresh ? onRefresh : onOpenSecuritySettings,
-        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-        visualDensity: VisualDensity.compact,
-        padding: EdgeInsets.zero,
-        icon: Icon(
-          canRefresh ? Icons.refresh : Icons.settings_outlined,
-          size: 20, color: c.textSecondary,
-        ),
+      controller: widget.controller,
+      obscureText: _obscurePassword,
+      action: const SizedBox.shrink(),
+      valueActions: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'کپی رمز عبور',
+            onPressed: widget.onCopy,
+            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            icon: Icon(Icons.copy_rounded, size: 17, color: c.textSecondary),
+          ),
+          IconButton(
+            tooltip: _obscurePassword ? 'نمایش رمز' : 'مخفی‌کردن رمز',
+            onPressed: () => setState(
+                () => _obscurePassword = !_obscurePassword),
+            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            icon: Icon(
+              _obscurePassword
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              size: 19,
+              color: c.textSecondary,
+            ),
+          ),
+          IconButton(
+            tooltip: widget.canRefresh ? 'تولید رمز جدید' : 'تنظیمات رمز',
+            onPressed: widget.canRefresh
+                ? widget.onRefresh
+                : widget.onOpenSecuritySettings,
+            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            icon: Icon(
+              widget.canRefresh ? Icons.refresh : Icons.settings_outlined,
+              size: 20,
+              color: c.textSecondary,
+            ),
+          ),
+        ],
       ),
       footer: Row(
         children: [
@@ -95,7 +138,7 @@ class OtpCard extends StatelessWidget {
           const SizedBox(width: AdminDeskMetrics.spaceXs),
           Expanded(
             child: Text(
-              canRefresh ? 'رمز موقت فعال' : 'مدیریت رمز از تنظیمات امنیتی',
+              widget.canRefresh ? 'رمز موقت فعال' : 'مدیریت رمز از تنظیمات امنیتی',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AdminDeskTypography.caption(c),
@@ -114,12 +157,16 @@ class _CredentialSurface extends StatelessWidget {
     required this.controller,
     required this.action,
     required this.footer,
+    this.obscureText = false,
+    this.valueActions,
   });
 
   final String title;
   final TextEditingController controller;
   final Widget action;
   final Widget footer;
+  final bool obscureText;
+  final Widget? valueActions;
 
   @override
   Widget build(BuildContext context) {
@@ -150,17 +197,30 @@ class _CredentialSurface extends StatelessWidget {
           Expanded(
             child: AnimatedBuilder(
               animation: controller,
-              builder: (context, _) => Align(
-                alignment: Alignment.centerRight,
-                child: Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: SelectableText(
-                    controller.text,
-                    textAlign: TextAlign.right,
-                    maxLines: 1,
-                    style: AdminDeskTypography.identity(c),
+              builder: (context, _) => Stack(
+                alignment: Alignment.center,
+                children: [
+                  Center(
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: SelectableText(
+                        obscureText && controller.text.isNotEmpty
+                            ? '••••••••'
+                            : controller.text,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: AdminDeskTypography.identity(c),
+                      ),
+                    ),
                   ),
-                ),
+                  if (valueActions != null)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(child: valueActions!),
+                    ),
+                ],
               ),
             ),
           ),
