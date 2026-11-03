@@ -89,7 +89,9 @@ class _OtpCardState extends State<OtpCard> {
       title: 'رمز عبور یک‌بارمصرف',
       controller: widget.controller,
       obscureText: _obscurePassword,
-      action: Row(
+      centerValue: true,
+      action: const SizedBox.shrink(),
+      valueActions: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
@@ -157,6 +159,8 @@ class _CredentialSurface extends StatelessWidget {
     required this.action,
     required this.footer,
     this.obscureText = false,
+    this.centerValue = true,
+    this.valueActions,
   });
 
   final String title;
@@ -164,6 +168,8 @@ class _CredentialSurface extends StatelessWidget {
   final Widget action;
   final Widget footer;
   final bool obscureText;
+  final bool centerValue;
+  final Widget? valueActions;
 
   @override
   Widget build(BuildContext context) {
@@ -194,19 +200,30 @@ class _CredentialSurface extends StatelessWidget {
           Expanded(
             child: AnimatedBuilder(
               animation: controller,
-              builder: (context, _) => Align(
-                alignment: Alignment.centerRight,
-                child: Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: SelectableText(
-                    obscureText && controller.text.isNotEmpty
-                        ? '••••••••'
-                        : controller.text,
-                    textAlign: TextAlign.right,
-                    maxLines: 1,
-                    style: AdminDeskTypography.identity(c),
+              builder: (context, _) => Stack(
+                alignment: Alignment.center,
+                children: [
+                  Center(
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: SelectableText(
+                        obscureText && controller.text.isNotEmpty
+                            ? '••••••••'
+                            : controller.text,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: AdminDeskTypography.identity(c),
+                      ),
+                    ),
                   ),
-                ),
+                  if (valueActions != null)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(child: valueActions!),
+                    ),
+                ],
               ),
             ),
           ),
