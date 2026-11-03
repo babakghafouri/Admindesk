@@ -494,7 +494,7 @@ jobs:
           Copy-Item -Path ./rustdesk/* -Destination ./admindesk-msi -Recurse -Force
           Rename-Item -Path ./admindesk-msi/rustdesk.exe -NewName AdminDesk.exe
           pushd ./res/msi
-          python preprocess.py --arp --app-name AdminDesk -d ../../admindesk-msi
+          python preprocess.py --arp --app-name AdminDesk -v ${{ env.ADMINDESK_VERSION }} -d ../../admindesk-msi
           nuget restore msi.sln
           $msiPlatform = if ('${{ matrix.job.arch }}' -eq 'aarch64') { 'ARM64' } else { 'x64' }
           msbuild msi.sln -p:Configuration=Release -p:Platform=$msiPlatform /p:TargetVersion=Windows10
