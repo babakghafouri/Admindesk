@@ -12,6 +12,7 @@ import 'package:flutter_hbb/desktop/widgets/promo_carousel.dart';
 import 'package:flutter_hbb/models/server_model.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:provider/provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 /// Presentation-only desktop dashboard. Connection, server state and peer
 /// operations are intentionally delegated to the existing RustDesk widgets.
@@ -26,12 +27,17 @@ class AdminDeskDashboard extends StatefulWidget {
 
 class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
   final ValueNotifier<int?> _requestedPeerTab = ValueNotifier<int?>(null);
+  String _adminDeskVersion = '';
   int _selectedMenu = 2;
 
   @override
   void initState() {
     super.initState();
     _selectedMenu = _menuForPeerTab(gFFI.peerTabModel.currentTab);
+    PackageInfo.fromPlatform().then((info) {
+      if (!mounted) return;
+      setState(() => _adminDeskVersion = info.version);
+    });
   }
 
   @override
@@ -103,7 +109,9 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
             ),
             AdminDeskSideBar(
               selectedMenu: _selectedMenu,
-              versionLabel: version.isEmpty ? 'AdminDesk' : 'نسخه $version',
+              versionLabel: _adminDeskVersion.isEmpty
+                  ? 'AdminDesk'
+                  : 'نسخه $_adminDeskVersion',
               onNavigate: _openTab,
               onSettings: _openSettings,
             ),
