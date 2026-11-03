@@ -581,11 +581,12 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $arch = "${{ matrix.job.arch }}"
-          $version = "${{ env.ADMINDESK_VERSION }}"
+          $coreVersion = "${{ env.VERSION }}"
+          $adminDeskVersion = "${{ env.ADMINDESK_VERSION }}"
           foreach ($ext in @('exe', 'msi')) {
-            $old = "./SignOutput/rustdesk-$version-$arch.$ext"
+            $old = "./SignOutput/rustdesk-$coreVersion-$arch.$ext"
             if (-not (Test-Path $old)) { throw "Expected installer missing: $old" }
-            Rename-Item -Path $old -NewName "AdminDesk-$version-$arch.$ext"
+            Rename-Item -Path $old -NewName "AdminDesk-$adminDeskVersion-$arch.$ext"
           }
           Get-ChildItem ./SignOutput/AdminDesk-* | ForEach-Object {
             $hash = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash
