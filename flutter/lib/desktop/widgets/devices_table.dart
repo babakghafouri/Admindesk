@@ -511,12 +511,16 @@ class _DeviceTableRow extends StatelessWidget {
             Expanded(flex: 4, child: Row(children: [
               Icon(_deviceIcon(peer.platform), size: 20, color: c.primary),
               const SizedBox(width: 7),
-              Expanded(child: Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AdminDeskTypography.body(c).copyWith(
-                    fontWeight: AdminDeskTypography.semibold),
+              Expanded(child: Tooltip(
+                message: name,
+                waitDuration: const Duration(milliseconds: 350),
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AdminDeskTypography.body(c).copyWith(
+                      fontWeight: AdminDeskTypography.semibold),
+                ),
               )),
             ])),
             Expanded(flex: 3, child: Align(
