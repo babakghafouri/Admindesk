@@ -482,7 +482,7 @@ class _PeerCardState extends State<_PeerCard>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 6),
                     // Device title.
                     Tooltip(
                       message: displayName,
@@ -494,7 +494,7 @@ class _PeerCardState extends State<_PeerCard>
                       textDirection: Directionality.of(context),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
                     )),
@@ -510,11 +510,11 @@ class _PeerCardState extends State<_PeerCard>
                                 .colorScheme
                                 .onSurface
                                 .withOpacity(0.58),
-                            fontSize: 10,
+                            fontSize: 11,
                           ),
                         ),
                       ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 5),
                     // Remote ID is always rendered LTR, independently of the
                     // Persian application direction.
                     Row(
@@ -531,7 +531,7 @@ class _PeerCardState extends State<_PeerCard>
                                   .colorScheme
                                   .onSurface
                                   .withOpacity(0.82),
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                               letterSpacing: 0.25,
                             ),
@@ -551,7 +551,7 @@ class _PeerCardState extends State<_PeerCard>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 7),
                     // Keep compact device actions; double-click the card to connect.
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
