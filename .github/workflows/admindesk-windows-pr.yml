@@ -75,4 +75,6 @@ jobs:
           lib/desktop/widgets/admindesk_credentials.dart
           lib/desktop/widgets/admindesk_dashboard.dart
           lib/desktop/widgets/admindesk_titlebar.dart
+          lib/desktop/services/admindesk_update_action.dart
+          lib/desktop/services/admindesk_update_client.dart
           lib/desktop/widgets/devices_table.dart
