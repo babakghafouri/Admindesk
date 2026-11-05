@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - master
+      - feature/admindesk-ui-polish-final
     paths:
       - "flutter/**"
       - "src/**"
