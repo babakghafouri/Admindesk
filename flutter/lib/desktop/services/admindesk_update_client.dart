@@ -16,6 +16,8 @@ class AdminDeskRelease {
     required this.url,
     required this.sha256Hex,
     required this.changelog,
+    required this.minVersion,
+    required this.force,
   });
 
   final String version;
@@ -23,6 +25,8 @@ class AdminDeskRelease {
   final Uri url;
   final String sha256Hex;
   final String changelog;
+  final String? minVersion;
+  final bool force;
 }
 
 class AdminDeskUpdateClient {
@@ -79,10 +83,15 @@ class AdminDeskUpdateClient {
       final version = raw['version'];
       final sha = raw['sha256'];
       final url = raw['url'];
+      final minVersionRaw = raw['min_version'];
+      final forceRaw = raw['force'];
       if (version is! String || !_versionFormat.hasMatch(version) ||
           _compareVersions(version, current) <= 0 ||
           sha is! String || !_hashFormat.hasMatch(sha) ||
-          url is! String) {
+          url is! String ||
+          (minVersionRaw is String && minVersionRaw.isNotEmpty &&
+              !_versionFormat.hasMatch(minVersionRaw)) ||
+          (forceRaw != null && forceRaw is! bool)) {
         return null;
       }
       final downloadUri = Uri.tryParse(url);
@@ -100,6 +109,12 @@ class AdminDeskUpdateClient {
         url: downloadUri,
         sha256Hex: sha.toLowerCase(),
         changelog: raw['changelog'] is String ? raw['changelog'] as String : '',
+        minVersion: minVersionRaw is String && minVersionRaw.isNotEmpty
+            ? minVersionRaw
+            : null,
+        force: forceRaw == true ||
+            (minVersionRaw is String && minVersionRaw.isNotEmpty &&
+                _compareVersions(current, minVersionRaw) < 0),
       );
     } finally {
       client.close();
