@@ -101,9 +101,9 @@ class _PromoCarouselState extends State<PromoCarousel>
   // Advertising is served only by the existing AdminDesk WordPress site.
   static const String _wpHost = 'admindesk.ir';
   static const String _categoryOption = 'admindesk_ads_category';
-  static const String _categoriesPath = '/wp-json/admindesk/v1/ads/categories';
-  static const String _adsPath = '/wp-json/admindesk/v1/ads';
-  static const String _eventsPath = '/wp-json/admindesk/v1/ads/events';
+  static const String _categoriesPath = 'wp-json/admindesk/v1/ads/categories';
+  static const String _adsPath = 'wp-json/admindesk/v1/ads';
+  static const String _eventsPath = 'wp-json/admindesk/v1/ads/events';
 
   List<_PromoSlide> _activeSlides = _slides;
   List<Map<String, String>> _categories = [];
