@@ -11,6 +11,7 @@ import 'package:get/get.dart';
 
 import '../../models/state_model.dart';
 import '../theme/admindesk_theme.dart';
+import '../services/admindesk_update_action.dart';
 
 /// Brand in the existing Windows drag-to-move titlebar.
 /// Window minimize / maximize / close stay in RustDesk's WindowActionPanel,
@@ -72,6 +73,8 @@ class AdminDeskTitleActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const AdminDeskServerHealth(),
+        const SizedBox(width: AdminDeskMetrics.spaceXs),
+        const AdminDeskUpdateAction(),
         const SizedBox(width: AdminDeskMetrics.spaceXs),
         Obx(() {
           final hasUpdate = stateGlobal.updateUrl.value.isNotEmpty;
