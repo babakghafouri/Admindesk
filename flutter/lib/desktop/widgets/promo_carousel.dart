@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../models/platform_model.dart';
+import 'package:uuid/uuid.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../theme/admindesk_theme.dart';
@@ -19,6 +21,8 @@ class _PromoSlide {
     required this.image,
     this.networkImage,
     this.targetUrl,
+    this.adId,
+    this.category,
   });
 
   final String heading;
@@ -28,6 +32,8 @@ class _PromoSlide {
   final String image;
   final String? networkImage;
   final String? targetUrl;
+  final int? adId;
+  final String? category;
 }
 
 /// Windows-only promotional carousel. All colors/fonts come from the
@@ -92,13 +98,18 @@ class _PromoCarouselState extends State<PromoCarousel>
     ),
   ];
 
-  // A public JSON feed URL from the ads-admin service is supplied at build time.
-  // Never embed administrative credentials or the dashboard login page here.
-  static const _feedUrl = String.fromEnvironment(
-    'ADMINDESK_ADS_FEED_URL',
-    defaultValue: 'https://admin98.ir/ads-admin/ads.php',
-  );
+  // Advertising is served only by the existing AdminDesk WordPress site.
+  static const String _wpHost = 'admindesk.ir';
+  static const String _categoryOption = 'admindesk_ads_category';
+  static const String _categoriesPath = 'wp-json/admindesk/v1/ads/categories';
+  static const String _adsPath = 'wp-json/admindesk/v1/ads';
+  static const String _eventsPath = 'wp-json/admindesk/v1/ads/events';
+
   List<_PromoSlide> _activeSlides = _slides;
+  List<Map<String, String>> _categories = [];
+  String _category = '';
+  bool _categoryDialogOpen = false;
+  final Set<int> _impressionsThisRun = <int>{};
   late final PageController _controller;
   Timer? _timer;
   Timer? _refreshTimer;
@@ -136,24 +147,58 @@ class _PromoCarouselState extends State<PromoCarousel>
     super.dispose();
   }
 
-  Future<void> _loadRemoteAds() async {
-    final uri = Uri.tryParse(_feedUrl);
-    if (uri == null || uri.scheme != 'https' || uri.host != 'admin98.ir') return;
-    final client = HttpClient()..connectionTimeout = const Duration(seconds: 6);
+  Future<void> _loadRemoteAds({bool reloadCategories = true}) async {
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 6);
     try {
+      if (reloadCategories) {
+        final categoriesUri = Uri.https(_wpHost, _categoriesPath);
+        final categoryRequest = await client.getUrl(categoriesUri)
+            .timeout(const Duration(seconds: 8));
+        final categoryResponse = await categoryRequest.close()
+            .timeout(const Duration(seconds: 8));
+        if (categoryResponse.statusCode == HttpStatus.ok) {
+          final raw = await categoryResponse.transform(utf8.decoder).join();
+          if (raw.length <= 100000) {
+            final decoded = jsonDecode(raw);
+            if (decoded is Map && decoded['success'] == true &&
+                decoded['categories'] is List) {
+              final categories = <Map<String, String>>[];
+              for (final item in decoded['categories'] as List) {
+                if (item is! Map) continue;
+                final slug = item['slug']?.toString() ?? '';
+                final name = item['name']?.toString() ?? '';
+                if (RegExp(r'^[a-z0-9_-]{1,80}$').hasMatch(slug) &&
+                    name.isNotEmpty && name.length <= 100) {
+                  categories.add({'slug': slug, 'name': name});
+                }
+              }
+              if (mounted) setState(() => _categories = categories);
+            }
+          }
+        }
+      }
+      _category = bind.mainGetLocalOption(key: _categoryOption).trim();
+      final categoryExists = _categories.any((item) => item['slug'] == _category);
+      if (_categories.isNotEmpty && (!categoryExists || _category.isEmpty)) {
+        await _showCategoryPicker(reloadAfterSave: false);
+      }
+      if (_category.isEmpty || !_categories.any((item) => item['slug'] == _category)) return;
+
+      final uri = Uri.https(_wpHost, _adsPath, {'category': _category});
       final request = await client.getUrl(uri).timeout(const Duration(seconds: 8));
       final response = await request.close().timeout(const Duration(seconds: 8));
       if (response.statusCode != HttpStatus.ok) return;
       final raw = await response.transform(utf8.decoder).join();
       if (raw.length > 200000) return;
       final decoded = jsonDecode(raw);
-      if (decoded is! Map || decoded['ads'] is! List) return;
+      if (decoded is! Map || decoded['success'] != true || decoded['slides'] is! List) return;
+
       final slides = <_PromoSlide>[];
-      for (final item in (decoded['ads'] as List).take(12)) {
+      for (final item in (decoded['slides'] as List).take(12)) {
         if (item is! Map) continue;
         final imageUrl = Uri.tryParse(item['image_url']?.toString() ?? '');
-        if (imageUrl == null || imageUrl.scheme != 'https' ||
-            imageUrl.host != 'admin98.ir') continue;
+        if (imageUrl == null || imageUrl.scheme != 'https' || imageUrl.host != _wpHost) continue;
         final destination = Uri.tryParse(item['target_url']?.toString() ?? '');
         final safeDestination = destination != null &&
                 (destination.scheme == 'https' || destination.scheme == 'http') &&
@@ -161,7 +206,8 @@ class _PromoCarouselState extends State<PromoCarousel>
             ? destination.toString()
             : null;
         final heading = item['title']?.toString() ?? '';
-        if (heading.isEmpty || heading.length > 100) continue;
+        final adId = int.tryParse(item['id']?.toString() ?? '');
+        if (heading.isEmpty || heading.length > 100 || adId == null || adId <= 0) continue;
         slides.add(_PromoSlide(
           heading: heading,
           accent: (item['subtitle'] ?? '').toString(),
@@ -172,16 +218,105 @@ class _PromoCarouselState extends State<PromoCarousel>
           image: 'assets/admindesk_promo_1.svg',
           networkImage: imageUrl.toString(),
           targetUrl: safeDestination,
+          adId: adId,
+          category: _category,
         ));
       }
-      if (!mounted || slides.isEmpty) return;
-      setState(() { _activeSlides = slides; _page = 0; });
+      if (!mounted) return;
+      setState(() {
+        _activeSlides = slides.isEmpty ? _slides : slides;
+        _page = 0;
+      });
       if (_controller.hasClients) _controller.jumpToPage(0);
+      if (slides.isNotEmpty) _recordImpression(slides.first);
     } catch (_) {
-      // Offline or invalid feeds retain bundled local promotional slides.
+      // Offline or unavailable WordPress retains bundled public AdminDesk slides.
     } finally {
       client.close(force: true);
     }
+  }
+
+  Future<void> _showCategoryPicker({bool reloadAfterSave = true}) async {
+    if (!mounted || _categories.isEmpty || _categoryDialogOpen) return;
+    _categoryDialogOpen = true;
+    String selected = _categories.any((item) => item['slug'] == _category)
+        ? _category
+        : _categories.first['slug']!;
+    try {
+      final result = await showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setDialogState) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: AlertDialog(
+              title: const Text('انتخاب صنف فعالیت'),
+              content: SizedBox(
+                width: 330,
+                child: DropdownButtonFormField<String>(
+                  value: selected,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'صنف شما',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _categories.map((item) => DropdownMenuItem<String>(
+                    value: item['slug'],
+                    child: Text(item['name']!, overflow: TextOverflow.ellipsis),
+                  )).toList(),
+                  onChanged: (value) {
+                    if (value != null) setDialogState(() => selected = value);
+                  },
+                ),
+              ),
+              actions: [
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(selected),
+                  child: const Text('ذخیره'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      if (result != null) {
+        await bind.mainSetLocalOption(key: _categoryOption, value: result);
+        _category = result;
+        if (reloadAfterSave) await _loadRemoteAds(reloadCategories: false);
+      }
+    } finally {
+      _categoryDialogOpen = false;
+    }
+  }
+
+  Future<void> _recordEvent(_PromoSlide slide, String eventType) async {
+    final adId = slide.adId;
+    if (adId == null) return;
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 4);
+    try {
+      final request = await client.postUrl(Uri.https(_wpHost, _eventsPath))
+          .timeout(const Duration(seconds: 5));
+      request.headers.contentType = ContentType.json;
+      request.write(jsonEncode({
+        'ad_id': adId,
+        'event_type': eventType,
+        'event_id': const Uuid().v4(),
+        'category': slide.category ?? '',
+      }));
+      final response = await request.close().timeout(const Duration(seconds: 5));
+      await response.drain<void>();
+    } catch (_) {
+      // Analytics must never interfere with remote desktop features.
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  void _recordImpression(_PromoSlide slide) {
+    final id = slide.adId;
+    if (id == null || !_impressionsThisRun.add(id)) return;
+    _recordEvent(slide, 'impression');
   }
 
   Widget _slideArtwork(_PromoSlide slide, double height) {
@@ -210,6 +345,7 @@ class _PromoCarouselState extends State<PromoCarousel>
       _showDetails(slide);
       return;
     }
+    if (slide.adId != null) await _recordEvent(slide, 'click');
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
@@ -283,7 +419,12 @@ class _PromoCarouselState extends State<PromoCarousel>
               child: PageView.builder(
                 controller: _controller,
                 itemCount: _activeSlides.length,
-                onPageChanged: (page) => setState(() => _page = page),
+                onPageChanged: (page) {
+                  setState(() => _page = page);
+                  if (page >= 0 && page < _activeSlides.length) {
+                    _recordImpression(_activeSlides[page]);
+                  }
+                },
                 itemBuilder: (context, index) =>
                     _slide(context, _activeSlides[index], index),
               ),
@@ -327,7 +468,21 @@ class _PromoCarouselState extends State<PromoCarousel>
                     ),
                   ),
                 ),
-                SvgPicture.asset('assets/icon.svg', width: 34, height: 34),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'تغییر صنف تبلیغات',
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+                      padding: EdgeInsets.zero,
+                      onPressed: _categories.isEmpty ? null : _showCategoryPicker,
+                      icon: Icon(Icons.category_outlined, size: 17, color: c.primary),
+                    ),
+                    const SizedBox(width: 4),
+                    SvgPicture.asset('assets/icon.svg', width: 34, height: 34),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: AdminDeskMetrics.spaceMd),

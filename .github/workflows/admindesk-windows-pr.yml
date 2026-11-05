@@ -61,6 +61,6 @@ jobs:
         working-directory: flutter
         run: flutter pub get
 
-      - name: Analyze changed Notification widget
+      - name: Analyze AdminDesk titlebar and advertising carousel
         working-directory: flutter
-        run: flutter analyze --no-pub lib/desktop/widgets/admindesk_titlebar.dart
+        run: flutter analyze --no-pub lib/desktop/widgets/admindesk_titlebar.dart lib/desktop/widgets/promo_carousel.dart
