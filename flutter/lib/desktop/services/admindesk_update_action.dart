@@ -81,9 +81,21 @@ class _AdminDeskUpdateActionState extends State<AdminDeskUpdateAction> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('دانلود فقط با درخواست شما انجام می‌شود. '
-                    'فایل پس از دریافت با SHA-256 بررسی خواهد شد؛ '
-                    'نصب خودکار فعال نیست.'),
+                Text(release.force
+                    ? 'این به‌روزرسانی اجباری اعلام شده است. برای حفظ امنیت، '
+                        'فایل فقط پس از دانلود و بررسی SHA-256 ارائه می‌شود؛ '
+                        'نصب همچنان دستی است.'
+                    : 'دانلود فقط با درخواست شما انجام می‌شود. '
+                        'فایل پس از دریافت با SHA-256 بررسی خواهد شد؛ '
+                        'نصب خودکار فعال نیست.'),
+                if (release.minVersion == null) ...[
+                  const SizedBox(height: 8),
+                  const Text('هشدار: سرور حداقل نسخه مجاز را ارسال نکرده است.',
+                      style: TextStyle(color: Colors.orange)),
+                ] else ...[
+                  const SizedBox(height: 8),
+                  Text('حداقل نسخه مجاز: ${release.minVersion}'),
+                ],
                 if (release.changelog.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Text(release.changelog),
