@@ -493,7 +493,7 @@ class _PromoCarouselState extends State<PromoCarousel>
       final categoryExists =
           _categories.any((item) => item['slug'] == _category);
       if (_categories.isNotEmpty && (!categoryExists || _category.isEmpty)) {
-        await _showCategoryPicker();
+        await _showCategoryPicker(reloadAfterSave: false);
       }
       if (_category.isEmpty || !_categories.any((item) => item['slug'] == _category)) {
         return;
@@ -552,7 +552,7 @@ class _PromoCarouselState extends State<PromoCarousel>
     }
   }
 
-  Future<void> _showCategoryPicker() async {
+  Future<void> _showCategoryPicker({bool reloadAfterSave = true}) async {
     if (!mounted || _categories.isEmpty || _categoryDialogOpen) return;
     _categoryDialogOpen = true;
     String selected = _categories.any((item) => item['slug'] == _category)
@@ -598,6 +598,7 @@ class _PromoCarouselState extends State<PromoCarousel>
       if (result != null) {
         await bind.mainSetLocalOption(key: _categoryOption, value: result);
         _category = result;
+        if (reloadAfterSave) await _loadRemoteAds(reloadCategories: false);
       }
     } finally {
       _categoryDialogOpen = false;
