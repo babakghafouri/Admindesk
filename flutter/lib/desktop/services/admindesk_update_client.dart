@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi' show Abi;
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
@@ -32,9 +33,14 @@ class AdminDeskUpdateClient {
   static final RegExp _versionFormat = RegExp(r'^\d+\.\d+\.\d+$');
   static final RegExp _hashFormat = RegExp(r'^[a-fA-F0-9]{64}$');
 
-  /// Flutter desktop currently ships a 64-bit Windows build. The separate
-  /// legacy x86 build uses Sciter, not this Flutter code.
-  static const String windowsFlutterArch = 'x64';
+  /// Resolve the architecture of the running Flutter process so x86 clients
+  /// never receive the x64 installer (and vice versa).
+  static String get windowsFlutterArch {
+    final abi = Abi.current();
+    if (abi == Abi.windowsX64) return 'x64';
+    if (abi == Abi.windowsIA32) return 'x86';
+    throw UnsupportedError('Unsupported AdminDesk Windows architecture: $abi');
+  }
 
   static int _compareVersions(String left, String right) {
     final a = left.split('.').map(int.parse).toList();
