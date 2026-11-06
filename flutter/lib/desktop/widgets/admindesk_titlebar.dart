@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../common.dart' show createDialogContent;
 import '../../models/state_model.dart';
 import '../theme/admindesk_theme.dart';
 
@@ -227,7 +228,7 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
             Expanded(child: Text(title)),
           ],
         ),
-        content: SingleChildScrollView(child: Text(message)),
+        content: SingleChildScrollView(child: createDialogContent(message)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
