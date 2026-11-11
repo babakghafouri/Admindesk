@@ -328,7 +328,7 @@ jobs:
       - name: Pin AdminDesk Windows rendezvous defaults
         run: python3 res/admindesk/patch_server_defaults.py
 
-      - name: Diagnose AdminDesk server reachability
+      - name: Diagnose AdminDesk rendezvous reachability
         if: env.UPLOAD_ARTIFACT == 'true'
         continue-on-error: true
         shell: pwsh
@@ -346,15 +346,34 @@ jobs:
             $reachable = Test-NetConnection $hostName -Port $port -InformationLevel Quiet -WarningAction SilentlyContinue
             Write-Host ("TCP {0}:{1} reachable = {2}" -f $hostName, $port, $reachable)
           }
-          try {
-            $feed = Invoke-RestMethod -Uri "https://admin98.ir/ads-admin/ads.php" -TimeoutSec 12
-            if ($feed.ads -is [System.Collections.IEnumerable] -and $feed.ads -isnot [string]) {
-              Write-Host ("Admin98 ads feed reachable; entries returned = {0}" -f @($feed.ads).Count)
-            } else {
-              Write-Warning "Admin98 ads endpoint responded, but its JSON does not contain an ads array."
+
+      - name: Validate WordPress AdminDesk ads feed
+        if: ${{ matrix.job.target == 'x86_64-pc-windows-msvc' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = "https://admindesk.ir/wp-json/admindesk/v1/ads"
+          $categories = Invoke-RestMethod -Uri "$root/categories" -TimeoutSec 20
+          if ($categories.success -ne $true -or $null -eq $categories.categories) {
+            throw "WordPress categories API does not return success=true and categories."
+          }
+          $slugs = @($categories.categories | ForEach-Object { $_.slug })
+          if ('it' -notin $slugs) {
+            throw "WordPress ads categories missing expected 'it' slug."
+          }
+          $feed = Invoke-RestMethod -Uri "${root}?category=it" -TimeoutSec 20
+          if ($feed.success -ne $true -or $null -eq $feed.slides) {
+            throw "WordPress ads API does not return success=true and slides."
+          }
+          $slides = @($feed.slides)
+          Write-Host ("WordPress ads feed OK; category=it; slides={0}" -f $slides.Count)
+          foreach ($slide in $slides) {
+            if (-not $slide.id -or -not $slide.title -or -not $slide.image_url -or -not $slide.target_url) {
+              throw "WordPress advertisement missing required id/title/image_url/target_url."
             }
-          } catch {
-            Write-Warning ("Admin98 ads feed diagnostic failed: {0}" -f $_.Exception.Message)
+            if ([uri]$slide.image_url -and ([uri]$slide.image_url).Host -ne 'admindesk.ir') {
+              throw "WordPress ad image must be hosted on admindesk.ir."
+            }
           }
 
       - name: Build rustdesk
