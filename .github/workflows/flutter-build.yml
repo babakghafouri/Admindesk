@@ -353,7 +353,26 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $root = "https://admindesk.ir/wp-json/admindesk/v1/ads"
-          $categories = Invoke-RestMethod -Uri "$root/categories" -TimeoutSec 20
+          function Get-AdsApiJson([string]$url) {
+            for ($attempt = 1; $attempt -le 3; $attempt++) {
+              try {
+                return Invoke-RestMethod -Uri $url -TimeoutSec 20
+              } catch {
+                $response = $_.Exception.Response
+                $statusCode = if ($null -ne $response) { [int]$response.StatusCode } else { 0 }
+                # Only transient gateway or network failures should be non-blocking.
+                if ($statusCode -notin @(0, 502, 503, 504)) { throw }
+                Write-Warning ("WordPress API request failed (attempt {0}/3, HTTP {1}): {2}" -f $attempt, $statusCode, $url)
+                if ($attempt -lt 3) { Start-Sleep -Seconds (5 * $attempt) }
+              }
+            }
+            return $null
+          }
+          $categories = Get-AdsApiJson "$root/categories"
+          if ($null -eq $categories) {
+            Write-Warning "WordPress ads categories endpoint unavailable after retries; continuing Windows build. API health remains UNVERIFIED."
+            exit 0
+          }
           if ($categories.success -ne $true -or $null -eq $categories.categories) {
             throw "WordPress categories API does not return success=true and categories."
           }
@@ -361,7 +380,11 @@ jobs:
           if ('it' -notin $slugs) {
             throw "WordPress ads categories missing expected 'it' slug."
           }
-          $feed = Invoke-RestMethod -Uri "${root}?category=it" -TimeoutSec 20
+          $feed = Get-AdsApiJson "${root}?category=it"
+          if ($null -eq $feed) {
+            Write-Warning "WordPress ads slides endpoint unavailable after retries; continuing Windows build. API health remains UNVERIFIED."
+            exit 0
+          }
           if ($feed.success -ne $true -or $null -eq $feed.slides) {
             throw "WordPress ads API does not return success=true and slides."
           }
