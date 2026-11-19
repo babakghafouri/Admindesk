@@ -462,6 +462,49 @@ class _PromoCarouselState extends State<PromoCarousel>
 
   Widget _slide(BuildContext context, _PromoSlide slide, int index) {
     final c = AdminDeskColors.of(context);
+    if (slide.networkImage != null) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.network(
+            slide.networkImage!,
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+            errorBuilder: (_, __, ___) =>
+                SvgPicture.asset(slide.image, fit: BoxFit.contain),
+          ),
+          Positioned(
+            top: AdminDeskMetrics.spaceSm,
+            right: AdminDeskMetrics.spaceSm,
+            child: IconButton(
+              tooltip: 'تغییر صنف تبلیغات',
+              onPressed: _categories.isEmpty ? null : _showCategoryPicker,
+              icon: Icon(Icons.category_outlined, size: 17, color: c.primary),
+              style: IconButton.styleFrom(backgroundColor: c.surface),
+            ),
+          ),
+          Positioned(
+            top: AdminDeskMetrics.spaceSm,
+            left: AdminDeskMetrics.spaceSm,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: c.promoBadge,
+                borderRadius: AdminDeskMetrics.controlRadius,
+              ),
+              child: Text(
+                '${index + 1} / ${_activeSlides.length}',
+                textDirection: TextDirection.ltr,
+                style: AdminDeskTypography.caption(c).copyWith(
+                  fontWeight: AdminDeskTypography.bold,
+                  color: c.textPrimary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     return Directionality(
       textDirection: TextDirection.rtl,
       child: LayoutBuilder(
