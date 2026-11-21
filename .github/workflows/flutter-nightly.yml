@@ -2,12 +2,6 @@ name: Flutter Nightly Build
 
 on:
   workflow_dispatch:
-  # Validate this workflow's permission contract after edits without publishing.
-  push:
-    branches:
-      - master
-    paths:
-      - ".github/workflows/flutter-nightly.yml"
 
 jobs:
   run-flutter-nightly-build:
@@ -18,6 +12,6 @@ jobs:
     uses: ./.github/workflows/flutter-build.yml
     secrets: inherit
     with:
-      # A workflow-file push is a smoke build; scheduled/manual runs publish.
-      upload-artifact: ${{ github.event_name != 'push' }}
+      # Only an explicit manual dispatch can start this workflow.
+      upload-artifact: true
       upload-tag: "nightly"
