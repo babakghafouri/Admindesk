@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common/widgets/connection_page_title.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/widgets/popup_menu.dart';
@@ -366,7 +367,13 @@ class _ConnectionPageState extends State<ConnectionPage>
       bool isViewCamera = false,
       bool isTerminal = false,
       bool isTcpTunneling = false}) {
-    var id = _idController.id;
+    var id = _idController.id.trim();
+    if (id.isEmpty) {
+      showToast(translate('Enter Remote ID'));
+      _idFocusNode.requestFocus();
+      return;
+    }
+    _idController.id = id;
     connect(context, id,
         isFileTransfer: isFileTransfer,
         isViewCamera: isViewCamera,
@@ -508,6 +515,54 @@ class _ConnectionPageState extends State<ConnectionPage>
                               prefixIcon: widget.dashboardLayout
                                   ? Icon(Icons.desktop_windows_outlined,
                                       color: dashboardColors.textSecondary)
+                                  : null,
+                              suffixIcon: widget.dashboardLayout
+                                  ? SizedBox(
+                                      width: 82,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            tooltip: 'چسباندن شناسه',
+                                            visualDensity: VisualDensity.compact,
+                                            icon: Icon(Icons.content_paste_rounded,
+                                                size: 18,
+                                                color: dashboardColors.textSecondary),
+                                            onPressed: () async {
+                                              final data = await Clipboard.getData('text/plain');
+                                              final pasted = data?.text?.trim() ?? '';
+                                              if (pasted.isEmpty) return;
+                                              final oldValue = fieldTextEditingController.value;
+                                              final proposed = TextEditingValue(
+                                                text: pasted,
+                                                selection: TextSelection.collapsed(
+                                                  offset: pasted.length,
+                                                ),
+                                              );
+                                              final formatted =
+                                                  IDTextInputFormatter().formatEditUpdate(
+                                                oldValue,
+                                                proposed,
+                                              );
+                                              fieldTextEditingController.value = formatted;
+                                              _idController.id = formatted.text;
+                                            },
+                                          ),
+                                          IconButton(
+                                            tooltip: 'پاک‌کردن شناسه',
+                                            visualDensity: VisualDensity.compact,
+                                            icon: Icon(Icons.close_rounded,
+                                                size: 18,
+                                                color: dashboardColors.textSecondary),
+                                            onPressed: () {
+                                              fieldTextEditingController.clear();
+                                              _idController.id = '';
+                                              _idFocusNode.requestFocus();
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    )
                                   : null,
                               enabledBorder: widget.dashboardLayout
                                   ? OutlineInputBorder(
