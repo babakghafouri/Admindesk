@@ -468,8 +468,7 @@ class _PromoCarouselState extends State<PromoCarousel>
         children: [
           Image.network(
             slide.networkImage!,
-            fit: BoxFit.cover,
-            alignment: Alignment.topCenter,
+            fit: BoxFit.fill,
             errorBuilder: (_, __, ___) =>
                 SvgPicture.asset(slide.image, fit: BoxFit.contain),
           ),

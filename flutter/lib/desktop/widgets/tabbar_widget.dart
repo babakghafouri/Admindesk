@@ -724,6 +724,7 @@ class _DesktopTabState extends State<DesktopTab>
                             },
                             child: _ListView(
                               controller: controller,
+                              reverse: moveWindowControlsRight && isMainWindow,
                               invisibleTabKeys: invisibleTabKeys,
                               tabBuilder: tabBuilder,
                               tabMenuBuilder: tabMenuBuilder,
@@ -966,6 +967,7 @@ Future<bool> closeConfirmDialog() async {
 
 class _ListView extends StatelessWidget {
   final DesktopTabController controller;
+  final bool reverse;
   final RxList<String> invisibleTabKeys;
 
   final TabBuilder? tabBuilder;
@@ -980,6 +982,7 @@ class _ListView extends StatelessWidget {
 
   _ListView({
     required this.controller,
+    this.reverse = false,
     required this.invisibleTabKeys,
     this.tabBuilder,
     this.tabMenuBuilder,
@@ -1018,6 +1021,7 @@ class _ListView extends StatelessWidget {
     return Obx(() => ListView(
         controller: state.value.scrollController,
         scrollDirection: Axis.horizontal,
+        reverse: reverse,
         shrinkWrap: true,
         physics: const BouncingScrollPhysics(),
         children: isHideSingleItem()
