@@ -1,5 +1,4 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -384,27 +383,22 @@ class _PeerCardState extends State<_PeerCard>
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(_cardRadius - 1),
-            child: BackdropFilter(
-              filter: ui.ImageFilter.blur(
-                sigmaX: isWindows ? 22 : 16,
-                sigmaY: isWindows ? 22 : 16,
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(10),
+            child: Container(
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: isWindows
-                        ? [
-                            const Color(0xFFEAF7FF).withOpacity(0.86),
-                            const Color(0xFFCFEAFF).withOpacity(0.72),
-                            const Color(0xFFF6FBFF).withOpacity(0.84),
+                        ? const [
+                            Color(0xFFFFFFFF),
+                            Color(0xFFEAF5FF),
+                            Color(0xFFF5FAFF),
                           ]
                         : [
-                            Theme.of(context).colorScheme.surface.withOpacity(0.78),
-                            Theme.of(context).colorScheme.surface.withOpacity(0.58),
-                            Theme.of(context).colorScheme.primary.withOpacity(0.10),
+                            Theme.of(context).colorScheme.surface,
+                            Theme.of(context).colorScheme.surface.withOpacity(0.96),
+                            Theme.of(context).colorScheme.primary.withOpacity(0.06),
                           ],
                   ),
                   border: Border.all(
@@ -417,13 +411,13 @@ class _PeerCardState extends State<_PeerCard>
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF248EDB).withOpacity(0.13),
-                      blurRadius: 18,
-                      offset: const Offset(0, 6),
+                      blurRadius: 9,
+                      offset: const Offset(0, 3),
                     ),
                     BoxShadow(
                       color: Colors.white.withOpacity(0.70),
-                      blurRadius: 2,
-                      offset: const Offset(-1, -2),
+                      blurRadius: 1,
+                      offset: const Offset(0, -1),
                     ),
                   ],
                 ),
@@ -488,19 +482,22 @@ class _PeerCardState extends State<_PeerCard>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 6),
                     // Device title.
-                    Text(
+                    Tooltip(
+                      message: displayName,
+                      waitDuration: const Duration(milliseconds: 450),
+                      child: Text(
                       displayName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textDirection: Directionality.of(context),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
-                    ),
+                    )),
                     if (_showNote(peer))
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
@@ -513,11 +510,11 @@ class _PeerCardState extends State<_PeerCard>
                                 .colorScheme
                                 .onSurface
                                 .withOpacity(0.58),
-                            fontSize: 10,
+                            fontSize: 11,
                           ),
                         ),
                       ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 5),
                     // Remote ID is always rendered LTR, independently of the
                     // Persian application direction.
                     Row(
@@ -534,7 +531,7 @@ class _PeerCardState extends State<_PeerCard>
                                   .colorScheme
                                   .onSurface
                                   .withOpacity(0.82),
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                               letterSpacing: 0.25,
                             ),
@@ -554,7 +551,7 @@ class _PeerCardState extends State<_PeerCard>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 7),
                     // Keep compact device actions; double-click the card to connect.
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -578,7 +575,6 @@ class _PeerCardState extends State<_PeerCard>
             ),
           ),
         ),
-      ),
     );
   }
 
