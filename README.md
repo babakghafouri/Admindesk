@@ -9,7 +9,7 @@
 </p>
 
 > [!NOTE]
-> **AdminDesk code signing:** Windows builds currently do not have a configured trusted signing certificate. [SignPath Foundation application and readiness checklist](docs/ADMIN_DESK_SIGNPATH_APPLICATION.md) is **preparation only**; no Foundation approval or trusted signature is claimed.
+> **AdminDesk code signing:** Windows builds currently do not have a configured trusted signing certificate. [Code signing policy (approval-pending draft)](docs/ADMIN_DESK_CODE_SIGNING_POLICY.md), [Privacy policy (review draft)](docs/ADMIN_DESK_PRIVACY_POLICY.md), and [SignPath Foundation application checklist](docs/ADMIN_DESK_SIGNPATH_APPLICATION.md) are available for review. No Foundation approval or trusted signature is claimed.
 
 > [!Caution]
 > **Misuse Disclaimer:** <br>
