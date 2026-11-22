@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../models/platform_model.dart';
 import 'package:uuid/uuid.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -100,15 +99,10 @@ class _PromoCarouselState extends State<PromoCarousel>
 
   // Advertising is served only by the existing AdminDesk WordPress site.
   static const String _wpHost = 'admindesk.ir';
-  static const String _categoryOption = 'admindesk_ads_category';
-  static const String _categoriesPath = 'wp-json/admindesk/v1/ads/categories';
   static const String _adsPath = 'wp-json/admindesk/v1/ads';
   static const String _eventsPath = 'wp-json/admindesk/v1/ads/events';
 
   List<_PromoSlide> _activeSlides = _slides;
-  List<Map<String, String>> _categories = [];
-  String _category = '';
-  bool _categoryDialogOpen = false;
   final Set<int> _impressionsThisRun = <int>{};
   late final PageController _controller;
   Timer? _timer;
@@ -180,40 +174,11 @@ class _PromoCarouselState extends State<PromoCarousel>
     return null;
   }
 
-  Future<void> _loadRemoteAds({bool reloadCategories = true}) async {
+  Future<void> _loadRemoteAds() async {
     final client = HttpClient()
       ..connectionTimeout = const Duration(seconds: 6);
     try {
-      if (reloadCategories) {
-        final decoded = await _getAdsJson(
-            client, Uri.https(_wpHost, _categoriesPath), 100000);
-        if (decoded != null && decoded['success'] == true &&
-            decoded['categories'] is List) {
-              final categories = <Map<String, String>>[];
-              for (final item in decoded['categories'] as List) {
-                if (item is! Map) continue;
-                final slug = item['slug']?.toString() ?? '';
-                final name = item['name']?.toString() ?? '';
-                if (RegExp(r'^[a-z0-9_-]{1,80}$').hasMatch(slug) &&
-                    name.isNotEmpty && name.length <= 100) {
-                  categories.add({'slug': slug, 'name': name});
-                }
-              }
-            if (mounted) setState(() => _categories = categories);
-        }
-      }
-      _category = bind.mainGetLocalOption(key: _categoryOption).trim();
-      final categoryExists = _categories.any((item) => item['slug'] == _category);
-      if (_categories.isNotEmpty && (!categoryExists || _category.isEmpty)) {
-        await _showCategoryPicker(reloadAfterSave: false);
-      }
-      // If categories are temporarily offline, retain the previously saved
-      // selection. Never request an unvalidated category or override a choice.
-      if (!RegExp(r'^[a-z0-9_-]{1,80}$').hasMatch(_category) ||
-          (_categories.isNotEmpty &&
-              !_categories.any((item) => item['slug'] == _category))) return;
-
-      final uri = Uri.https(_wpHost, _adsPath, {'category': _category});
+      final uri = Uri.https(_wpHost, _adsPath);
       final decoded = await _getAdsJson(client, uri, 200000);
       if (decoded == null || decoded['success'] != true ||
           decoded['slides'] is! List) return;
@@ -243,7 +208,7 @@ class _PromoCarouselState extends State<PromoCarousel>
           networkImage: imageUrl.toString(),
           targetUrl: safeDestination,
           adId: adId,
-          category: _category,
+          category: '',
         ));
       }
       if (!mounted) return;
@@ -257,59 +222,6 @@ class _PromoCarouselState extends State<PromoCarousel>
       // Offline or unavailable WordPress retains bundled public AdminDesk slides.
     } finally {
       client.close(force: true);
-    }
-  }
-
-  Future<void> _showCategoryPicker({bool reloadAfterSave = true}) async {
-    if (!mounted || _categories.isEmpty || _categoryDialogOpen) return;
-    _categoryDialogOpen = true;
-    String selected = _categories.any((item) => item['slug'] == _category)
-        ? _category
-        : _categories.first['slug']!;
-    try {
-      final result = await showDialog<String>(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) => StatefulBuilder(
-          builder: (context, setDialogState) => Directionality(
-            textDirection: TextDirection.rtl,
-            child: AlertDialog(
-              title: const Text('انتخاب صنف فعالیت'),
-              content: SizedBox(
-                width: 330,
-                child: DropdownButtonFormField<String>(
-                  value: selected,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'صنف شما',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _categories.map((item) => DropdownMenuItem<String>(
-                    value: item['slug'],
-                    child: Text(item['name']!, overflow: TextOverflow.ellipsis),
-                  )).toList(),
-                  onChanged: (value) {
-                    if (value != null) setDialogState(() => selected = value);
-                  },
-                ),
-              ),
-              actions: [
-                FilledButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(selected),
-                  child: const Text('ذخیره'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-      if (result != null) {
-        await bind.mainSetLocalOption(key: _categoryOption, value: result);
-        _category = result;
-        if (reloadAfterSave) await _loadRemoteAds(reloadCategories: false);
-      }
-    } finally {
-      _categoryDialogOpen = false;
     }
   }
 
@@ -474,16 +386,6 @@ class _PromoCarouselState extends State<PromoCarousel>
           ),
           Positioned(
             top: AdminDeskMetrics.spaceSm,
-            right: AdminDeskMetrics.spaceSm,
-            child: IconButton(
-              tooltip: 'تغییر صنف تبلیغات',
-              onPressed: _categories.isEmpty ? null : _showCategoryPicker,
-              icon: Icon(Icons.category_outlined, size: 17, color: c.primary),
-              style: IconButton.styleFrom(backgroundColor: c.surface),
-            ),
-          ),
-          Positioned(
-            top: AdminDeskMetrics.spaceSm,
             left: AdminDeskMetrics.spaceSm,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -537,15 +439,6 @@ class _PromoCarouselState extends State<PromoCarousel>
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      tooltip: 'تغییر صنف تبلیغات',
-                      visualDensity: VisualDensity.compact,
-                      constraints: const BoxConstraints.tightFor(width: 30, height: 30),
-                      padding: EdgeInsets.zero,
-                      onPressed: _categories.isEmpty ? null : _showCategoryPicker,
-                      icon: Icon(Icons.category_outlined, size: 17, color: c.primary),
-                    ),
-                    const SizedBox(width: 4),
                     SvgPicture.asset('assets/icon.svg', width: 34, height: 34),
                   ],
                 ),
