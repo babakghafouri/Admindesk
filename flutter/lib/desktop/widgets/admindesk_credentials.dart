@@ -90,7 +90,7 @@ class _OtpCardState extends State<OtpCard> {
       controller: widget.controller,
       obscureText: _obscurePassword,
       action: const SizedBox.shrink(),
-      valueActions: Column(
+      valueActions: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
@@ -138,7 +138,7 @@ class _OtpCardState extends State<OtpCard> {
           const SizedBox(width: AdminDeskMetrics.spaceXs),
           Expanded(
             child: Text(
-              widget.canRefresh ? 'رمز موقت فعال' : 'مدیریت رمز از تنظیمات امنیتی',
+              widget.canRefresh ? 'رمز موقت فعال است' : 'مدیریت رمز از تنظیمات امنیتی',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AdminDeskTypography.caption(c),
@@ -213,17 +213,12 @@ class _CredentialSurface extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (valueActions != null)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(child: valueActions!),
-                    ),
+
                 ],
               ),
             ),
           ),
+          if (valueActions != null) Center(child: valueActions!),
           Directionality(
             textDirection: TextDirection.rtl,
             child: footer,
