@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
-import '../../common.dart' show createDialogContent;
+import '../../common.dart' show createDialogContent, MyTheme;
 import '../../models/state_model.dart';
 import '../theme/admindesk_theme.dart';
 
@@ -72,6 +72,17 @@ class AdminDeskTitleActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        PopupMenuButton<ThemeMode>(
+          tooltip: 'تغییر تم',
+          icon: Icon(Theme.of(context).brightness == Brightness.dark
+              ? Icons.light_mode_outlined : Icons.dark_mode_outlined, size: 19),
+          onSelected: (mode) => MyTheme.changeDarkMode(mode),
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: ThemeMode.system, child: Text('تم سیستم')),
+            PopupMenuItem(value: ThemeMode.light, child: Text('روشن')),
+            PopupMenuItem(value: ThemeMode.dark, child: Text('تیره')),
+          ],
+        ),
         const AdminDeskServerHealth(),
         const SizedBox(width: AdminDeskMetrics.spaceXs),
         Obx(() {
@@ -254,7 +265,12 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
           _openNotification(value);
         }
       },
-      icon: Stack(
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        if (widget.hasUpdate) Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Text('نسخه جدید موجود است', style: TextStyle(color: colors.notification, fontSize: 11)),
+        ),
+        Stack(
         clipBehavior: Clip.none,
         children: [
           Icon(
@@ -299,6 +315,7 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
             ),
         ],
       ),
+      ]),
       itemBuilder: (_) {
         final items = <PopupMenuEntry<int>>[
           const PopupMenuItem<int>(
