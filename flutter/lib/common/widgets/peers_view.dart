@@ -55,6 +55,9 @@ class PeersModelName {
 /// for peer search text, global obs value
 final peerSearchText = "".obs;
 
+/// Windows dashboard peer status filter: all, online, or offline.
+final peerStatusFilter = "all".obs;
+
 /// for peer sort, global obs value
 RxString? _peerSort;
 RxString get peerSort {
@@ -239,11 +242,19 @@ class _PeersViewState extends State<_PeersView>
     final body = Obx(() {
       final searchText = peerSearchText.value;
       final sortedBy = peerSort.value;
+      final statusFilter = DevicesTableScope.enabledOf(context)
+          ? peerStatusFilter.value
+          : 'all';
       return FutureBuilder<List<Peer>>(
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             var peers = snapshot.data!;
             if (peers.length > 1000) peers = peers.sublist(0, 1000);
+            if (statusFilter == 'online') {
+              peers = peers.where((peer) => peer.online).toList();
+            } else if (statusFilter == 'offline') {
+              peers = peers.where((peer) => !peer.online).toList();
+            }
             gFFI.peerTabModel.setCurrentTabCachedPeers(peers);
             if (peers.isEmpty) {
               return Center(
