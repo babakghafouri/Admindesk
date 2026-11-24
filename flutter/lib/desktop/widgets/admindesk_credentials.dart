@@ -9,11 +9,13 @@ class IdCard extends StatelessWidget {
     required this.controller,
     required this.onCopy,
     required this.onOpenSecuritySettings,
+    required this.unattendedEnabled,
   }) : super(key: key);
 
   final TextEditingController controller;
   final VoidCallback onCopy;
   final VoidCallback? onOpenSecuritySettings;
+  final bool? unattendedEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +36,10 @@ class IdCard extends StatelessWidget {
           Icon(Icons.lock_outline_rounded, color: c.primary, size: 17),
           const SizedBox(width: AdminDeskMetrics.spaceXs),
           Expanded(
-            child: Text('دسترسی بدون نظارت',
+            child: Text(unattendedEnabled == null ? 'دسترسی بدون نظارت: در حال بررسی' : unattendedEnabled! ? 'دسترسی بدون نظارت: فعال' : 'دسترسی بدون نظارت: غیرفعال',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AdminDeskTypography.caption(c)),
+              style: AdminDeskTypography.caption(c).copyWith(color: unattendedEnabled == true ? c.online : c.textSecondary)),
           ),
           TextButton(
             onPressed: onOpenSecuritySettings,
@@ -172,7 +174,7 @@ class _CredentialSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AdminDeskColors.of(context);
     return Container(
-      height: 136,
+      height: 152,
       padding: const EdgeInsets.symmetric(
         horizontal: AdminDeskMetrics.spaceMd,
         vertical: AdminDeskMetrics.spaceXs,
@@ -209,7 +211,7 @@ class _CredentialSurface extends StatelessWidget {
                             : controller.text,
                         textAlign: TextAlign.center,
                         maxLines: 1,
-                        style: AdminDeskTypography.identity(c),
+                        style: AdminDeskTypography.identity(c).copyWith(fontSize: valueActions == null ? 28 : 23),
                       ),
                     ),
                   ),
