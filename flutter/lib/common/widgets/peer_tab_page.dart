@@ -206,10 +206,12 @@ class _PeerTabPageState extends State<PeerTabPage>
   // The dashboard table is a presentation of the existing native peer tabs.
   // Keep tab visibility restrictions, persistent tab index and original loads.
   Widget _dashboardHeader(BuildContext context, PeerTabModel model) {
-    return DevicesTableTabs(
+    return Obx(() => DevicesTableTabs(
       showNavigation: false,
       currentTab: model.currentTab,
       availableTabs: model.visibleEnabledOrderedIndexs,
+      statusFilter: peerStatusFilter.value,
+      onStatusFilterChanged: (value) => peerStatusFilter.value = value,
       onTabSelected: (tab) async {
         if (isOptionFixed(kOptionPeerTabIndex) ||
             !model.visibleEnabledOrderedIndexs.contains(tab)) {
@@ -244,7 +246,7 @@ class _PeerTabPageState extends State<PeerTabPage>
             break;
         }
       },
-    );
+    ));
   }
 
   Widget _createSwitchBar(BuildContext context) {
