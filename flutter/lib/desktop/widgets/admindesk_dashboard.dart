@@ -212,6 +212,8 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
       case 0:
       case 1:
       case 2:
+      case 3:
+      case 4:
         return peerTab;
       default:
         return 0;
@@ -220,7 +222,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
 
   void _copy(String value) {
     Clipboard.setData(ClipboardData(text: value));
-    showToast(translate('Copied'));
+    showToast('کپی شد');
   }
 
 }
