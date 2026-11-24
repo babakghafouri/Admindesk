@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 import '../../common.dart';
+import '../../desktop/theme/admindesk_theme.dart';
 import '../../common/formatter/id_formatter.dart';
 import '../../models/peer_model.dart';
 import '../../models/platform_model.dart';
@@ -104,7 +105,7 @@ class _PeerCardState extends State<_PeerCard>
     final PeerTabModel peerTabModel = Provider.of(context);
     final peer = super.widget.peer;
     return GestureDetector(
-        onDoubleTap: peerTabModel.multiSelectionMode
+        onDoubleTap: peerTabModel.multiSelectionMode || (isWindows && !peer.online)
             ? null
             : () => widget.connect(context, peer.id),
         onTap: () {
@@ -184,8 +185,8 @@ class _PeerCardState extends State<_PeerCard>
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 6,
-            height: 6,
+            width: 9,
+            height: 9,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 4),
@@ -370,6 +371,61 @@ class _PeerCardState extends State<_PeerCard>
     final tagColors = _frontN(peer.tags, 25)
         .map((e) => gFFI.abModel.getCurrentAbTagColor(e))
         .toList();
+
+    if (isWindows) {
+      final c = AdminDeskColors.of(context);
+      final status = peer.online ? c.online : c.offline;
+      return Tooltip(
+        message: peer.online ? 'دوبار کلیک = اتصال' : 'دستگاه آفلاین است',
+        child: Material(
+          color: peer.online ? c.surface : Color.alphaBlend(c.offline.withOpacity(.06), c.surface),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: c.border),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              Container(height: 3, color: status),
+              Expanded(child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(children: [
+                      _peerStatusBadge(context, peer.online),
+                      const Spacer(),
+                      PeerFavoriteButton(peer: peer, tab: widget.tab),
+                    ]),
+                    Tooltip(message: displayName, child: Text(displayName,
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: AdminDeskTypography.body(c).copyWith(
+                        color: peer.online ? c.textPrimary : c.textSecondary,
+                        fontWeight: FontWeight.w700))),
+                    Tooltip(message: 'کپی شناسه', child: InkWell(
+                      onTap: () => _copyPeerId(peer),
+                      child: Text(formatID(peer.id), textDirection: TextDirection.ltr,
+                        textAlign: TextAlign.right, maxLines: 1,
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold,
+                          color: peer.online ? c.primary : c.textSecondary)))),
+                    const Spacer(),
+                    Row(children: [
+                      Expanded(child: PeerConnectButton(online: peer.online,
+                        onConnect: () => widget.connect(context, peer.id))),
+                      IconButton(tooltip: 'ویرایش', visualDensity: VisualDensity.compact,
+                        iconSize: 17, onPressed: () => _renamePeer(peer),
+                        icon: Icon(Icons.edit_outlined, color: c.textSecondary)),
+                      SizedBox(width: 26, height: 30,
+                        child: checkBoxOrActionMoreLandscape(peer, isTile: false)),
+                    ]),
+                  ],
+                ),
+              )),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Tooltip(
       message: peer.tags.isNotEmpty
@@ -1880,4 +1936,116 @@ void connectInPeerTab(BuildContext context, Peer peer, PeerTabIndex tab,
       isViewCamera: isViewCamera,
       isTcpTunneling: isTcpTunneling,
       isRDP: isRDP);
+}
+
+class PeerFavoriteButton extends StatefulWidget {
+  const PeerFavoriteButton({super.key, required this.peer, required this.tab});
+  final Peer peer;
+  final PeerTabIndex tab;
+  @override
+  State<PeerFavoriteButton> createState() => _PeerFavoriteButtonState();
+}
+
+class _PeerFavoriteButtonState extends State<PeerFavoriteButton> {
+  @override
+  void initState() {
+    super.initState();
+    _ensureFavoritePeerIdsLoaded().catchError((Object e) {
+      debugPrint('Favorites: $e');
+    });
+  }
+  @override
+  Widget build(BuildContext context) => Obx(() {
+    final selected = _favoritePeerIds.contains(widget.peer.id);
+    return InkWell(
+      onTap: () async {
+        await _ensureFavoritePeerIdsLoaded();
+        final ids = (await bind.mainGetFav()).toList();
+        if (ids.contains(widget.peer.id)) {
+          ids.remove(widget.peer.id);
+        } else {
+          ids.add(widget.peer.id);
+        }
+        await _storeFavoritePeerIds(ids);
+        if (widget.tab == PeerTabIndex.fav) await bind.mainLoadFavPeers();
+      },
+      child: Icon(selected ? Icons.star_rounded : Icons.star_outline_rounded,
+        size: 21, color: selected ? const Color(0xFFE7A900) : AdminDeskColors.of(context).textSecondary),
+    );
+  });
+}
+
+class PeerConnectButton extends StatelessWidget {
+  const PeerConnectButton({super.key, required this.online, required this.onConnect});
+  final bool online;
+  final VoidCallback onConnect;
+  @override
+  Widget build(BuildContext context) {
+    final c = AdminDeskColors.of(context);
+    return Tooltip(
+      message: online ? 'اتصال' : 'دستگاه آفلاین است',
+      child: online ? TextButton.icon(
+        onPressed: onConnect,
+        style: ButtonStyle(
+          minimumSize: MaterialStateProperty.all(const Size(0, 30)),
+          padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 8)),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          backgroundColor: MaterialStateProperty.resolveWith((states) =>
+            states.contains(MaterialState.hovered) ? c.primary : c.selectedBackground),
+          foregroundColor: MaterialStateProperty.resolveWith((states) =>
+            states.contains(MaterialState.hovered) ? c.onPrimary : c.primary),
+        ),
+        icon: const Icon(Icons.desktop_windows_outlined, size: 16),
+        label: const Text('اتصال'),
+      ) : Align(alignment: Alignment.centerRight, child: CustomPaint(
+        painter: _OfflineConnectBorder(c.border),
+        child: SizedBox(width: 42, height: 30,
+          child: Icon(Icons.desktop_windows_outlined, size: 16, color: c.offline)),
+      )),
+    );
+  }
+}
+
+class _OfflineConnectBorder extends CustomPainter {
+  _OfflineConnectBorder(this.color);
+  final Color color;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()..addRRect(RRect.fromRectAndRadius(
+      Offset.zero & size, const Radius.circular(7)));
+    final paint = Paint()..color = color..style = PaintingStyle.stroke..strokeWidth = 1;
+    for (final metric in path.computeMetrics()) {
+      for (double d = 0; d < metric.length; d += 6) {
+        canvas.drawPath(metric.extractPath(d, math.min(d + 3, metric.length)), paint);
+      }
+    }
+  }
+  @override
+  bool shouldRepaint(covariant _OfflineConnectBorder oldDelegate) => color != oldDelegate.color;
+}
+
+Future<void> renameDashboardPeer(BuildContext context, Peer peer, PeerTabIndex tab) async {
+  final oldName = await bind.mainGetPeerOption(id: peer.id, key: 'alias');
+  if (!context.mounted) return;
+  renameDialog(oldName: oldName, onSubmit: (String name) async {
+    if (name == oldName) return;
+    await bind.mainSetPeerAlias(id: peer.id, alias: name);
+    peer.alias = name;
+    switch (tab) {
+      case PeerTabIndex.ab:
+        await gFFI.abModel.changeAlias(id: peer.id, alias: name);
+        break;
+      case PeerTabIndex.recent:
+        await bind.mainLoadRecentPeers();
+        break;
+      case PeerTabIndex.fav:
+        await bind.mainLoadFavPeers();
+        break;
+      case PeerTabIndex.lan:
+        await bind.mainLoadLanPeers();
+        break;
+      case PeerTabIndex.group:
+        break;
+    }
+  });
 }
