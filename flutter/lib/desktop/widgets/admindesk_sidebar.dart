@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+import '../../models/state_model.dart';
 
 import '../theme/admindesk_theme.dart';
 
@@ -46,6 +48,10 @@ class AdminDeskSideBar extends StatelessWidget {
                 () => onNavigate(1, 1)),
             _entry(context, Icons.lan_outlined, 'شبکه داخلی', 2,
                 () => onNavigate(2, 2)),
+            _entry(context, Icons.contacts_outlined, 'دفترچه آدرس', 3,
+                () => onNavigate(3, 3)),
+            _entry(context, Icons.group_outlined, 'گروه‌ها', 4,
+                () => onNavigate(4, 4)),
             _entry(context, Icons.settings_outlined, 'تنظیمات', -1,
                 onSettings),
             const Spacer(),
@@ -86,6 +92,9 @@ class AdminDeskSideBar extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: AdminDeskMetrics.spaceSm),
+                    Obx(() => stateGlobal.updateUrl.value.isNotEmpty
+                        ? TextButton(onPressed: onSettings, child: const Text('به‌روزرسانی موجود'))
+                        : const SizedBox.shrink()),
                     Text(
                       versionLabel,
                       textAlign: TextAlign.center,
