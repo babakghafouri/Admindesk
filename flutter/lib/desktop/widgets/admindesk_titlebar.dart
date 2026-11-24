@@ -496,8 +496,8 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
   }
 
   String _serviceLabel(String name, int? latency) {
-    if (latency == null) return '$name: در دسترس نیست';
-    return '$name: متصل · $latency ms';
+    if (latency == null) return '$name: قطع';
+    return '$name: متصل';
   }
 
   void _showDetails() {
@@ -532,8 +532,8 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
                       ),
                       subtitle: Text(
                         entry.value == null
-                            ? 'در دسترس نیست'
-                            : 'متصل · ${entry.value} ms',
+                            ? 'قطع'
+                            : 'متصل',
                         style: AdminDeskTypography.caption(colors),
                       ),
                     ),
