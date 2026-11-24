@@ -255,6 +255,9 @@ class _PeersViewState extends State<_PeersView>
             } else if (statusFilter == 'offline') {
               peers = peers.where((peer) => !peer.online).toList();
             }
+            if (DevicesTableScope.enabledOf(context)) {
+              peers = [...peers.where((p) => p.online), ...peers.where((p) => !p.online)];
+            }
             gFFI.peerTabModel.setCurrentTabCachedPeers(peers);
             if (peers.isEmpty) {
               return Center(
@@ -287,7 +290,7 @@ class _PeersViewState extends State<_PeersView>
                                   ? 228
                                   : 220,
                               height: DevicesTableScope.enabledOf(context)
-                                  ? 144
+                                  ? 164
                                   : 140,
                               child: visibilityChild,
                             )
