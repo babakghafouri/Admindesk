@@ -388,26 +388,9 @@ class AdminDeskServerHealth extends StatefulWidget {
 
 class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
   static const String _host = 'desk.admin98.ir';
-  static final Uri _notificationsEndpoint = Uri(
-    scheme: 'https',
-    host: 'admindesk.ir',
-    path: '/wp-json/admindesk/v1/notifications',
-    queryParameters: {'audience': 'all'},
-  );
-
   Timer? _timer;
   bool _checking = false;
-  final Map<String, int?> _latencies = {
-    'Rendezvous (TCP 21116)': null,
-    'Relay (TCP 21117)': null,
-    'Notifications (HTTPS)': null,
-    'Update hosting (HTTPS)': null,
-  };
-
-  bool get _allAvailable =>
-      _latencies.values.every((latency) => latency != null);
-  bool get _anyAvailable =>
-      _latencies.values.any((latency) => latency != null);
+  bool? _connected;
 
   @override
   void initState() {
@@ -422,8 +405,7 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
     super.dispose();
   }
 
-  Future<int?> _checkTcp(int port) async {
-    final watch = Stopwatch()..start();
+  Future<bool> _checkTcp(int port) async {
     Socket? socket;
     try {
       socket = await Socket.connect(
@@ -431,176 +413,62 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
         port,
         timeout: const Duration(seconds: 3),
       );
-      watch.stop();
-      return watch.elapsedMilliseconds;
+      return true;
     } catch (_) {
-      return null;
+      return false;
     } finally {
       socket?.destroy();
     }
   }
 
-  Future<int?> _checkNotifications() async {
-    final watch = Stopwatch()..start();
-    try {
-      final response = await http.get(
-        _notificationsEndpoint,
-        headers: const {'Accept': 'application/json'},
-      ).timeout(const Duration(seconds: 5));
-      watch.stop();
-      return response.statusCode == HttpStatus.ok
-          ? watch.elapsedMilliseconds
-          : null;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<int?> _checkUpdateHosting() async {
-    final watch = Stopwatch()..start();
-    try {
-      final response = await http.head(
-        Uri.parse('https://update.admindesk.ir/'),
-      ).timeout(const Duration(seconds: 5));
-      watch.stop();
-      // A 4xx response still proves that the HTTPS host is reachable.
-      return response.statusCode < HttpStatus.internalServerError
-          ? watch.elapsedMilliseconds
-          : null;
-    } catch (_) {
-      return null;
-    }
-  }
-
   Future<void> _check() async {
-    if (_checking) return;
-    _checking = true;
-    if (mounted) setState(() {});
-    final results = await Future.wait<int?>([
+    if (_checking || !mounted) return;
+    setState(() => _checking = true);
+    final results = await Future.wait<bool>([
       _checkTcp(21116),
       _checkTcp(21117),
-      _checkNotifications(),
-      _checkUpdateHosting(),
     ]);
     if (mounted) {
       setState(() {
-        _latencies['Rendezvous (TCP 21116)'] = results[0];
-        _latencies['Relay (TCP 21117)'] = results[1];
-        _latencies['Notifications (HTTPS)'] = results[2];
-        _latencies['Update hosting (HTTPS)'] = results[3];
+        _connected = results.every((available) => available);
         _checking = false;
       });
-    } else {
-      _checking = false;
     }
   }
 
-  String _serviceLabel(String name, int? latency) {
-    if (latency == null) return '$name: قطع';
-    return '$name: متصل';
-  }
+  String get _status => _connected == null
+      ? 'در حال بررسی'
+      : _connected!
+          ? 'متصل و آماده به کار'
+          : 'قطع';
 
-  void _showDetails() {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        final colors = AdminDeskColors.of(dialogContext);
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: AlertDialog(
-            title: const Text('وضعیت سرویس‌های AdminDesk'),
-            content: SizedBox(
-              width: 390,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final entry in _latencies.entries)
-                    ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(
-                        entry.value == null
-                            ? Icons.error_outline_rounded
-                            : Icons.check_circle_outline_rounded,
-                        color: entry.value == null
-                            ? const Color(0xFFE34D4D)
-                            : const Color(0xFF16A765),
-                      ),
-                      title: Text(
-                        entry.key,
-                        style: AdminDeskTypography.body(colors),
-                      ),
-                      subtitle: Text(
-                        entry.value == null
-                            ? 'قطع'
-                            : 'متصل',
-                        style: AdminDeskTypography.caption(colors),
-                      ),
-                    ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'این بررسی فقط دسترسی TCP و HTTPS را می‌سنجد؛ سلامت کامل نشست ریموت، ارتباط UDP یا عملکرد واقعی انتقال فایل را تضمین نمی‌کند.',
-                    style: AdminDeskTypography.caption(colors),
-                    textAlign: TextAlign.right,
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('بستن'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  Color get _statusColor => _connected == null
+      ? AdminDeskColors.light.textSecondary
+      : _connected!
+          ? const Color(0xFF16A765)
+          : const Color(0xFFE34D4D);
 
   @override
   Widget build(BuildContext context) {
-    final Color signalColor = _checking
-        ? AdminDeskColors.light.textSecondary
-        : _allAvailable
-            ? const Color(0xFF16A765)
-            : _anyAvailable
-                ? const Color(0xFFE6A323)
-                : const Color(0xFFE34D4D);
-    final tooltip = [
-      'وضعیت سرویس‌های AdminDesk',
-      for (final entry in _latencies.entries)
-        _serviceLabel(entry.key, entry.value),
-      'این بررسی دسترسی TCP/HTTPS را می‌سنجد و سلامت کامل نشست یا UDP را تضمین نمی‌کند.',
-    ].join('\n');
-
     return Tooltip(
-      message: tooltip,
-      waitDuration: const Duration(milliseconds: 250),
-      child: IconButton(
-        tooltip: 'نمایش وضعیت سرویس‌های سرور',
-        constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-        padding: EdgeInsets.zero,
-        onPressed: _checking
-            ? null
-            : () async {
-                await _check();
-                if (mounted) _showDetails();
-              },
-        icon: _checking
-            ? SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: signalColor,
-                ),
-              )
-            : Icon(
-                Icons.wifi_tethering_rounded,
-                size: 21,
-                color: signalColor,
-              ),
+      message: 'وضعیت: $_status',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: _checking ? null : _check,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.wifi_tethering_rounded,
+                  size: 19, color: _statusColor),
+              const SizedBox(width: 5),
+              Text('وضعیت: $_status',
+                  textDirection: TextDirection.rtl,
+                  style: TextStyle(fontSize: 11, color: _statusColor)),
+            ],
+          ),
+        ),
       ),
     );
   }
