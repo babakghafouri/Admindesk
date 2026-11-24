@@ -494,7 +494,7 @@ class _GeneralState extends State<_General> {
               Expanded(child: hwcodec()),
             ],
           ),
-        if (!isWindows) theme(),
+        theme(),
         if (!isWindows) _Card(title: 'Language', children: [language()]),
         if (!isWeb) audio(context),
         if (!isWeb) record(context),
