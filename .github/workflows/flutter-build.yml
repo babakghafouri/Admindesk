@@ -62,7 +62,7 @@ env:
   # RustDesk engine version (must match Cargo.toml and rustdesk --version).
   VERSION: "1.5.1"
   # AdminDesk product version (independent from the RustDesk engine).
-  ADMINDESK_VERSION: "1.5.2"
+  ADMINDESK_VERSION: "1.5.3"
   NDK_VERSION: "r28c"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: "${{ secrets.ANDROID_SIGNING_KEY }}"
