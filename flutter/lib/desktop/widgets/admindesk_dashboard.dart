@@ -153,13 +153,16 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
                         child: LayoutBuilder(
                           builder: (context, constraints) {
                             final cards = <Widget>[
-                              IdCard(
+                              FutureBuilder<String>(
+                                future: bind.mainGetCommon(key: 'permanent-password-set'),
+                                builder: (context, snapshot) => IdCard(
+                                unattendedEnabled: !snapshot.hasData ? null : model.approveMode == 'password' && model.verificationMethod != kUseTemporaryPassword && snapshot.data == 'true',
                                 controller: model.serverId,
                                 onCopy: () => _copy(model.serverId.text),
                                 onOpenSecuritySettings: () =>
                                     DesktopSettingPage.switch2page(
                                         SettingsTabKey.safety),
-                              ),
+                              )),
                               OtpCard(
                                 controller: model.serverPasswd,
                                 canRefresh: canRefresh,
