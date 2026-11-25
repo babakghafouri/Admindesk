@@ -31,7 +31,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: admindesk-windows-release-1.5.3
+  group: admindesk-windows-release-2.0.0
   cancel-in-progress: false
 
 jobs:
@@ -43,6 +43,6 @@ jobs:
       windows-only: true
       upload-artifact: false
       pr-preview-installers: true
-      upload-tag: v1.5.3
+      upload-tag: v2.0.0
       publish-update-metadata: false
     secrets: inherit
