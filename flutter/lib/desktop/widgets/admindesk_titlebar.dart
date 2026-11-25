@@ -50,20 +50,6 @@ class AdminDeskTitleActions extends StatelessWidget {
       children: [
         const AdminDeskServerHealth(),
         const SizedBox(width: AdminDeskMetrics.spaceXs),
-        Obx(() {\n          final hasUpdate = stateGlobal.updateUrl.value.isNotEmpty;\n          return AdminDeskNotifications(\n            hasUpdate: hasUpdate,\n            settingsEnabled: settingsEnabled,\n            onUpdateTap: onSettings,\n          );\n        }),
-        const SizedBox(width: AdminDeskMetrics.spaceXs),
-        PopupMenuButton<ThemeMode>(
-          tooltip: 'تغییر تم',
-          icon: Icon(Theme.of(context).brightness == Brightness.dark
-              ? Icons.light_mode_outlined : Icons.dark_mode_outlined, size: 19),
-          onSelected: (mode) => MyTheme.changeDarkMode(mode),
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: ThemeMode.system, child: Text('تم سیستم')),
-            PopupMenuItem(value: ThemeMode.light, child: Text('روشن')),
-            PopupMenuItem(value: ThemeMode.dark, child: Text('تیره')),
-          ],
-        ),
-        const SizedBox(width: AdminDeskMetrics.spaceXs),
         Obx(() {
           final hasUpdate = stateGlobal.updateUrl.value.isNotEmpty;
           return AdminDeskNotifications(
@@ -73,11 +59,25 @@ class AdminDeskTitleActions extends StatelessWidget {
           );
         }),
         const SizedBox(width: AdminDeskMetrics.spaceXs),
-        const AdminDeskServerHealth(),
+        PopupMenuButton<ThemeMode>(
+          tooltip: 'تغییر تم',
+          icon: Icon(
+            Theme.of(context).brightness == Brightness.dark
+                ? Icons.light_mode_outlined
+                : Icons.dark_mode_outlined,
+            size: 19,
+          ),
+          onSelected: (mode) => MyTheme.changeDarkMode(mode),
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: ThemeMode.system, child: Text('تم سیستم')),
+            PopupMenuItem(value: ThemeMode.light, child: Text('روشن')),
+            PopupMenuItem(value: ThemeMode.dark, child: Text('تیره')),
+          ],
+        ),
       ],
     );
   }
-}
+}}
 
 
 /// Reads public AdminDesk announcements from the WordPress REST API.
