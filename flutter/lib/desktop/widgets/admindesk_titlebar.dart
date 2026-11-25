@@ -233,6 +233,7 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AdminDeskColors.of(context);
     final unread = _unreadCount;
     final displayCount = unread > 0 ? unread : (widget.hasUpdate ? 1 : 0);
     return PopupMenuButton<int>(
