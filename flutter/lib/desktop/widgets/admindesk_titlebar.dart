@@ -48,6 +48,10 @@ class AdminDeskTitleActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        const AdminDeskServerHealth(),
+        const SizedBox(width: AdminDeskMetrics.spaceXs),
+        Obx(() {\n          final hasUpdate = stateGlobal.updateUrl.value.isNotEmpty;\n          return AdminDeskNotifications(\n            hasUpdate: hasUpdate,\n            settingsEnabled: settingsEnabled,\n            onUpdateTap: onSettings,\n          );\n        }),
+        const SizedBox(width: AdminDeskMetrics.spaceXs),
         PopupMenuButton<ThemeMode>(
           tooltip: 'تغییر تم',
           icon: Icon(Theme.of(context).brightness == Brightness.dark
@@ -262,9 +266,6 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
               alignment: Alignment.center,
               child: Text(displayCount > 9 ? '9+' : displayCount.toString(), style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
             ),
-            const SizedBox(width: 5),
-            Icon(Icons.notifications_none_rounded, size: 17,
-              color: widget.hasUpdate ? const Color(0xFFC83F24) : const Color(0xFF14875D)),
           ]),
         ),
         Stack(
