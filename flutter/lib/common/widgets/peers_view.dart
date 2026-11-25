@@ -329,14 +329,24 @@ class _PeersViewState extends State<_PeersView>
                               bottom: space / 2);
                         },
                       )
-                    : DynamicGridView.builder(
-                        gridDelegate: SliverGridDelegateWithWrapping(
-                            mainAxisSpacing: space / 2,
-                            crossAxisSpacing: space),
-                        itemCount: peers.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          return buildOnePeer(peers[index], false);
-                        }));
+                    : Transform.translate(
+                        // Center the fixed-width dashboard cards in the
+                        // available content area; the current wrapping grid
+                        // otherwise leaves a noticeably larger gap on the
+                        // right side of the Windows dashboard.
+                        offset: Offset(
+                          DevicesTableScope.enabledOf(context) ? 64 : 0,
+                          0,
+                        ),
+                        child: DynamicGridView.builder(
+                          gridDelegate: SliverGridDelegateWithWrapping(
+                              mainAxisSpacing: space / 2,
+                              crossAxisSpacing: space),
+                          itemCount: peers.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return buildOnePeer(peers[index], false);
+                          },
+                        )));
 
             if (updateEvent == UpdateEvent.load) {
               if (!DevicesTableScope.enabledOf(context)) {
