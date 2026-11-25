@@ -51,8 +51,6 @@ class AdminDeskSideBar extends StatelessWidget {
                 () => onNavigate(4, 4)),
             _entry(context, Icons.lan_outlined, 'شبکه داخلی', 2,
                 () => onNavigate(2, 2)),
-            _entry(context, Icons.history_toggle_off_rounded, 'تاریخچه جلسات', 5,
-                () => onNavigate(5, 0)),
             const Divider(indent: 12, endIndent: 12, height: 22),
             _entry(context, Icons.settings_outlined, 'تنظیمات', -1,
                 onSettings),
