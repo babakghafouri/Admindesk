@@ -539,22 +539,29 @@ class _PeerCardState extends State<_PeerCard>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    // Add breathing room below the card header so the
+                    // device name and ID sit lower in the visual center.
+                    const SizedBox(height: 18),
                     // Device title.
                     Tooltip(
                       message: displayName,
                       waitDuration: const Duration(milliseconds: 450),
-                      child: Text(
-                      displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textDirection: Directionality.of(context),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textDirection: Directionality.of(context),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                    )),
+                    ),
                     if (_showNote(peer))
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
@@ -562,6 +569,7 @@ class _PeerCardState extends State<_PeerCard>
                           peer.note,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Theme.of(context)
                                 .colorScheme
@@ -571,7 +579,7 @@ class _PeerCardState extends State<_PeerCard>
                           ),
                         ),
                       ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 18),
                     // Remote ID is always rendered LTR, independently of the
                     // Persian application direction.
                     Row(
@@ -582,7 +590,7 @@ class _PeerCardState extends State<_PeerCard>
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             textDirection: TextDirection.ltr,
-                            textAlign: TextAlign.left,
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Theme.of(context)
                                   .colorScheme
