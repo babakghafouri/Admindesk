@@ -190,7 +190,7 @@ class _CredentialSurface extends StatelessWidget {
                   child: Text(title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AdminDeskTypography.title(c).copyWith(fontSize: 13)),
+                    style: AdminDeskTypography.title(c).copyWith(fontSize: 14, fontWeight: FontWeight.w800)),
                 ),
                 action,
               ],
