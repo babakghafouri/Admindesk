@@ -691,8 +691,8 @@ class _ConnectionPageState extends State<ConnectionPage>
                     ),
                   ),
                   SizedBox(
-                    height: 44,
-                    width: 135,
+                    height: 42,
+                    width: 112,
                     child: ElevatedButton.icon(
                       onPressed: () => onConnect(),
                       icon: const Icon(Icons.sync_alt, size: 18),
