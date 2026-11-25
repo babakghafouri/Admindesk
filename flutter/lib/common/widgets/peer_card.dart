@@ -392,12 +392,13 @@ class _PeerCardState extends State<_PeerCard>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(children: [
+                    Row(children:[
                       _peerStatusBadge(context, peer.online),
                       const Spacer(),
                       PeerFavoriteButton(peer: peer, tab: widget.tab),
                     ]),
                     Tooltip(message: displayName, child: Text(displayName,
+                      textAlign: TextAlign.center,
                       maxLines: 1, overflow: TextOverflow.ellipsis,
                       style: AdminDeskTypography.body(c).copyWith(
                         color: peer.online ? c.textPrimary : c.textSecondary,
@@ -405,7 +406,7 @@ class _PeerCardState extends State<_PeerCard>
                     Tooltip(message: 'کپی شناسه', child: InkWell(
                       onTap: () => _copyPeerId(peer),
                       child: Text(formatID(peer.id), textDirection: TextDirection.ltr,
-                        textAlign: TextAlign.right, maxLines: 1,
+                        textAlign: TextAlign.center, maxLines: 1,
                         style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold,
                           color: peer.online ? c.primary : c.textSecondary)))),
                     const Spacer(),
