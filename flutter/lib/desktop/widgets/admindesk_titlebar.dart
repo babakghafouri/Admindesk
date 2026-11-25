@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../common.dart' show createDialogContent, MyTheme;
@@ -23,37 +22,14 @@ class AdminDeskTitleBrand extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AdminDeskColors.of(context);
     return Padding(
-      padding: const EdgeInsets.only(left: 19),
-      child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SvgPicture.asset('assets/icon.svg', width: 32, height: 32),
-        const SizedBox(width: AdminDeskMetrics.spaceXs),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'AdminDesk',
-              style: AdminDeskTypography.title(colors).copyWith(
-                fontSize: 17,
-                height: 1.1,
-              ),
-            ),
-            Text(
-              'اتصال امن، مدیریت آسان',
-              style: AdminDeskTypography.caption(colors).copyWith(
-                fontSize: 9,
-                height: 1.1,
-              ),
-            ),
-          ],
-        ),
-      ],
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Text(
+        'اتصال امن، مدیریت آسان',
+        style: AdminDeskTypography.title(colors).copyWith(fontSize: 15),
       ),
     );
   }
-}
+}}
 
 /// App actions placed immediately before the existing native-behavior
 /// simulated Windows controls in DesktopTab's WindowActionPanel.
@@ -266,9 +242,28 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
         }
       },
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (widget.hasUpdate) Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Text('نسخه جدید موجود است', style: TextStyle(color: colors.notification, fontSize: 11)),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+          decoration: BoxDecoration(
+            color: widget.hasUpdate ? const Color(0xFFFFEEE9) : const Color(0xFFE7F6EF),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Text(widget.hasUpdate ? 'نسخه جدید موجود است' : 'نسخه شما به‌روز است',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+                color: widget.hasUpdate ? const Color(0xFFC83F24) : const Color(0xFF14875D))),
+            const SizedBox(width: 5),
+            if (unread > 0) Container(
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(color: widget.hasUpdate ? const Color(0xFFC83F24) : const Color(0xFF14875D), shape: BoxShape.circle),
+              alignment: Alignment.center,
+              child: Text(unread > 9 ? '9+' : unread.toString(), style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(width: 5),
+            Icon(Icons.notifications_none_rounded, size: 17,
+              color: widget.hasUpdate ? const Color(0xFFC83F24) : const Color(0xFF14875D)),
+          ]),
         ),
         Stack(
         clipBehavior: Clip.none,
@@ -480,7 +475,7 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
               Icon(Icons.wifi_tethering_rounded,
                   size: 19, color: _statusColor),
               const SizedBox(width: 5),
-              Text('وضعیت: $_status',
+              Text(_status,
                   textDirection: TextDirection.rtl,
                   style: TextStyle(fontSize: 11, color: _statusColor)),
             ],
