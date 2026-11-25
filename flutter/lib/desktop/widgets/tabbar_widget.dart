@@ -628,7 +628,7 @@ class _DesktopTabState extends State<DesktopTab>
       showClose: showClose,
       onClose: onWindowCloseButton,
       labelGetter: labelGetter,
-    ).paddingOnly(left: 10);
+    ).paddingOnly(left: 10, right: 8);
     return Directionality(
       textDirection:
           moveWindowControlsRight ? TextDirection.ltr : Directionality.of(context),
@@ -675,36 +675,6 @@ class _DesktopTabState extends State<DesktopTab>
                         child: const SizedBox(
                           width: 78,
                         )),
-                    Offstage(
-                      offstage: kUseCompatibleUiMode || isMacOS,
-                      child: Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: widget.leading ?? Row(children: [
-                          Offstage(
-                            offstage: !showLogo,
-                            child: loadIcon(16),
-                          ),
-                          Offstage(
-                              offstage: !showTitle,
-                              child: const Text(
-                                "RustDesk",
-                                style: TextStyle(fontSize: 13),
-                              ).marginOnly(left: 2))
-                        ]).marginOnly(
-                          left: 5,
-                          right: 10,
-                        ),
-                      ),
-                    ),
-                    // On the main window, place AdminDesk's three actions
-                    // immediately after the brand, before the flexible tabs.
-                    if (moveWindowControlsRight &&
-                        isMainWindow &&
-                        tail != null)
-                      Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: tail!,
-                      ),
                     Expanded(
                         child: Listener(
                             // handle mouse wheel
@@ -736,6 +706,22 @@ class _DesktopTabState extends State<DesktopTab>
                                   unSelectedTabBackgroundColor,
                               selectedBorderColor: selectedBorderColor,
                             ))),
+                    if (moveWindowControlsRight && isMainWindow && tail != null)
+                      Directionality(textDirection: TextDirection.rtl, child: tail!),
+                    if (moveWindowControlsRight && isMainWindow && widget.leading != null)
+                      Directionality(textDirection: TextDirection.rtl, child: widget.leading!),
+                    if (!moveWindowControlsRight || !isMainWindow)
+                      Offstage(
+                        offstage: kUseCompatibleUiMode || isMacOS,
+                        child: Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: widget.leading ?? Row(children: [
+                            Offstage(offstage: !showLogo, child: loadIcon(16)),
+                            Offstage(offstage: !showTitle,
+                              child: const Text("RustDesk", style: TextStyle(fontSize: 13)).marginOnly(left: 2))
+                          ]).marginOnly(left: 5, right: 10),
+                        ),
+                      ),
                   ],
                 ))),
           // Only the main window's app actions are placed beside its brand.
