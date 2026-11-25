@@ -18,12 +18,15 @@ class QuickConnectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AdminDeskColors.of(context);
-    return Directionality(
+    return SizedBox(
+      height: 152,
+      child: Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
-        padding: const EdgeInsets.all(AdminDeskMetrics.spaceMd),
+        padding: const EdgeInsets.symmetric(horizontal: AdminDeskMetrics.spaceMd, vertical: AdminDeskMetrics.spaceSm),
         decoration: AdminDeskMetrics.cardDecoration(c),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -39,6 +42,7 @@ class QuickConnectCard extends StatelessWidget {
             connectFields,
           ],
         ),
+      ),
       ),
     );
   }
