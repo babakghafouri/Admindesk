@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../common.dart';
 import '../../common/formatter/id_formatter.dart';
 import '../../models/platform_model.dart';
 import 'package:get/get.dart';
