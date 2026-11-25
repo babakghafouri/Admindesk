@@ -77,7 +77,7 @@ class AdminDeskTitleActions extends StatelessWidget {
       ],
     );
   }
-}}
+}
 
 
 /// Reads public AdminDesk announcements from the WordPress REST API.
@@ -233,7 +233,6 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AdminDeskColors.of(context);
     final unread = _unreadCount;
     final displayCount = unread > 0 ? unread : (widget.hasUpdate ? 1 : 0);
     return PopupMenuButton<int>(
@@ -268,51 +267,6 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
             ),
           ]),
         ),
-        Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Icon(
-            Icons.notifications_none_rounded,
-            size: 20,
-            color: colors.textPrimary,
-          ),
-          if (unread > 0)
-            Positioned(
-              top: -5,
-              right: -8,
-              child: Container(
-                constraints: const BoxConstraints(minWidth: 15, minHeight: 15),
-                padding: const EdgeInsets.symmetric(horizontal: 3),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE34D4D),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  unread > 9 ? '9+' : unread.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            )
-          else if (widget.hasUpdate)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: colors.notification,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-        ],
-      ),
       ]),
       itemBuilder: (_) {
         final items = <PopupMenuEntry<int>>[
