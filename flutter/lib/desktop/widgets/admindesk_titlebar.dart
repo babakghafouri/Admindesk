@@ -29,7 +29,7 @@ class AdminDeskTitleBrand extends StatelessWidget {
       ),
     );
   }
-}}
+}
 
 /// App actions placed immediately before the existing native-behavior
 /// simulated Windows controls in DesktopTab's WindowActionPanel.
@@ -231,6 +231,7 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
   Widget build(BuildContext context) {
     final colors = AdminDeskColors.of(context);
     final unread = _unreadCount;
+    final displayCount = unread > 0 ? unread : (widget.hasUpdate ? 1 : 0);
     return PopupMenuButton<int>(
       tooltip: unread > 0 ? '$unread اعلان خوانده‌نشده' : 'اعلان‌ها',
       padding: EdgeInsets.zero,
@@ -254,12 +255,12 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
                 color: widget.hasUpdate ? const Color(0xFFC83F24) : const Color(0xFF14875D))),
             const SizedBox(width: 5),
-            if (unread > 0) Container(
+            if (displayCount > 0) Container(
               constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
               padding: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(color: widget.hasUpdate ? const Color(0xFFC83F24) : const Color(0xFF14875D), shape: BoxShape.circle),
               alignment: Alignment.center,
-              child: Text(unread > 9 ? '9+' : unread.toString(), style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+              child: Text(displayCount > 9 ? '9+' : displayCount.toString(), style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(width: 5),
             Icon(Icons.notifications_none_rounded, size: 17,
