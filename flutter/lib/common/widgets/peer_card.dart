@@ -388,7 +388,7 @@ class _PeerCardState extends State<_PeerCard>
             children: [
               Container(height: 3, color: status),
               Expanded(child: Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.fromLTRB(10, 4, 10, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -402,7 +402,7 @@ class _PeerCardState extends State<_PeerCard>
                       maxLines: 1, overflow: TextOverflow.ellipsis,
                       style: AdminDeskTypography.body(c).copyWith(
                         color: peer.online ? c.textPrimary : c.textSecondary,
-                        fontWeight: FontWeight.w700))),
+                        fontWeight: FontWeight.w800))),
                     Center(child: Tooltip(message: 'کپی شناسه', child: InkWell(
                       onTap: () => _copyPeerId(peer),
                       child: Text(formatID(peer.id), textDirection: TextDirection.ltr,
