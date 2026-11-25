@@ -346,7 +346,7 @@ class _ConnectionPageState extends State<ConnectionPage>
           return Column(
             children: [
               SizedBox(
-                height: constraints.maxWidth >= 1100 ? 152 : 304,
+                height: constraints.maxWidth >= 1100 ? 152 : 312,
                 child: topPanels,
               ),
               if (widget.peerTabNavigation != null) widget.peerTabNavigation!,
