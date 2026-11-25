@@ -463,7 +463,7 @@ class _DeviceTableRow extends StatelessWidget {
                 color: online ? c.textPrimary : c.textSecondary,
                 fontWeight: FontWeight.w600)))),
             Expanded(flex: 3, child: Text(formatID(peer.id),
-              textDirection: TextDirection.ltr, textAlign: TextAlign.center,
+              textDirection: TextDirection.ltr, textAlign: TextAlign.right,
               maxLines: 1, overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold,
                 color: online ? c.primary : c.textSecondary))),
