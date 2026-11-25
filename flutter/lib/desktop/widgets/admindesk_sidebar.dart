@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/state_model.dart';
 
 import '../theme/admindesk_theme.dart';
@@ -46,14 +47,20 @@ class AdminDeskSideBar extends StatelessWidget {
                 () => onNavigate(0, 0)),
             _entry(context, Icons.star_border_rounded, 'علاقه‌مندی‌ها', 1,
                 () => onNavigate(1, 1)),
-            _entry(context, Icons.lan_outlined, 'شبکه داخلی', 2,
-                () => onNavigate(2, 2)),
-            _entry(context, Icons.contacts_outlined, 'دفترچه آدرس', 3,
-                () => onNavigate(3, 3)),
             _entry(context, Icons.group_outlined, 'گروه‌ها', 4,
                 () => onNavigate(4, 4)),
+            _entry(context, Icons.lan_outlined, 'شبکه داخلی', 2,
+                () => onNavigate(2, 2)),
+            _entry(context, Icons.history_toggle_off_rounded, 'تاریخچه جلسات', 5,
+                () => onNavigate(5, 0)),
+            const Divider(indent: 12, endIndent: 12, height: 22),
             _entry(context, Icons.settings_outlined, 'تنظیمات', -1,
                 onSettings),
+            _entry(context, Icons.help_outline_rounded, 'پشتیبانی', -2,
+                () async {
+                  final uri = Uri.parse('https://admindesk.ir');
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }),
             const Spacer(),
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -72,10 +79,10 @@ class AdminDeskSideBar extends StatelessWidget {
                   children: [
                     SvgPicture.asset(
                       'assets/icon.svg',
-                      width: 72,
-                      height: 72,
+                      width: 104,
+                      height: 104,
                     ),
-                    const SizedBox(height: AdminDeskMetrics.spaceXs),
+                    const SizedBox(height: AdminDeskMetrics.spaceSm),
                     Text(
                       'AdminDesk',
                       textAlign: TextAlign.center,
