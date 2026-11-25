@@ -99,7 +99,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
                   Expanded(
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
-                        showPromo ? 6 : 12, 12, 8, 10),
+                        showPromo ? 6 : 12, 12, 2, 10),
                       child: _connectionsPanel(context, colors.surface,
                           colors.border, colors.textPrimary),
                     ),
