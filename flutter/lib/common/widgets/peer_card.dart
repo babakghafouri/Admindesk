@@ -403,12 +403,12 @@ class _PeerCardState extends State<_PeerCard>
                       style: AdminDeskTypography.body(c).copyWith(
                         color: peer.online ? c.textPrimary : c.textSecondary,
                         fontWeight: FontWeight.w700))),
-                    Tooltip(message: 'کپی شناسه', child: InkWell(
+                    Center(child: Tooltip(message: 'کپی شناسه', child: InkWell(
                       onTap: () => _copyPeerId(peer),
                       child: Text(formatID(peer.id), textDirection: TextDirection.ltr,
                         textAlign: TextAlign.center, maxLines: 1,
                         style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold,
-                          color: peer.online ? c.primary : c.textSecondary)))),
+                          color: peer.online ? c.primary : c.textSecondary))))),
                     const Spacer(),
                     Row(children: [
                       Expanded(child: PeerConnectButton(online: peer.online,
