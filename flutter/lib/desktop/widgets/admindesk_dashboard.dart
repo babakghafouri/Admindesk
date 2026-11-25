@@ -146,11 +146,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
                     builder: (context, model, _) {
                       final canRefresh = model.approveMode != 'click' &&
                           model.verificationMethod != kUsePermanentPassword;
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AdminDeskMetrics.spaceSm,
-                        ),
-                        child: LayoutBuilder(
+                      return LayoutBuilder(
                           builder: (context, constraints) {
                             final cards = <Widget>[
                               FutureBuilder<String>(
@@ -191,8 +187,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
                               ],
                             );
                           },
-                        ),
-                      );
+                        );
                     },
                   ),
                 ),
