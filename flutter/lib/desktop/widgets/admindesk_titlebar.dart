@@ -59,7 +59,6 @@ class AdminDeskTitleActions extends StatelessWidget {
             PopupMenuItem(value: ThemeMode.dark, child: Text('تیره')),
           ],
         ),
-        const AdminDeskServerHealth(),
         const SizedBox(width: AdminDeskMetrics.spaceXs),
         Obx(() {
           final hasUpdate = stateGlobal.updateUrl.value.isNotEmpty;
@@ -69,6 +68,8 @@ class AdminDeskTitleActions extends StatelessWidget {
             onUpdateTap: onSettings,
           );
         }),
+        const SizedBox(width: AdminDeskMetrics.spaceXs),
+        const AdminDeskServerHealth(),
       ],
     );
   }
