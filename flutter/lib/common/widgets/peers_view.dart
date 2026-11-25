@@ -194,6 +194,169 @@ class _PeersViewState extends State<_PeersView>
               peerTab: widget.peerTabIndex,
               cardKeyPrefix: widget.peers.name,
               onPeerVisible: (peerId, visible) {},
+            );
+          }
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.sentiment_very_dissatisfied_rounded,
+                  color: Theme.of(context).tabBarTheme.labelColor,
+                  size: 40,
+                ).paddingOnly(bottom: 10),
+                Text(
+                  translate(
+                    _emptyMessages[widget.peers.loadEvent] ?? 'Empty',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Theme.of(context).tabBarTheme.labelColor,
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else {
+          return _buildPeersView(peers);
+        }
+      }),
+    );
+  }
+
+  onVisibilityChanged(VisibilityInfo info) {
+    if (!mounted || DevicesTableScope.enabledOf(context)) return;
+    final peerId = _peerId((info.key as ValueKey).value);
+    if (info.visibleFraction > 0.00001) {
+      _curPeers.add(peerId);
+    } else {
+      _curPeers.remove(peerId);
+    }
+    _lastChangeTime = DateTime.now();
+  }
+
+  String _cardId(String id) => widget.peers.name + id;
+  String _peerId(String cardId) => cardId.replaceAll(widget.peers.name, '');
+
+  Widget _buildPeersView(Peers peers) {
+    final updateEvent = peers.event;
+    final body = Obx(() {
+      final searchText = peerSearchText.value;
+      final sortedBy = peerSort.value;
+      final statusFilter = DevicesTableScope.enabledOf(context)
+          ? peerStatusFilter.value
+          : 'all';
+      return FutureBuilder<List<Peer>>(
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            var peers = snapshot.data!;
+            if (peers.length > 1000) peers = peers.sublist(0, 1000);
+            if (DevicesTableScope.enabledOf(context)) {
+              final ids = peers.map((p) => p.id).toSet();
+              if (!setEquals(ids, _curPeers)) {
+                _curPeers..clear()..addAll(ids);
+                _lastChangeTime = DateTime.now();
+              }
+            }
+            if (statusFilter == 'online') {
+              peers = peers.where((peer) => peer.online).toList();
+            } else if (statusFilter == 'offline') {
+              peers = peers.where((peer) => !peer.online).toList();
+            }
+            if (DevicesTableScope.enabledOf(context)) {
+              peers = [...peers.where((p) => p.online), ...peers.where((p) => !p.online)];
+            }
+            gFFI.peerTabModel.setCurrentTabCachedPeers(peers);
+            if (peers.isEmpty) {
+              return Center(
+                child: Text(
+                  'دستگاهی با این فیلتر یافت نشد',
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.titleLarge?.color,
+                  ),
+                ),
+              );
+            }
+            buildOnePeer(Peer peer, bool isPortrait) {
+              final visibilityChild = VisibilityDetector(
+                key: ValueKey(_cardId(peer.id)),
+                onVisibilityChanged: onVisibilityChanged,
+                child: widget.peerCardBuilder(peer),
+              );
+              // `Provider.of<PeerTabModel>(context)` will causes infinete loop.
+              // Because `gFFI.peerTabModel.setCurrentTabCachedPeers(peers)` will trigger `notifyListeners()`.
+              //
+              // No need to listen the currentTab change event.
+              // Because the currentTab change event will trigger the peers change event,
+              // and the peers change event will trigger _buildPeersView().
+              return !isPortrait
+                  ? Obx(() => peerCardUiType.value == PeerUiType.list
+                      ? Container(height: 45, child: visibilityChild)
+                      : peerCardUiType.value == PeerUiType.grid
+                          ? SizedBox(
+                              width: DevicesTableScope.enabledOf(context)
+                                  ? 228
+                                  : 220,
+                              height: DevicesTableScope.enabledOf(context)
+                                  ? 164
+                                  : 140,
+                              child: visibilityChild,
+                            )
+                          : SizedBox(
+                              width: 220, height: 42, child: visibilityChild))
+                  : Container(child: visibilityChild);
+            }
+
+            // We should avoid too many rebuilds. Win10(Some machines) on Flutter 3.19.6.
+            // Continious rebuilds of `ListView.builder` will cause memory leak.
+            // Simple demo can reproduce this issue.
+            final Widget child = Obx(() => stateGlobal.isPortrait.isTrue
+                ? ListView.builder(
+                    itemCount: peers.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return buildOnePeer(peers[index], true).marginOnly(
+                          top: index == 0 ? 0 : space / 2, bottom: space / 2);
+                    },
+                  )
+                : peerCardUiType.value == PeerUiType.list
+                    ? ListView.builder(
+                        controller: _scrollController,
+                        itemCount: peers.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return buildOnePeer(peers[index], false).marginOnly(
+                              right: space,
+                              top: index == 0 ? 0 : space / 2,
+                              bottom: space / 2);
+                        },
+                      )
+                    : DynamicGridView.builder(
+                        gridDelegate: SliverGridDelegateWithWrapping(
+                            mainAxisSpacing: space / 2,
+                            crossAxisSpacing: space),
+                        itemCount: peers.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return buildOnePeer(peers[index], false);
+                        }));
+
+            if (updateEvent == UpdateEvent.load) {
+              if (!DevicesTableScope.enabledOf(context)) {
+                _curPeers.clear();
+                _curPeers.addAll(peers.map((e) => e.id));
+              }
+              _queryOnlines(true);
+            }
+            // Keep this loader, search, sort and online polling machinery
+            // unchanged. Only swap its row presentation in the Windows UI.
+            if (DevicesTableScope.enabledOf(context)) {
+              // The Windows dashboard can switch between the existing glass
+              // peer cards and the native data-backed list without reloading
+              // or replacing the peer model.
+              return Obx(() => peerCardUiType.value == PeerUiType.list
+                  ? DevicesTable(
+                      peers: peers,
+                      peerTab: widget.peerTabIndex,
+                      cardKeyPrefix: widget.peers.name,
+                      onPeerVisible: (peerId, visible) {},
                     )
                   : ScrollConfiguration(
                       behavior: const _DashboardGridScrollBehavior(),
