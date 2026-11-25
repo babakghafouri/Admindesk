@@ -331,9 +331,9 @@ class _ConnectionPageState extends State<ConnectionPage>
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(flex: 4, child: quickConnect),
+                    Expanded(flex: 1, child: quickConnect),
                     const SizedBox(width: AdminDeskMetrics.spaceSm),
-                    Expanded(flex: 6, child: credentials),
+                    Expanded(flex: 2, child: credentials),
                   ],
                 )
               : Column(
