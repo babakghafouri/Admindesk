@@ -321,22 +321,46 @@ class _ConnectionPageState extends State<ConnectionPage>
   Widget build(BuildContext context) {
     final isOutgoingOnly = bind.isOutgoingOnly();
     if (widget.dashboardLayout) {
-      return Column(
-        children: [
-          QuickConnectCard(connectFields: _buildRemoteIDTextField(context)),
-          const SizedBox(height: AdminDeskMetrics.spaceSm),
-          if (widget.identityCards != null) widget.identityCards!,
-          if (widget.peerTabNavigation != null) widget.peerTabNavigation!,
-          const SizedBox(height: 6),
-          Expanded(
-            child: PeerTabPage(
-              dashboardLayout: true,
-              requestedPeerTab: widget.requestedPeerTab,
-              onPeerTabChanged: widget.onPeerTabChanged,
-            ),
-          ),
-          // Redundant dashboard-only online notice removed (status is still available in server settings).
-        ],
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final quickConnect = QuickConnectCard(
+            connectFields: _buildRemoteIDTextField(context),
+          );
+          final credentials = widget.identityCards ?? const SizedBox.shrink();
+          final topPanels = constraints.maxWidth >= 1100
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(flex: 4, child: quickConnect),
+                    const SizedBox(width: AdminDeskMetrics.spaceSm),
+                    Expanded(flex: 6, child: credentials),
+                  ],
+                )
+              : Column(
+                  children: [
+                    SizedBox(width: double.infinity, child: quickConnect),
+                    const SizedBox(height: AdminDeskMetrics.spaceSm),
+                    SizedBox(width: double.infinity, child: credentials),
+                  ],
+                );
+          return Column(
+            children: [
+              SizedBox(
+                height: constraints.maxWidth >= 1100 ? 152 : 304,
+                child: topPanels,
+              ),
+              if (widget.peerTabNavigation != null) widget.peerTabNavigation!,
+              const SizedBox(height: 6),
+              Expanded(
+                child: PeerTabPage(
+                  dashboardLayout: true,
+                  requestedPeerTab: widget.requestedPeerTab,
+                  onPeerTabChanged: widget.onPeerTabChanged,
+                ),
+              ),
+            ],
+          );
+        },
       );
     }
     return Column(
