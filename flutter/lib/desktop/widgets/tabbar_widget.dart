@@ -639,6 +639,13 @@ class _DesktopTabState extends State<DesktopTab>
       child: Row(
         children: [
           // In remote windows, keep the session actions on the left.
+          // Keep AdminDesk status, update and theme actions at the far
+          // left of the main Windows titlebar, outside the draggable tab area.
+          if (moveWindowControlsRight && isMainWindow && tail != null)
+            Directionality(
+              textDirection: TextDirection.rtl,
+              child: tail!,
+            ),
           if (moveWindowControlsRight && !isMainWindow && tail != null)
             Directionality(
               textDirection: TextDirection.rtl,
@@ -710,8 +717,6 @@ class _DesktopTabState extends State<DesktopTab>
                                   unSelectedTabBackgroundColor,
                               selectedBorderColor: selectedBorderColor,
                             ))),
-                    if (moveWindowControlsRight && isMainWindow && tail != null)
-                      Directionality(textDirection: TextDirection.rtl, child: tail!),
                     if (moveWindowControlsRight && isMainWindow && widget.leading != null)
                       Directionality(textDirection: TextDirection.rtl, child: widget.leading!),
                     if (!moveWindowControlsRight || !isMainWindow)
