@@ -617,7 +617,10 @@ class _DesktopTabState extends State<DesktopTab>
     // On the Windows home titlebar, keep the three AdminDesk actions on the
     // left and place only the native-behavior window controls on the right.
     // The titlebar inherits RTL direction: first child is rightmost.
-    final actionPanel = WindowActionPanel(
+    final actionPanel = Transform.scale(
+      scale: 1.10,
+      alignment: Alignment.centerRight,
+      child: WindowActionPanel(
       isMainWindow: isMainWindow,
       state: state,
       tabController: controller,
@@ -628,7 +631,8 @@ class _DesktopTabState extends State<DesktopTab>
       showClose: showClose,
       onClose: onWindowCloseButton,
       labelGetter: labelGetter,
-    ).paddingOnly(left: 10, right: 8);
+      ).paddingOnly(left: 10, right: 8),
+    );
     return Directionality(
       textDirection:
           moveWindowControlsRight ? TextDirection.ltr : Directionality.of(context),
