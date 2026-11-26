@@ -514,7 +514,8 @@ class _PeerCardState extends State<_PeerCard>
                           ),
                         ),
                       ),
-                    const SizedBox(height: 5),
+                    // Add clear breathing room between the device name and its ID.
+                    const SizedBox(height: 18),
                     // Remote ID is always rendered LTR, independently of the
                     // Persian application direction.
                     Row(
