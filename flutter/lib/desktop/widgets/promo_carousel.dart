@@ -463,7 +463,12 @@ class _PromoCarouselState extends State<PromoCarousel>
   Widget _slide(BuildContext context, _PromoSlide slide, int index) {
     final c = AdminDeskColors.of(context);
     if (slide.networkImage != null) {
-      return Stack(
+      return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _openPromotion(slide),
+          child: Stack(
         fit: StackFit.expand,
         children: [
           Image.network(
@@ -501,10 +506,15 @@ class _PromoCarouselState extends State<PromoCarousel>
               ),
             ),
           ),
-        ],
+          ],
+          ),
+        ),
       );
     }
-    return Directionality(
+    return InkWell(
+      mouseCursor: SystemMouseCursors.click,
+      onTap: () => _openPromotion(slide),
+      child: Directionality(
       textDirection: TextDirection.rtl,
       child: LayoutBuilder(
         builder: (context, constraints) => ListView(
@@ -577,6 +587,7 @@ class _PromoCarouselState extends State<PromoCarousel>
             _slideArtwork(slide, constraints.maxHeight < 430 ? 135 : 210),
           ],
         ),
+      ),
       ),
     );
   }
@@ -661,29 +672,7 @@ class _PromoCarouselState extends State<PromoCarousel>
               ],
             ),
           ),
-          const SizedBox(height: AdminDeskMetrics.spaceXs),
-          SizedBox(
-            width: double.infinity,
-            height: 43,
-            child: ElevatedButton(
-              onPressed: () => _openPromotion(_activeSlides[_page]),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: c.primary,
-                foregroundColor: c.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: AdminDeskMetrics.controlRadius,
-                ),
-              ),
-              child: Text(
-                _activeSlides[_page].targetUrl == null
-                    ? 'اطلاعات بیشتر' : 'مشاهده تبلیغ',
-                style: AdminDeskTypography.body(c).copyWith(
-                  fontWeight: AdminDeskTypography.bold,
-                  color: c.onPrimary,
-                ),
-              ),
-            ),
-          ),
+
         ],
       ),
     );

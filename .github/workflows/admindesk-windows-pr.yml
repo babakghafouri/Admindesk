@@ -76,3 +76,7 @@ jobs:
           lib/desktop/widgets/devices_table.dart
           lib/desktop/widgets/tabbar_widget.dart
           lib/desktop/widgets/promo_carousel.dart
+          lib/desktop/theme/admindesk_theme.dart
+          lib/desktop/widgets/admindesk_sidebar.dart
+          lib/desktop/pages/remote_tab_page.dart
+          lib/common.dart

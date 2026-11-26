@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 import '../../common.dart';
+import '../../desktop/theme/admindesk_theme.dart';
 import '../../common/formatter/id_formatter.dart';
 import '../../models/peer_model.dart';
 import '../../models/platform_model.dart';
@@ -104,7 +105,7 @@ class _PeerCardState extends State<_PeerCard>
     final PeerTabModel peerTabModel = Provider.of(context);
     final peer = super.widget.peer;
     return GestureDetector(
-        onDoubleTap: peerTabModel.multiSelectionMode
+        onDoubleTap: peerTabModel.multiSelectionMode || (isWindows && !peer.online)
             ? null
             : () => widget.connect(context, peer.id),
         onTap: () {
@@ -172,20 +173,20 @@ class _PeerCardState extends State<_PeerCard>
   Widget _peerStatusBadge(BuildContext context, bool online) {
     final color = online
         ? const Color(0xFF159B57)
-        : const Color(0xFF75869A);
+        : const Color(0xFF5F6F82);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withOpacity(online ? 0.12 : 0.18),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.22)),
+        border: Border.all(color: color.withOpacity(online ? 0.22 : 0.38)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 6,
-            height: 6,
+            width: 9,
+            height: 9,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 4),
@@ -213,6 +214,9 @@ class _PeerCardState extends State<_PeerCard>
     final greyStyle = TextStyle(
         fontSize: 11,
         color: Theme.of(context).textTheme.titleLarge?.color?.withOpacity(0.6));
+    final isEnglishName = name.runes.every((rune) => rune < 128);
+    final topName = peer.alias.isEmpty ? formatID(peer.id) : peer.alias;
+    final isEnglishTopName = topName.runes.every((rune) => rune < 128);
     final showNote = _showNote(peer);
 
     return Row(
@@ -261,13 +265,15 @@ class _PeerCardState extends State<_PeerCard>
                         _peerStatusBadge(context, peer.online),
                         Expanded(
                             child: Text(
-                          peer.alias.isEmpty ? formatID(peer.id) : peer.alias,
-                          textDirection: peer.alias.isEmpty
+                          topName,
+                          textDirection: isEnglishTopName
                               ? TextDirection.ltr
                               : Directionality.of(context),
-                          textAlign: peer.alias.isEmpty ? TextAlign.left : null,
+                          textAlign: isEnglishTopName ? TextAlign.left : null,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleSmall,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontFamily: isEnglishTopName ? 'monospace' : null,
+                          ),
                         )),
                       ]).marginOnly(top: isPortrait ? 0 : 2),
                       Row(
@@ -280,8 +286,15 @@ class _PeerCardState extends State<_PeerCard>
                                 alignment: Alignment.centerLeft,
                                 child: Text(
                                   name,
-                                  style: isPortrait ? null : greyStyle,
-                                  textAlign: TextAlign.start,
+                                  textDirection: isEnglishName
+                                      ? TextDirection.ltr
+                                      : Directionality.of(context),
+                                  style: (isPortrait ? null : greyStyle)?.copyWith(
+                                    fontFamily: isEnglishName ? 'monospace' : null,
+                                  ),
+                                  textAlign: isEnglishName
+                                      ? TextAlign.left
+                                      : TextAlign.start,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -370,6 +383,83 @@ class _PeerCardState extends State<_PeerCard>
     final tagColors = _frontN(peer.tags, 25)
         .map((e) => gFFI.abModel.getCurrentAbTagColor(e))
         .toList();
+
+    if (isWindows) {
+      final c = AdminDeskColors.of(context);
+      final status = peer.online ? c.online : c.offline;
+      return Tooltip(
+        message: peer.online ? 'دوبار کلیک = اتصال' : 'دستگاه آفلاین است',
+        child: Material(
+          color: peer.online ? c.surface : Color.alphaBlend(c.offline.withOpacity(.06), c.surface),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: c.border),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              Container(height: 3, color: status),
+              Expanded(child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(children:[
+                      _peerStatusBadge(context, peer.online),
+                      const Spacer(),
+                      PeerFavoriteButton(peer: peer, tab: widget.tab),
+                    ]),
+                    Builder(builder: (context) {
+                      final isEnglishName =
+                          displayName.runes.every((rune) => rune < 128);
+                      return Tooltip(
+                        message: displayName,
+                        child: Text(
+                          displayName,
+                          textDirection: isEnglishName
+                              ? TextDirection.ltr
+                              : TextDirection.rtl,
+                          textAlign: TextAlign.right,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AdminDeskTypography.body(c).copyWith(
+                            fontFamily: isEnglishName ? 'monospace' : null,
+                            color: peer.online
+                                ? c.textPrimary
+                                : c.textSecondary,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      );
+                    }),
+                    // Keep the ID clearly separated from the device name
+                    // and lower in the card's visual center. The flexible spacer
+                    // below preserves the card height and action-row position.
+                    const SizedBox(height: 25),
+                    Center(child: Tooltip(message: 'کپی شناسه', child: InkWell(
+                      onTap: () => _copyPeerId(peer),
+                      child: Text(formatID(peer.id), textDirection: TextDirection.ltr,
+                        textAlign: TextAlign.center, maxLines: 1,
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold,
+                          color: peer.online ? c.primary : c.textSecondary))))),
+                    const Spacer(),
+                    Row(children: [
+                      Expanded(child: PeerConnectButton(online: peer.online,
+                        onConnect: () => widget.connect(context, peer.id))),
+                      IconButton(tooltip: 'ویرایش', visualDensity: VisualDensity.compact,
+                        iconSize: 17, onPressed: () => _renamePeer(peer),
+                        icon: Icon(Icons.edit_outlined, color: c.textSecondary)),
+                      SizedBox(width: 26, height: 30,
+                        child: checkBoxOrActionMoreLandscape(peer, isTile: false)),
+                    ]),
+                  ],
+                ),
+              )),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Tooltip(
       message: peer.tags.isNotEmpty
@@ -482,22 +572,29 @@ class _PeerCardState extends State<_PeerCard>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    // Add breathing room below the card header so the
+                    // device name and ID sit lower in the visual center.
+                    const SizedBox(height: 18),
                     // Device title.
                     Tooltip(
                       message: displayName,
                       waitDuration: const Duration(milliseconds: 450),
-                      child: Text(
-                      displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textDirection: Directionality.of(context),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textDirection: Directionality.of(context),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                    )),
+                    ),
                     if (_showNote(peer))
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
@@ -505,6 +602,7 @@ class _PeerCardState extends State<_PeerCard>
                           peer.note,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Theme.of(context)
                                 .colorScheme
@@ -514,7 +612,7 @@ class _PeerCardState extends State<_PeerCard>
                           ),
                         ),
                       ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 18),
                     // Remote ID is always rendered LTR, independently of the
                     // Persian application direction.
                     Row(
@@ -525,7 +623,7 @@ class _PeerCardState extends State<_PeerCard>
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             textDirection: TextDirection.ltr,
-                            textAlign: TextAlign.left,
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Theme.of(context)
                                   .colorScheme
@@ -1880,4 +1978,117 @@ void connectInPeerTab(BuildContext context, Peer peer, PeerTabIndex tab,
       isViewCamera: isViewCamera,
       isTcpTunneling: isTcpTunneling,
       isRDP: isRDP);
+}
+
+class PeerFavoriteButton extends StatefulWidget {
+  const PeerFavoriteButton({super.key, required this.peer, required this.tab});
+  final Peer peer;
+  final PeerTabIndex tab;
+  @override
+  State<PeerFavoriteButton> createState() => _PeerFavoriteButtonState();
+}
+
+class _PeerFavoriteButtonState extends State<PeerFavoriteButton> {
+  @override
+  void initState() {
+    super.initState();
+    _ensureFavoritePeerIdsLoaded().catchError((Object e) {
+      debugPrint('Favorites: $e');
+    });
+  }
+  @override
+  Widget build(BuildContext context) => Obx(() {
+    final selected = _favoritePeerIds.contains(widget.peer.id);
+    return InkWell(
+      onTap: () async {
+        await _ensureFavoritePeerIdsLoaded();
+        final ids = (await bind.mainGetFav()).toList();
+        if (ids.contains(widget.peer.id)) {
+          ids.remove(widget.peer.id);
+        } else {
+          ids.add(widget.peer.id);
+        }
+        await _storeFavoritePeerIds(ids);
+        if (widget.tab == PeerTabIndex.fav) await bind.mainLoadFavPeers();
+      },
+      child: Icon(selected ? Icons.star_rounded : Icons.star_outline_rounded,
+        size: 21, color: selected ? const Color(0xFFE7A900) : AdminDeskColors.of(context).textSecondary),
+    );
+  });
+}
+
+class PeerConnectButton extends StatelessWidget {
+  const PeerConnectButton({super.key, required this.online, required this.onConnect});
+  final bool online;
+  final VoidCallback onConnect;
+  @override
+  Widget build(BuildContext context) {
+    final c = AdminDeskColors.of(context);
+    return Tooltip(
+      message: online ? 'اتصال' : 'دستگاه آفلاین است',
+      child: online ? TextButton.icon(
+        onPressed: onConnect,
+        style: ButtonStyle(
+          minimumSize: MaterialStateProperty.all(const Size(0, 30)),
+          padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 8)),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          backgroundColor: MaterialStateProperty.resolveWith((states) =>
+            states.contains(MaterialState.hovered) ? c.primary : c.selectedBackground),
+          foregroundColor: MaterialStateProperty.resolveWith((states) =>
+            states.contains(MaterialState.hovered) ? c.onPrimary : c.primary),
+        ),
+        icon: const Icon(Icons.desktop_windows_outlined, size: 16),
+        label: const Text('اتصال'),
+      ) : Align(
+        alignment: Alignment.centerRight,
+        child: SizedBox(
+          width: 42,
+          height: 30,
+          child: TextButton(
+            onPressed: null,
+            style: ButtonStyle(
+              padding: MaterialStateProperty.all(EdgeInsets.zero),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              backgroundColor: MaterialStateProperty.all(c.inputBackground),
+              foregroundColor: MaterialStateProperty.all(c.offline),
+              side: MaterialStateProperty.all(
+                BorderSide(color: c.offline.withOpacity(.45)),
+              ),
+              shape: MaterialStateProperty.all(
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
+              ),
+            ),
+            child: Icon(Icons.desktop_windows_outlined,
+                size: 16, color: c.offline),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> renameDashboardPeer(BuildContext context, Peer peer, PeerTabIndex tab) async {
+  final oldName = await bind.mainGetPeerOption(id: peer.id, key: 'alias');
+  if (!context.mounted) return;
+  renameDialog(oldName: oldName, onSubmit: (String name) async {
+    if (name == oldName) return;
+    await bind.mainSetPeerAlias(id: peer.id, alias: name);
+    peer.alias = name;
+    switch (tab) {
+      case PeerTabIndex.ab:
+        await gFFI.abModel.changeAlias(id: peer.id, alias: name);
+        break;
+      case PeerTabIndex.recent:
+        await bind.mainLoadRecentPeers();
+        break;
+      case PeerTabIndex.fav:
+        await bind.mainLoadFavPeers();
+        break;
+      case PeerTabIndex.lan:
+        await bind.mainLoadLanPeers();
+        break;
+      case PeerTabIndex.group:
+        break;
+    }
+  });
 }

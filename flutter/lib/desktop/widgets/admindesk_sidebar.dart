@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../models/state_model.dart';
 
 import '../theme/admindesk_theme.dart';
 
@@ -44,10 +47,18 @@ class AdminDeskSideBar extends StatelessWidget {
                 () => onNavigate(0, 0)),
             _entry(context, Icons.star_border_rounded, 'علاقه‌مندی‌ها', 1,
                 () => onNavigate(1, 1)),
+            _entry(context, Icons.group_outlined, 'گروه‌ها', 4,
+                () => onNavigate(4, 4)),
             _entry(context, Icons.lan_outlined, 'شبکه داخلی', 2,
                 () => onNavigate(2, 2)),
+            const Divider(indent: 12, endIndent: 12, height: 22),
             _entry(context, Icons.settings_outlined, 'تنظیمات', -1,
                 onSettings),
+            _entry(context, Icons.help_outline_rounded, 'پشتیبانی', -2,
+                () async {
+                  final uri = Uri.parse('https://admindesk.ir');
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }),
             const Spacer(),
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -66,10 +77,10 @@ class AdminDeskSideBar extends StatelessWidget {
                   children: [
                     SvgPicture.asset(
                       'assets/icon.svg',
-                      width: 72,
-                      height: 72,
+                      width: 104,
+                      height: 104,
                     ),
-                    const SizedBox(height: AdminDeskMetrics.spaceXs),
+                    const SizedBox(height: AdminDeskMetrics.spaceSm),
                     Text(
                       'AdminDesk',
                       textAlign: TextAlign.center,
@@ -86,6 +97,9 @@ class AdminDeskSideBar extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: AdminDeskMetrics.spaceSm),
+                    Obx(() => stateGlobal.updateUrl.value.isNotEmpty
+                        ? TextButton(onPressed: onSettings, child: const Text('به‌روزرسانی موجود'))
+                        : const SizedBox.shrink()),
                     Text(
                       versionLabel,
                       textAlign: TextAlign.center,
@@ -111,12 +125,14 @@ class AdminDeskSideBar extends StatelessWidget {
         vertical: 3,
       ),
       child: Material(
-        color: active ? colors.primary : colors.sidebar,
+        // Navigation selection is intentionally softer than the primary
+        // action buttons (for example, the quick-connect button).
+        color: active ? colors.selectedBackground : colors.sidebar,
         borderRadius: AdminDeskMetrics.controlRadius,
         child: InkWell(
           onTap: onPressed,
           borderRadius: AdminDeskMetrics.controlRadius,
-          hoverColor: active ? colors.primaryHover : colors.hoverBackground,
+          hoverColor: colors.hoverBackground,
           child: SizedBox(
             height: 42,
             child: Row(
@@ -125,7 +141,7 @@ class AdminDeskSideBar extends StatelessWidget {
                 Icon(
                   icon,
                   size: 20,
-                  color: active ? colors.onPrimary : colors.textSecondary,
+                  color: active ? colors.primary : colors.textSecondary,
                 ),
                 const SizedBox(width: AdminDeskMetrics.spaceSm),
                 Expanded(
@@ -134,7 +150,7 @@ class AdminDeskSideBar extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AdminDeskTypography.body(colors).copyWith(
-                      color: active ? colors.onPrimary : colors.textPrimary,
+                      color: active ? colors.primary : colors.textPrimary,
                       fontWeight: active
                           ? AdminDeskTypography.bold
                           : AdminDeskTypography.medium,

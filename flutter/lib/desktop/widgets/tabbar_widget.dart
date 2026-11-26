@@ -617,7 +617,10 @@ class _DesktopTabState extends State<DesktopTab>
     // On the Windows home titlebar, keep the three AdminDesk actions on the
     // left and place only the native-behavior window controls on the right.
     // The titlebar inherits RTL direction: first child is rightmost.
-    final actionPanel = WindowActionPanel(
+    final actionPanel = Transform.scale(
+      scale: 1.10,
+      alignment: Alignment.centerRight,
+      child: WindowActionPanel(
       isMainWindow: isMainWindow,
       state: state,
       tabController: controller,
@@ -628,13 +631,21 @@ class _DesktopTabState extends State<DesktopTab>
       showClose: showClose,
       onClose: onWindowCloseButton,
       labelGetter: labelGetter,
-    ).paddingOnly(left: 10);
+      ).paddingOnly(left: 10, right: 8),
+    );
     return Directionality(
       textDirection:
           moveWindowControlsRight ? TextDirection.ltr : Directionality.of(context),
       child: Row(
         children: [
           // In remote windows, keep the session actions on the left.
+          // Keep AdminDesk status, update and theme actions at the far
+          // left of the main Windows titlebar, outside the draggable tab area.
+          if (moveWindowControlsRight && isMainWindow && tail != null)
+            Directionality(
+              textDirection: TextDirection.rtl,
+              child: tail!,
+            ),
           if (moveWindowControlsRight && !isMainWindow && tail != null)
             Directionality(
               textDirection: TextDirection.rtl,
@@ -675,36 +686,6 @@ class _DesktopTabState extends State<DesktopTab>
                         child: const SizedBox(
                           width: 78,
                         )),
-                    Offstage(
-                      offstage: kUseCompatibleUiMode || isMacOS,
-                      child: Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: widget.leading ?? Row(children: [
-                          Offstage(
-                            offstage: !showLogo,
-                            child: loadIcon(16),
-                          ),
-                          Offstage(
-                              offstage: !showTitle,
-                              child: const Text(
-                                "RustDesk",
-                                style: TextStyle(fontSize: 13),
-                              ).marginOnly(left: 2))
-                        ]).marginOnly(
-                          left: 5,
-                          right: 10,
-                        ),
-                      ),
-                    ),
-                    // On the main window, place AdminDesk's three actions
-                    // immediately after the brand, before the flexible tabs.
-                    if (moveWindowControlsRight &&
-                        isMainWindow &&
-                        tail != null)
-                      Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: tail!,
-                      ),
                     Expanded(
                         child: Listener(
                             // handle mouse wheel
@@ -736,6 +717,20 @@ class _DesktopTabState extends State<DesktopTab>
                                   unSelectedTabBackgroundColor,
                               selectedBorderColor: selectedBorderColor,
                             ))),
+                    if (moveWindowControlsRight && isMainWindow && widget.leading != null)
+                      Directionality(textDirection: TextDirection.rtl, child: widget.leading!),
+                    if (!moveWindowControlsRight || !isMainWindow)
+                      Offstage(
+                        offstage: kUseCompatibleUiMode || isMacOS,
+                        child: Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: widget.leading ?? Row(children: [
+                            Offstage(offstage: !showLogo, child: loadIcon(16)),
+                            Offstage(offstage: !showTitle,
+                              child: const Text("RustDesk", style: TextStyle(fontSize: 13)).marginOnly(left: 2))
+                          ]).marginOnly(left: 5, right: 10),
+                        ),
+                      ),
                   ],
                 ))),
           // Only the main window's app actions are placed beside its brand.
@@ -1365,10 +1360,45 @@ class _ActionIconState extends State<ActionIcon> {
 class AddButton extends StatelessWidget {
   const AddButton({
     Key? key,
+    this.showRemoteLabel = false,
   }) : super(key: key);
+
+  final bool showRemoteLabel;
 
   @override
   Widget build(BuildContext context) {
+    if (isWindows && showRemoteLabel) {
+      final color = MyTheme.tabbar(context).unSelectedIconColor;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+        child: Material(
+          color: Theme.of(context).colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+            side: BorderSide(color: Theme.of(context).dividerColor),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(6),
+            hoverColor: MyTheme.tabbar(context).hoverColor,
+            onTap: () => rustDeskWinManager.call(
+                WindowType.Main, kWindowMainWindowOnTop, ""),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(IconFont.add, size: _kActionIconSize, color: color),
+                  const SizedBox(width: 6),
+                  Text('ریموت جدید',
+                      textDirection: TextDirection.rtl,
+                      style: TextStyle(fontSize: 12, color: color)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return ActionIcon(
         message: 'New Connection',
         icon: IconFont.add,
