@@ -97,27 +97,71 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
                       curve: Curves.easeInOut,
                       width: promoWidth,
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 12, 6, 10),
+                        padding: _promoCollapsed
+                             ? const EdgeInsets.symmetric(vertical: 12, horizontal: 2)
+                             : const EdgeInsets.fromLTRB(12, 12, 6, 10),
                         child: _promoCollapsed
-                            ? Align(
-                                alignment: Alignment.topCenter,
-                                child: Tooltip(
-                                  message: 'باز کردن پنل تبلیغات',
-                                  child: IconButton(
-                                    visualDensity: VisualDensity.compact,
-                                    constraints: const BoxConstraints.tightFor(
-                                      width: 34,
-                                      height: 34,
-                                    ),
-                                    padding: EdgeInsets.zero,
-                                    onPressed: () =>
-                                        setState(() => _promoCollapsed = false),
-                                    icon: Icon(
-                                      Icons.chevron_right_rounded,
-                                      color: colors.textSecondary,
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Tooltip(
+                                    message: 'باز کردن پنل تبلیغات',
+                                    child: IconButton(
+                                      visualDensity: VisualDensity.compact,
+                                      constraints: const BoxConstraints.tightFor(
+                                        width: 42,
+                                        height: 42,
+                                      ),
+                                      padding: EdgeInsets.zero,
+                                      onPressed: () =>
+                                          setState(() => _promoCollapsed = false),
+                                      icon: Icon(
+                                        Icons.chevron_right_rounded,
+                                        size: 25,
+                                        color: colors.textPrimary,
+                                      ),
                                     ),
                                   ),
-                                ),
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    width: 34,
+                                    height: 34,
+                                    decoration: BoxDecoration(
+                                      color: colors.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      'DNS',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    'FaraDNS',
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    style: AdminDeskTypography.caption(colors).copyWith(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    '185.255\\n208.208',
+                                    textDirection: TextDirection.ltr,
+                                    textAlign: TextAlign.center,
+                                    style: AdminDeskTypography.caption(colors).copyWith(
+                                      fontSize: 9,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ],
                               )
                             : Column(
                                 children: [
