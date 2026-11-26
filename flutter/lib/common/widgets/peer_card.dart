@@ -2031,24 +2031,6 @@ class PeerConnectButton extends StatelessWidget {
   }
 }
 
-class _OfflineConnectBorder extends CustomPainter {
-  _OfflineConnectBorder(this.color);
-  final Color color;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path()..addRRect(RRect.fromRectAndRadius(
-      Offset.zero & size, const Radius.circular(7)));
-    final paint = Paint()..color = color..style = PaintingStyle.stroke..strokeWidth = 1;
-    for (final metric in path.computeMetrics()) {
-      for (double d = 0; d < metric.length; d += 6) {
-        canvas.drawPath(metric.extractPath(d, math.min(d + 3, metric.length)), paint);
-      }
-    }
-  }
-  @override
-  bool shouldRepaint(covariant _OfflineConnectBorder oldDelegate) => color != oldDelegate.color;
-}
-
 Future<void> renameDashboardPeer(BuildContext context, Peer peer, PeerTabIndex tab) async {
   final oldName = await bind.mainGetPeerOption(id: peer.id, key: 'alias');
   if (!context.mounted) return;
