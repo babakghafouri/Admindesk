@@ -115,19 +115,25 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
                                     const SizedBox(height: 5),
                                     Tooltip(
                                       message: 'بازکردن پنل تبلیغات',
-                                      child: IconButton(
-                                        visualDensity: VisualDensity.compact,
-                                        constraints: const BoxConstraints.tightFor(
-                                          width: 42,
-                                          height: 38,
-                                        ),
-                                        padding: EdgeInsets.zero,
-                                        onPressed: () =>
-                                            setState(() => _promoCollapsed = false),
-                                        icon: Icon(
-                                          Icons.chevron_right_rounded,
-                                          size: 27,
-                                          color: colors.primary,
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          borderRadius: BorderRadius.circular(8),
+                                          splashColor: Colors.transparent,
+                                          highlightColor: Colors.transparent,
+                                          hoverColor: Colors.transparent,
+                                          focusColor: Colors.transparent,
+                                          onTap: () => setState(
+                                              () => _promoCollapsed = false),
+                                          child: SizedBox(
+                                            width: 42,
+                                            height: 38,
+                                            child: Icon(
+                                              Icons.chevron_right_rounded,
+                                              size: 27,
+                                              color: colors.primary,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
