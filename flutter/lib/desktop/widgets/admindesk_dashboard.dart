@@ -29,6 +29,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
   final ValueNotifier<int?> _requestedPeerTab = ValueNotifier<int?>(null);
   String _adminDeskVersion = '';
   int _selectedMenu = 2;
+  bool _promoCollapsed = false;
 
   @override
   void initState() {
@@ -89,11 +90,43 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
               child: Row(
                 children: [
                   if (showPromo)
-                    SizedBox(
-                      width: promoWidth,
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeInOutCubic,
+                      width: _promoCollapsed ? 60 : promoWidth,
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(12, 12, 6, 10),
-                        child: const PromoCarousel(),
+                        child: _promoCollapsed
+                            ? _buildCollapsedPromoRail(context)
+                            : Stack(
+                                children: [
+                                  const Positioned.fill(child: PromoCarousel()),
+                                  Positioned(
+                                    top: 8,
+                                    left: 8,
+                                    child: Material(
+                                      color: Colors.black.withOpacity(.48),
+                                      borderRadius: BorderRadius.circular(9),
+                                      child: IconButton(
+                                        tooltip: 'جمع‌کردن پنل تبلیغات',
+                                        visualDensity: VisualDensity.compact,
+                                        constraints: const BoxConstraints.tightFor(
+                                          width: 30,
+                                          height: 30,
+                                        ),
+                                        padding: EdgeInsets.zero,
+                                        onPressed: () => setState(
+                                            () => _promoCollapsed = true),
+                                        icon: const Icon(
+                                          Icons.chevron_left_rounded,
+                                          size: 21,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                       ),
                     ),
                   Expanded(
@@ -117,6 +150,73 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCollapsedPromoRail(BuildContext context) {
+    final colors = AdminDeskColors.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: AdminDeskMetrics.cardRadius,
+        border: Border.all(color: colors.border),
+        boxShadow: AdminDeskMetrics.cardShadow(colors),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 9),
+          IconButton(
+            tooltip: 'بازکردن پنل تبلیغات',
+            onPressed: () => setState(() => _promoCollapsed = false),
+            icon: Icon(Icons.chevron_right_rounded,
+                size: 23, color: colors.primary),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: Color(0xFF0799D6),
+              shape: BoxShape.circle,
+            ),
+            child: const Text(
+              'DNS',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            'FaraDNS',
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            style: AdminDeskTypography.caption(colors).copyWith(
+              fontSize: 9,
+              fontWeight: AdminDeskTypography.bold,
+            ),
+          ),
+          const Spacer(),
+          RotatedBox(
+            quarterTurns: 3,
+            child: Text(
+              '185.255.208.208',
+              textDirection: TextDirection.ltr,
+              maxLines: 1,
+              style: AdminDeskTypography.caption(colors).copyWith(
+                fontSize: 9,
+                fontWeight: AdminDeskTypography.semibold,
+                letterSpacing: .2,
+              ),
+            ),
+          ),
+          const Spacer(),
+          const SizedBox(height: 10),
+        ],
       ),
     );
   }
