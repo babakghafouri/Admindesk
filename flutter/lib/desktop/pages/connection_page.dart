@@ -577,7 +577,7 @@ class _ConnectionPageState extends State<ConnectionPage>
                                           color: dashboardColors.primary))
                                   : null,
                               contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 15, vertical: 13)),
+                                  horizontal: 15, vertical: 22)),
                           controller: fieldTextEditingController,
                           inputFormatters: [IDTextInputFormatter()],
                           onChanged: (v) {
@@ -667,8 +667,8 @@ class _ConnectionPageState extends State<ConnectionPage>
                     ),
                   ),
                   SizedBox(
-                    height: 44,
-                    width: 135,
+                    height: 40,
+                    width: 126,
                     child: ElevatedButton.icon(
                       onPressed: () => onConnect(),
                       icon: const Icon(Icons.sync_alt, size: 18),
