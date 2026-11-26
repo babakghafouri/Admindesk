@@ -214,8 +214,9 @@ class _PeerCardState extends State<_PeerCard>
     final greyStyle = TextStyle(
         fontSize: 11,
         color: Theme.of(context).textTheme.titleLarge?.color?.withOpacity(0.6));
-    final isEnglishName = RegExp(r'^[\x00-\x7F]+
-
+    final isEnglishName = name.runes.every((rune) => rune < 128);
+    final topName = peer.alias.isEmpty ? formatID(peer.id) : peer.alias;
+    final isEnglishTopName = topName.runes.every((rune) => rune < 128);
     return Row(
       mainAxisSize: MainAxisSize.max,
       children: [
@@ -408,7 +409,27 @@ class _PeerCardState extends State<_PeerCard>
                     ]),
                     Builder(builder: (context) {
                       final isEnglishName =
-                          RegExp(r'^[\x00-\x7F]+
+                          displayName.runes.every((rune) => rune < 128);
+                      return Tooltip(
+                        message: displayName,
+                        child: Text(
+                          displayName,
+                          textDirection: isEnglishName
+                              ? TextDirection.ltr
+                              : TextDirection.rtl,
+                          textAlign: isEnglishName
+                              ? TextAlign.left
+                              : TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AdminDeskTypography.body(c).copyWith(
+                            fontFamily: isEnglishName ? 'monospace' : null,
+                            color: peer.online ? c.textPrimary : c.textSecondary,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      );
+                    }),
                     Center(child: Tooltip(message: 'کپی شناسه', child: InkWell(
                       onTap: () => _copyPeerId(peer),
                       child: Text(formatID(peer.id), textDirection: TextDirection.ltr,
