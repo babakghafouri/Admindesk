@@ -75,7 +75,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
     // Keep live device credentials visible at 900 px; hide promotions first.
     final showPromo = width >= 1250;
     final promoWidth = _promoCollapsed
-        ? 46.0
+        ? 58.0
         : (width * .22).clamp(270.0, 355.0).toDouble();
 
     // The existing top-level DesktopTab owns the window titlebar and its
