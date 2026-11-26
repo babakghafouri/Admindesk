@@ -125,12 +125,14 @@ class AdminDeskSideBar extends StatelessWidget {
         vertical: 3,
       ),
       child: Material(
-        color: active ? colors.primary : colors.sidebar,
+        // Navigation selection is intentionally softer than the primary
+        // action buttons (for example, the quick-connect button).
+        color: active ? colors.selectedBackground : colors.sidebar,
         borderRadius: AdminDeskMetrics.controlRadius,
         child: InkWell(
           onTap: onPressed,
           borderRadius: AdminDeskMetrics.controlRadius,
-          hoverColor: active ? colors.primaryHover : colors.hoverBackground,
+          hoverColor: colors.hoverBackground,
           child: SizedBox(
             height: 42,
             child: Row(
@@ -139,7 +141,7 @@ class AdminDeskSideBar extends StatelessWidget {
                 Icon(
                   icon,
                   size: 20,
-                  color: active ? colors.onPrimary : colors.textSecondary,
+                  color: active ? colors.primary : colors.textSecondary,
                 ),
                 const SizedBox(width: AdminDeskMetrics.spaceSm),
                 Expanded(
@@ -148,7 +150,7 @@ class AdminDeskSideBar extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AdminDeskTypography.body(colors).copyWith(
-                      color: active ? colors.onPrimary : colors.textPrimary,
+                      color: active ? colors.primary : colors.textPrimary,
                       fontWeight: active
                           ? AdminDeskTypography.bold
                           : AdminDeskTypography.medium,
