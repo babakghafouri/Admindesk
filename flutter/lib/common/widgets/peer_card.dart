@@ -432,7 +432,10 @@ class _PeerCardState extends State<_PeerCard>
                         ),
                       );
                     }),
-                    const SizedBox(height: 9),
+                    // Keep the ID clearly separated from the device name
+                    // and lower in the card's visual center. The flexible spacer
+                    // below preserves the card height and action-row position.
+                    const SizedBox(height: 25),
                     Center(child: Tooltip(message: 'کپی شناسه', child: InkWell(
                       onTap: () => _copyPeerId(peer),
                       child: Text(formatID(peer.id), textDirection: TextDirection.ltr,
