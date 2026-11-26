@@ -632,7 +632,22 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
         mainGetLocalBoolOptionSync(kOptionAllowMultiEdgeToolbarDock);
     final shouldResetToTop =
         cached != null && cached.multiEdgeEnabled && !multiEdgeEnabled;
-    if (cached != null && !shouldResetToTop) {
+
+    // On Windows, keep the remote-access toolbar centered on the title-bar
+    // edge when a connection opens. Do not restore an old dragged position
+    // from another session; the user can still drag it after it appears.
+    if (isWindows) {
+      _edge.value = _ToolbarEdge.top;
+      _fraction.value = 0.5;
+      _multiEdgeEnabled.value = multiEdgeEnabled;
+      _dockingOptionsInitialized.value = true;
+      _cacheToolbarDockingOptions(
+        sessionId: widget.ffi.sessionId,
+        edge: _ToolbarEdge.top,
+        fraction: 0.5,
+        multiEdgeEnabled: multiEdgeEnabled,
+      );
+    } else if (cached != null && !shouldResetToTop) {
       _edge.value = cached.edge;
       _fraction.value = cached.fraction;
       _multiEdgeEnabled.value = multiEdgeEnabled;
@@ -640,7 +655,8 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _syncDockingOptions(force: cached == null || shouldResetToTop);
+      await _syncDockingOptions(
+          force: !isWindows && (cached == null || shouldResetToTop));
       // Initialize toolbar states (collapse, hide) from session options
       widget.state.init(widget.ffi.sessionId);
     });
