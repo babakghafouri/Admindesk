@@ -23,7 +23,10 @@ class QuickConnectCard extends StatelessWidget {
       child: Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AdminDeskMetrics.spaceMd, vertical: AdminDeskMetrics.spaceSm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AdminDeskMetrics.spaceSm,
+          vertical: AdminDeskMetrics.spaceXs,
+        ),
         decoration: AdminDeskMetrics.cardDecoration(c),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
