@@ -29,6 +29,7 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
   final ValueNotifier<int?> _requestedPeerTab = ValueNotifier<int?>(null);
   String _adminDeskVersion = '';
   int _selectedMenu = 2;
+  bool _promoCollapsed = false;
 
   @override
   void initState() {
@@ -73,7 +74,9 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
     final width = MediaQuery.of(context).size.width;
     // Keep live device credentials visible at 900 px; hide promotions first.
     final showPromo = width >= 1250;
-    final promoWidth = (width * .22).clamp(270.0, 355.0).toDouble();
+    final promoWidth = _promoCollapsed
+        ? 46.0
+        : (width * .22).clamp(270.0, 355.0).toDouble();
 
     // The existing top-level DesktopTab owns the window titlebar and its
     // minimize/maximize/close actions. Do not render a second fake titlebar.
@@ -89,11 +92,60 @@ class _AdminDeskDashboardState extends State<AdminDeskDashboard> {
               child: Row(
                 children: [
                   if (showPromo)
-                    SizedBox(
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeInOut,
                       width: promoWidth,
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(12, 12, 6, 10),
-                        child: const PromoCarousel(),
+                        child: _promoCollapsed
+                            ? Align(
+                                alignment: Alignment.topCenter,
+                                child: Tooltip(
+                                  message: 'باز کردن پنل تبلیغات',
+                                  child: IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    constraints: const BoxConstraints.tightFor(
+                                      width: 34,
+                                      height: 34,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () =>
+                                        setState(() => _promoCollapsed = false),
+                                    icon: Icon(
+                                      Icons.chevron_right_rounded,
+                                      color: colors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : Column(
+                                children: [
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Tooltip(
+                                      message: 'جمع کردن پنل تبلیغات',
+                                      child: IconButton(
+                                        visualDensity: VisualDensity.compact,
+                                        constraints: const BoxConstraints.tightFor(
+                                          width: 30,
+                                          height: 30,
+                                        ),
+                                        padding: EdgeInsets.zero,
+                                        onPressed: () => setState(
+                                            () => _promoCollapsed = true),
+                                        icon: Icon(
+                                          Icons.chevron_left_rounded,
+                                          size: 19,
+                                          color: colors.textSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  const Expanded(child: PromoCarousel()),
+                                ],
+                              ),
                       ),
                     ),
                   Expanded(
