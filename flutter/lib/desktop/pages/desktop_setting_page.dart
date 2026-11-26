@@ -2682,7 +2682,6 @@ class _AboutState extends State<_About> {
         'license': license,
         'coreVersion': coreVersion,
         'adminDeskVersion': packageInfo.version,
-        'buildNumber': packageInfo.buildNumber,
         'buildDate': buildDate,
         'fingerprint': fingerprint,
         'myId': myId
@@ -2691,7 +2690,6 @@ class _AboutState extends State<_About> {
       final license = data['license'].toString();
       final coreVersion = data['coreVersion'].toString();
       final adminDeskVersion = data['adminDeskVersion'].toString();
-      final buildNumber = data['buildNumber'].toString();
       final buildDate = data['buildDate'].toString();
       final fingerprint = data['fingerprint'].toString();
       final myId = data['myId'].toString();
@@ -2715,9 +2713,6 @@ class _AboutState extends State<_About> {
                       .marginSymmetric(vertical: 4.0)),
               SelectionArea(
                   child: Text('نسخه هسته RustDesk: $coreVersion')
-                      .marginSymmetric(vertical: 4.0)),
-              SelectionArea(
-                  child: Text('شماره ساخت: $buildNumber')
                       .marginSymmetric(vertical: 4.0)),
               SelectionArea(
                   child: Text('${translate('Build Date')}: $buildDate')
