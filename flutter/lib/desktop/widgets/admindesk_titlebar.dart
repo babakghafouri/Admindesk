@@ -6,10 +6,9 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
-import '../../common.dart' show createDialogContent;
+import '../../common.dart' show createDialogContent, MyTheme;
 import '../../models/state_model.dart';
 import '../theme/admindesk_theme.dart';
 
@@ -23,33 +22,10 @@ class AdminDeskTitleBrand extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AdminDeskColors.of(context);
     return Padding(
-      padding: const EdgeInsets.only(left: 19),
-      child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SvgPicture.asset('assets/icon.svg', width: 32, height: 32),
-        const SizedBox(width: AdminDeskMetrics.spaceXs),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'AdminDesk',
-              style: AdminDeskTypography.title(colors).copyWith(
-                fontSize: 17,
-                height: 1.1,
-              ),
-            ),
-            Text(
-              'اتصال امن، مدیریت آسان',
-              style: AdminDeskTypography.caption(colors).copyWith(
-                fontSize: 9,
-                height: 1.1,
-              ),
-            ),
-          ],
-        ),
-      ],
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Text(
+        'اتصال امن، مدیریت آسان',
+        style: AdminDeskTypography.title(colors).copyWith(fontSize: 15),
       ),
     );
   }
@@ -82,6 +58,22 @@ class AdminDeskTitleActions extends StatelessWidget {
             onUpdateTap: onSettings,
           );
         }),
+        const SizedBox(width: AdminDeskMetrics.spaceXs),
+        PopupMenuButton<ThemeMode>(
+          tooltip: 'تغییر تم',
+          icon: Icon(
+            Theme.of(context).brightness == Brightness.dark
+                ? Icons.light_mode_outlined
+                : Icons.dark_mode_outlined,
+            size: 19,
+          ),
+          onSelected: (mode) => MyTheme.changeDarkMode(mode),
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: ThemeMode.system, child: Text('تم سیستم')),
+            PopupMenuItem(value: ThemeMode.light, child: Text('روشن')),
+            PopupMenuItem(value: ThemeMode.dark, child: Text('تیره')),
+          ],
+        ),
       ],
     );
   }
@@ -243,6 +235,7 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
   Widget build(BuildContext context) {
     final colors = AdminDeskColors.of(context);
     final unread = _unreadCount;
+    final displayCount = unread > 0 ? unread : (widget.hasUpdate ? 1 : 0);
     return PopupMenuButton<int>(
       tooltip: unread > 0 ? '$unread اعلان خوانده‌نشده' : 'اعلان‌ها',
       padding: EdgeInsets.zero,
@@ -254,51 +247,28 @@ class _AdminDeskNotificationsState extends State<AdminDeskNotifications> {
           _openNotification(value);
         }
       },
-      icon: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Icon(
-            Icons.notifications_none_rounded,
-            size: 20,
-            color: colors.textPrimary,
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+          decoration: BoxDecoration(
+            color: widget.hasUpdate ? const Color(0xFFFFEEE9) : const Color(0xFFE7F6EF),
+            borderRadius: BorderRadius.circular(20),
           ),
-          if (unread > 0)
-            Positioned(
-              top: -5,
-              right: -8,
-              child: Container(
-                constraints: const BoxConstraints(minWidth: 15, minHeight: 15),
-                padding: const EdgeInsets.symmetric(horizontal: 3),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE34D4D),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  unread > 9 ? '9+' : unread.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            )
-          else if (widget.hasUpdate)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: colors.notification,
-                  shape: BoxShape.circle,
-                ),
-              ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Text(widget.hasUpdate ? 'نسخه جدید موجود است' : 'نسخه شما به‌روز است',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+                color: widget.hasUpdate ? const Color(0xFFC83F24) : const Color(0xFF14875D))),
+            const SizedBox(width: 5),
+            if (displayCount > 0) Container(
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(color: widget.hasUpdate ? const Color(0xFFC83F24) : const Color(0xFF14875D), shape: BoxShape.circle),
+              alignment: Alignment.center,
+              child: Text(displayCount > 9 ? '9+' : displayCount.toString(), style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
             ),
-        ],
-      ),
+          ]),
+        ),
+      ]),
       itemBuilder: (_) {
         final items = <PopupMenuEntry<int>>[
           const PopupMenuItem<int>(
@@ -388,26 +358,9 @@ class AdminDeskServerHealth extends StatefulWidget {
 
 class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
   static const String _host = 'desk.admin98.ir';
-  static final Uri _notificationsEndpoint = Uri(
-    scheme: 'https',
-    host: 'admindesk.ir',
-    path: '/wp-json/admindesk/v1/notifications',
-    queryParameters: {'audience': 'all'},
-  );
-
   Timer? _timer;
   bool _checking = false;
-  final Map<String, int?> _latencies = {
-    'Rendezvous (TCP 21116)': null,
-    'Relay (TCP 21117)': null,
-    'Notifications (HTTPS)': null,
-    'Update hosting (HTTPS)': null,
-  };
-
-  bool get _allAvailable =>
-      _latencies.values.every((latency) => latency != null);
-  bool get _anyAvailable =>
-      _latencies.values.any((latency) => latency != null);
+  bool? _connected;
 
   @override
   void initState() {
@@ -422,8 +375,7 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
     super.dispose();
   }
 
-  Future<int?> _checkTcp(int port) async {
-    final watch = Stopwatch()..start();
+  Future<bool> _checkTcp(int port) async {
     Socket? socket;
     try {
       socket = await Socket.connect(
@@ -431,176 +383,62 @@ class _AdminDeskServerHealthState extends State<AdminDeskServerHealth> {
         port,
         timeout: const Duration(seconds: 3),
       );
-      watch.stop();
-      return watch.elapsedMilliseconds;
+      return true;
     } catch (_) {
-      return null;
+      return false;
     } finally {
       socket?.destroy();
     }
   }
 
-  Future<int?> _checkNotifications() async {
-    final watch = Stopwatch()..start();
-    try {
-      final response = await http.get(
-        _notificationsEndpoint,
-        headers: const {'Accept': 'application/json'},
-      ).timeout(const Duration(seconds: 5));
-      watch.stop();
-      return response.statusCode == HttpStatus.ok
-          ? watch.elapsedMilliseconds
-          : null;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<int?> _checkUpdateHosting() async {
-    final watch = Stopwatch()..start();
-    try {
-      final response = await http.head(
-        Uri.parse('https://update.admindesk.ir/'),
-      ).timeout(const Duration(seconds: 5));
-      watch.stop();
-      // A 4xx response still proves that the HTTPS host is reachable.
-      return response.statusCode < HttpStatus.internalServerError
-          ? watch.elapsedMilliseconds
-          : null;
-    } catch (_) {
-      return null;
-    }
-  }
-
   Future<void> _check() async {
-    if (_checking) return;
-    _checking = true;
-    if (mounted) setState(() {});
-    final results = await Future.wait<int?>([
+    if (_checking || !mounted) return;
+    setState(() => _checking = true);
+    final results = await Future.wait<bool>([
       _checkTcp(21116),
       _checkTcp(21117),
-      _checkNotifications(),
-      _checkUpdateHosting(),
     ]);
     if (mounted) {
       setState(() {
-        _latencies['Rendezvous (TCP 21116)'] = results[0];
-        _latencies['Relay (TCP 21117)'] = results[1];
-        _latencies['Notifications (HTTPS)'] = results[2];
-        _latencies['Update hosting (HTTPS)'] = results[3];
+        _connected = results.every((available) => available);
         _checking = false;
       });
-    } else {
-      _checking = false;
     }
   }
 
-  String _serviceLabel(String name, int? latency) {
-    if (latency == null) return '$name: در دسترس نیست';
-    return '$name: متصل · $latency ms';
-  }
+  String get _status => _connected == null
+      ? 'در حال بررسی'
+      : _connected!
+          ? 'متصل و آماده به کار'
+          : 'قطع';
 
-  void _showDetails() {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        final colors = AdminDeskColors.of(dialogContext);
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: AlertDialog(
-            title: const Text('وضعیت سرویس‌های AdminDesk'),
-            content: SizedBox(
-              width: 390,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final entry in _latencies.entries)
-                    ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(
-                        entry.value == null
-                            ? Icons.error_outline_rounded
-                            : Icons.check_circle_outline_rounded,
-                        color: entry.value == null
-                            ? const Color(0xFFE34D4D)
-                            : const Color(0xFF16A765),
-                      ),
-                      title: Text(
-                        entry.key,
-                        style: AdminDeskTypography.body(colors),
-                      ),
-                      subtitle: Text(
-                        entry.value == null
-                            ? 'در دسترس نیست'
-                            : 'متصل · ${entry.value} ms',
-                        style: AdminDeskTypography.caption(colors),
-                      ),
-                    ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'این بررسی فقط دسترسی TCP و HTTPS را می‌سنجد؛ سلامت کامل نشست ریموت، ارتباط UDP یا عملکرد واقعی انتقال فایل را تضمین نمی‌کند.',
-                    style: AdminDeskTypography.caption(colors),
-                    textAlign: TextAlign.right,
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('بستن'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  Color get _statusColor => _connected == null
+      ? AdminDeskColors.light.textSecondary
+      : _connected!
+          ? const Color(0xFF16A765)
+          : const Color(0xFFE34D4D);
 
   @override
   Widget build(BuildContext context) {
-    final Color signalColor = _checking
-        ? AdminDeskColors.light.textSecondary
-        : _allAvailable
-            ? const Color(0xFF16A765)
-            : _anyAvailable
-                ? const Color(0xFFE6A323)
-                : const Color(0xFFE34D4D);
-    final tooltip = [
-      'وضعیت سرویس‌های AdminDesk',
-      for (final entry in _latencies.entries)
-        _serviceLabel(entry.key, entry.value),
-      'این بررسی دسترسی TCP/HTTPS را می‌سنجد و سلامت کامل نشست یا UDP را تضمین نمی‌کند.',
-    ].join('\n');
-
     return Tooltip(
-      message: tooltip,
-      waitDuration: const Duration(milliseconds: 250),
-      child: IconButton(
-        tooltip: 'نمایش وضعیت سرویس‌های سرور',
-        constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-        padding: EdgeInsets.zero,
-        onPressed: _checking
-            ? null
-            : () async {
-                await _check();
-                if (mounted) _showDetails();
-              },
-        icon: _checking
-            ? SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: signalColor,
-                ),
-              )
-            : Icon(
-                Icons.wifi_tethering_rounded,
-                size: 21,
-                color: signalColor,
-              ),
+      message: 'وضعیت: $_status',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: _checking ? null : _check,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.wifi_tethering_rounded,
+                  size: 19, color: _statusColor),
+              const SizedBox(width: 5),
+              Text(_status,
+                  textDirection: TextDirection.rtl,
+                  style: TextStyle(fontSize: 11, color: _statusColor)),
+            ],
+          ),
+        ),
       ),
     );
   }

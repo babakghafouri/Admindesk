@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../common/formatter/id_formatter.dart';
+import '../../models/platform_model.dart';
 import 'package:get/get.dart';
 import 'package:flutter_hbb/common/widgets/peer_card.dart';
 import 'package:flutter_hbb/common/widgets/peers_view.dart';
@@ -306,51 +308,17 @@ class DevicesTableTabs extends StatelessWidget {
   }
 
   Widget _statusFilter(AdminDeskColors c) {
-    final value = statusFilter ?? 'all';
-    final label = value == 'online'
-        ? 'آنلاین'
-        : value == 'offline'
-            ? 'آفلاین'
-            : 'همه';
-    final icon = value == 'online'
-        ? Icons.circle
-        : value == 'offline'
-            ? Icons.circle_outlined
-            : Icons.filter_list_rounded;
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(start: 6),
-      child: PopupMenuButton<String>(
-        tooltip: 'فیلتر وضعیت دستگاه',
-        onSelected: onStatusFilterChanged,
-        itemBuilder: (_) => const [
-          PopupMenuItem(value: 'all', child: Text('همه دستگاه‌ها')),
-          PopupMenuItem(value: 'online', child: Text('فقط آنلاین')),
-          PopupMenuItem(value: 'offline', child: Text('فقط آفلاین')),
-        ],
-        child: Container(
-          height: 36,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: c.inputBackground,
-            border: Border.all(color: c.border),
-            borderRadius: AdminDeskMetrics.controlRadius,
-          ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(icon, size: 15,
-                color: value == 'online'
-                    ? c.online
-                    : value == 'offline'
-                        ? c.offline
-                        : c.textSecondary),
-            const SizedBox(width: 6),
-            Text(label, style: AdminDeskTypography.caption(c)),
-            const SizedBox(width: 3),
-            Icon(Icons.expand_more_rounded,
-                size: 16, color: c.textSecondary),
-          ]),
+    return Wrap(spacing: 5, children: [
+      for (final entry in const {'all': 'همه', 'online': 'آنلاین', 'offline': 'آفلاین'}.entries)
+        ChoiceChip(
+          label: Text(entry.value, style: AdminDeskTypography.body(c)),
+          selected: statusFilter == entry.key,
+          onSelected: (_) => onStatusFilterChanged?.call(entry.key),
+          selectedColor: c.selectedBackground,
+          visualDensity: VisualDensity.compact,
+          showCheckmark: false,
         ),
-      ),
-    );
+    ]);
   }
 
   Widget _refresh(AdminDeskColors c) {
@@ -371,227 +339,151 @@ class DevicesTableTabs extends StatelessWidget {
 
 /// Native data adapter: rows are driven exclusively by filtered peer records
 /// from the existing _PeersView loader, not a locally maintained fake list.
-class DevicesTable extends StatelessWidget {
-  const DevicesTable({
-    Key? key,
-    required this.peers,
-    required this.peerTab,
-    required this.onPeerVisible,
-    required this.cardKeyPrefix,
-  }) : super(key: key);
-
+class DevicesTable extends StatefulWidget {
+  const DevicesTable({super.key, required this.peers, required this.peerTab,
+    required this.onPeerVisible, required this.cardKeyPrefix});
   final List<Peer> peers;
   final PeerTabIndex peerTab;
   final void Function(String peerId, bool visible) onPeerVisible;
   final String cardKeyPrefix;
+  @override
+  State<DevicesTable> createState() => _DevicesTableState();
+}
+
+class _DevicesTableState extends State<DevicesTable> {
+  bool _onlineOpen = true;
+  bool _offlineOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _onlineOpen = bind.getLocalFlutterOption(k: 'admindesk-online-expanded') != 'N';
+    _offlineOpen = bind.getLocalFlutterOption(k: 'admindesk-offline-expanded') == 'Y';
+  }
+
+  Widget _header(AdminDeskColors c, bool online, int count) {
+    final open = online ? _onlineOpen : _offlineOpen;
+    return Material(
+      color: c.canvas,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            if (online) {
+              _onlineOpen = !open;
+            } else {
+              _offlineOpen = !open;
+            }
+          });
+          bind.setLocalFlutterOption(
+            k: online ? 'admindesk-online-expanded' : 'admindesk-offline-expanded',
+            v: !open ? 'Y' : 'N');
+        },
+        child: SizedBox(height: 40, child: Row(children: [
+          const SizedBox(width: 12),
+          Icon(open ? Icons.expand_more : Icons.chevron_left, color: c.textSecondary),
+          const SizedBox(width: 8),
+          Text(online ? 'آنلاین ($count)' : 'آفلاین ($count)',
+            style: AdminDeskTypography.title(c).copyWith(
+              fontSize: 13, color: online ? c.online : c.textSecondary)),
+        ])),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final c = AdminDeskColors.of(context);
+    final online = widget.peers.where((p) => p.online).toList();
+    final offline = widget.peers.where((p) => !p.online).toList();
+    final showOffline = _offlineOpen || peerStatusFilter.value == 'offline';
+    final showOnline = _onlineOpen || peerStatusFilter.value == 'online';
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Container(
-        decoration: AdminDeskMetrics.cardDecoration(c),
-        child: Column(
-          children: [
-            _headers(c),
-            Divider(height: 1, color: c.border),
-            Expanded(
-              child: peers.isEmpty
-                  ? Center(child: Text(
-                      'دستگاهی با این جستجو یافت نشد',
-                      style: AdminDeskTypography.body(c)))
-                  : ListView.separated(
-                      itemCount: peers.length,
-                      separatorBuilder: (context, index) =>
-                          Divider(height: 1, color: c.border),
-                      itemBuilder: (context, index) {
-                        final peer = peers[index];
-                        return VisibilityDetector(
-                          key: ValueKey('$cardKeyPrefix${peer.id}'),
-                          onVisibilityChanged: (info) =>
-                              onPeerVisible(peer.id, info.visibleFraction > 0),
-                          child: _DeviceTableRow(peer: peer, peerTab: peerTab),
-                        );
-                      },
-                    ),
-            ),
-          ],
+      child: ClipRRect(
+        borderRadius: AdminDeskMetrics.cardRadius,
+        child: DecoratedBox(
+          decoration: AdminDeskMetrics.cardDecoration(c),
+          child: ListView(
+            children: [
+              if (online.isNotEmpty) _header(c, true, online.length),
+              if (showOnline) for (final peer in online) _row(peer, c),
+              if (offline.isNotEmpty) _header(c, false, offline.length),
+              if (showOffline) for (final peer in offline) _row(peer, c),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _headers(AdminDeskColors c) {
-    final label = AdminDeskTypography.caption(c).copyWith(
-        fontWeight: AdminDeskTypography.semibold);
-    return SizedBox(
-      height: 40,
-      child: Row(children: [
-        const SizedBox(width: 12),
-        Expanded(flex: 4, child: Align(
-          alignment: Alignment.centerRight,
-          child: Text('نام دستگاه', style: label, textAlign: TextAlign.right),
-        )),
-        Expanded(flex: 3, child: Align(
-          alignment: Alignment.centerRight,
-          child: Text('شناسه', style: label, textAlign: TextAlign.right),
-        )),
-        Expanded(flex: 2, child: Align(
-          alignment: Alignment.centerRight,
-          child: Text('وضعیت', style: label, textAlign: TextAlign.right),
-        )),
-        Expanded(flex: 3, child: Align(
-          alignment: Alignment.centerRight,
-          child: Text('آخرین اتصال', style: label, textAlign: TextAlign.right),
-        )),
-        const SizedBox(width: 52),
-      ]),
-    );
-  }
-}
-
-String _lastConnectionLabel(DateTime? value) {
-  if (value == null) return '—';
-  final elapsed = DateTime.now().difference(value);
-  if (elapsed.isNegative || elapsed.inSeconds < 60) return 'همین الان';
-  if (elapsed.inMinutes < 60) {
-    return '${_persianDigits(elapsed.inMinutes.toString())} دقیقه پیش';
-  }
-  if (elapsed.inHours < 24) {
-    return '${_persianDigits(elapsed.inHours.toString())} ساعت پیش';
-  }
-  if (elapsed.inDays == 1) return 'دیروز، ${_clockLabel(value)}';
-  if (elapsed.inDays < 7) {
-    return '${_persianDigits(elapsed.inDays.toString())} روز پیش';
-  }
-  final date = '${value.year.toString().padLeft(4, '0')}/'
-      '${value.month.toString().padLeft(2, '0')}/'
-      '${value.day.toString().padLeft(2, '0')}';
-  return '${_persianDigits(date)}، ${_clockLabel(value)}';
-}
-
-String _clockLabel(DateTime value) => _persianDigits(
-    '${value.hour.toString().padLeft(2, '0')}:'
-    '${value.minute.toString().padLeft(2, '0')}');
-
-String _persianDigits(String value) {
-  const digits = '۰۱۲۳۴۵۶۷۸۹';
-  return value.replaceAllMapped(
-    RegExp(r'[0-9]'),
-    (match) => digits[int.parse(match.group(0)!)],
+  Widget _row(Peer peer, AdminDeskColors c) => VisibilityDetector(
+    key: ValueKey('${widget.cardKeyPrefix}${peer.id}'),
+    onVisibilityChanged: (info) => widget.onPeerVisible(peer.id, info.visibleFraction > 0),
+    child: Column(children: [
+      _DeviceTableRow(peer: peer, peerTab: widget.peerTab),
+      Divider(height: 1, thickness: 1, color: c.border),
+    ]),
   );
 }
 
 class _DeviceTableRow extends StatelessWidget {
   const _DeviceTableRow({required this.peer, required this.peerTab});
-
   final Peer peer;
   final PeerTabIndex peerTab;
 
   @override
   Widget build(BuildContext context) {
     final c = AdminDeskColors.of(context);
-    final peerTabs = Provider.of<PeerTabModel>(context);
-    final selected = peerTabs.isPeerSelected(peer.id);
-    final name = peer.alias.isNotEmpty
-        ? peer.alias
-        : peer.hostname.isNotEmpty ? peer.hostname : peer.id;
+    final model = Provider.of<PeerTabModel>(context);
+    final host = '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}';
+    final name = peer.alias.isNotEmpty ? peer.alias : host.isNotEmpty ? host : peer.id;
     final online = peer.online;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+    void connectPeer() => connectInPeerTab(context, peer, peerTab);
+    return Tooltip(
+      message: online ? 'دوبار کلیک = اتصال' : 'دستگاه آفلاین است',
       child: Material(
-          color: selected && peerTabs.multiSelectionMode
-              ? c.selectedBackground
-              : c.surface,
-          child: InkWell(
-        hoverColor: c.hoverBackground,
-        onDoubleTap: peerTabs.multiSelectionMode
-            ? null : () => connectInPeerTab(context, peer, peerTab),
-        onTap: peerTabs.multiSelectionMode
-            ? () => peerTabs.select(peer) : null,
-        onLongPress: () => peerTabs.select(peer),
-        child: SizedBox(
-          height: 58,
-          child: Row(children: [
+        color: model.multiSelectionMode && model.isPeerSelected(peer.id)
+            ? c.selectedBackground : c.surface,
+        child: InkWell(
+          hoverColor: c.hoverBackground,
+          onDoubleTap: online && !model.multiSelectionMode ? connectPeer : null,
+          onTap: model.multiSelectionMode ? () => model.select(peer) : null,
+          onLongPress: () => model.select(peer),
+          child: SizedBox(height: 49, child: Row(children: [
             const SizedBox(width: 12),
-            Expanded(flex: 4, child: Row(children: [
-              Icon(_deviceIcon(peer.platform), size: 20, color: c.primary),
-              const SizedBox(width: 7),
-              Expanded(child: Tooltip(
-                message: name,
-                waitDuration: const Duration(milliseconds: 350),
-                child: Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AdminDeskTypography.body(c).copyWith(
-                      fontWeight: AdminDeskTypography.semibold),
-                ),
-              )),
-            ])),
-            Expanded(flex: 3, child: Align(
-              alignment: Alignment.centerRight,
-              child: Directionality(
-                textDirection: TextDirection.ltr,
-                child: Text(
-                  peer.id,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.left,
-                  style: AdminDeskTypography.body(c),
-                ),
-              ),
+            if (model.multiSelectionMode)
+              Icon(model.isPeerSelected(peer.id) ? Icons.check_box : Icons.check_box_outline_blank)
+            else PeerFavoriteButton(peer: peer, tab: peerTab),
+            const SizedBox(width: 8),
+            Icon(Icons.circle, size: 10, color: online ? c.online : c.offline),
+            const SizedBox(width: 8),
+            Expanded(flex: 4, child: Tooltip(message: name, child: Text(name,
+              maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: AdminDeskTypography.body(c).copyWith(
+                color: online ? c.textPrimary : c.textSecondary,
+                fontWeight: FontWeight.w600)))),
+            Expanded(flex: 3, child: Text(formatID(peer.id),
+              textDirection: TextDirection.ltr, textAlign: TextAlign.right,
+              maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold,
+                color: online ? c.primary : c.textSecondary))),
+            SizedBox(width: 90, child: PeerConnectButton(online: online, onConnect: connectPeer)),
+            IconButton(tooltip: 'ویرایش', iconSize: 17,
+              onPressed: () => renameDashboardPeer(context, peer, peerTab),
+              icon: Icon(Icons.edit_outlined, color: c.textSecondary)),
+            Builder(builder: (buttonContext) => IconButton(
+              tooltip: 'گزینه‌های دستگاه', iconSize: 19,
+              icon: Icon(Icons.more_vert_rounded, color: c.textSecondary),
+              onPressed: () {
+                final box = buttonContext.findRenderObject() as RenderBox?;
+                showPeerActionsMenu(context, peer, peerTab,
+                  box?.localToGlobal(Offset.zero) ?? Offset.zero);
+              },
             )),
-            Expanded(flex: 2, child: Row(children: [
-              Icon(Icons.circle, size: 8,
-                  color: online ? c.online : c.offline),
-              const SizedBox(width: 5),
-              Flexible(child: Text(
-                online ? 'آنلاین' : 'آفلاین',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AdminDeskTypography.caption(c).copyWith(
-                    color: online ? c.online : c.offline),
-              )),
-            ])),
-            Expanded(
-              flex: 3,
-              child: Text(
-                _lastConnectionLabel(peer.lastConnected),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AdminDeskTypography.caption(c),
-              ),
-            ),
-            SizedBox(
-              width: 52,
-              child: IconButton(
-                tooltip: 'گزینه‌های دستگاه',
-                padding: EdgeInsets.zero,
-                icon: Icon(Icons.more_vert_rounded, color: c.textSecondary),
-                onPressed: () {
-                  final box = context.findRenderObject() as RenderBox?;
-                  final position = box == null
-                      ? Offset.zero
-                      : box.localToGlobal(
-                          Offset(box.size.width / 2, box.size.height / 2));
-                  showPeerActionsMenu(context, peer, peerTab, position);
-                },
-              ),
-            ),
-          ]),
-          ),
+            const SizedBox(width: 8),
+          ])),
         ),
-    ));
-  }
-
-  IconData _deviceIcon(String platform) {
-    final type = platform.toLowerCase();
-    if (type.contains('android')) return Icons.android_rounded;
-    if (type.contains('windows')) return Icons.desktop_windows_rounded;
-    if (type.contains('linux')) return Icons.computer_rounded;
-    if (type.contains('mac')) return Icons.laptop_mac_rounded;
-    return Icons.monitor_outlined;
+      ),
+    );
   }
 }

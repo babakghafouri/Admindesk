@@ -225,6 +225,7 @@ class _PeersViewState extends State<_PeersView>
   }
 
   onVisibilityChanged(VisibilityInfo info) {
+    if (!mounted || DevicesTableScope.enabledOf(context)) return;
     final peerId = _peerId((info.key as ValueKey).value);
     if (info.visibleFraction > 0.00001) {
       _curPeers.add(peerId);
@@ -250,10 +251,20 @@ class _PeersViewState extends State<_PeersView>
           if (snapshot.hasData) {
             var peers = snapshot.data!;
             if (peers.length > 1000) peers = peers.sublist(0, 1000);
+            if (DevicesTableScope.enabledOf(context)) {
+              final ids = peers.map((p) => p.id).toSet();
+              if (!setEquals(ids, _curPeers)) {
+                _curPeers..clear()..addAll(ids);
+                _lastChangeTime = DateTime.now();
+              }
+            }
             if (statusFilter == 'online') {
               peers = peers.where((peer) => peer.online).toList();
             } else if (statusFilter == 'offline') {
               peers = peers.where((peer) => !peer.online).toList();
+            }
+            if (DevicesTableScope.enabledOf(context)) {
+              peers = [...peers.where((p) => p.online), ...peers.where((p) => !p.online)];
             }
             gFFI.peerTabModel.setCurrentTabCachedPeers(peers);
             if (peers.isEmpty) {
@@ -287,7 +298,7 @@ class _PeersViewState extends State<_PeersView>
                                   ? 228
                                   : 220,
                               height: DevicesTableScope.enabledOf(context)
-                                  ? 144
+                                  ? 164
                                   : 140,
                               child: visibilityChild,
                             )
@@ -318,18 +329,30 @@ class _PeersViewState extends State<_PeersView>
                               bottom: space / 2);
                         },
                       )
-                    : DynamicGridView.builder(
-                        gridDelegate: SliverGridDelegateWithWrapping(
-                            mainAxisSpacing: space / 2,
-                            crossAxisSpacing: space),
-                        itemCount: peers.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          return buildOnePeer(peers[index], false);
-                        }));
+                    : Transform.translate(
+                        // Center the fixed-width dashboard cards in the
+                        // available content area; the current wrapping grid
+                        // otherwise leaves a noticeably larger gap on the
+                        // right side of the Windows dashboard.
+                        offset: Offset(
+                          DevicesTableScope.enabledOf(context) ? 64 : 0,
+                          0,
+                        ),
+                        child: DynamicGridView.builder(
+                          gridDelegate: SliverGridDelegateWithWrapping(
+                              mainAxisSpacing: space / 2,
+                              crossAxisSpacing: space),
+                          itemCount: peers.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return buildOnePeer(peers[index], false);
+                          },
+                        )));
 
             if (updateEvent == UpdateEvent.load) {
-              _curPeers.clear();
-              _curPeers.addAll(peers.map((e) => e.id));
+              if (!DevicesTableScope.enabledOf(context)) {
+                _curPeers.clear();
+                _curPeers.addAll(peers.map((e) => e.id));
+              }
               _queryOnlines(true);
             }
             // Keep this loader, search, sort and online polling machinery
@@ -343,16 +366,12 @@ class _PeersViewState extends State<_PeersView>
                       peers: peers,
                       peerTab: widget.peerTabIndex,
                       cardKeyPrefix: widget.peers.name,
-                      onPeerVisible: (peerId, visible) {
-                        if (visible) {
-                          _curPeers.add(peerId);
-                        } else {
-                          _curPeers.remove(peerId);
-                        }
-                        _lastChangeTime = DateTime.now();
-                      },
+                      onPeerVisible: (peerId, visible) {},
                     )
-                  : child);
+                  : ScrollConfiguration(
+                      behavior: const _DashboardGridScrollBehavior(),
+                      child: child,
+                    ));
             }
             return child;
           } else {
@@ -652,5 +671,26 @@ class MyGroupPeerView extends BasePeersView {
       }
     }
     return true;
+  }
+}
+
+/// Reserve a right-side gutter without changing RTL card ordering.
+class _DashboardGridScrollBehavior extends MaterialScrollBehavior {
+  const _DashboardGridScrollBehavior();
+
+  @override
+  Widget buildScrollbar(BuildContext context, Widget child,
+      ScrollableDetails details) {
+    if (axisDirectionToAxis(details.direction) != Axis.vertical) {
+      return super.buildScrollbar(context, child, details);
+    }
+    return Scrollbar(
+      controller: details.controller,
+      scrollbarOrientation: ScrollbarOrientation.right,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 14),
+        child: child,
+      ),
+    );
   }
 }
