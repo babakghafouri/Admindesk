@@ -437,6 +437,194 @@ class RemoteMenuEntry {
   }
 }
 
+/// Theme shared by the floating toolbar and the title-bar actions.
+/// [transparentBar] removes the menu-bar background so the buttons sit
+/// directly on the title bar instead of on a detached panel.
+ThemeData _toolbarThemeData(BuildContext context,
+    {bool transparentBar = false}) {
+  return Theme.of(context).copyWith(
+    menuButtonTheme: MenuButtonThemeData(
+      style: ButtonStyle(
+        minimumSize: MaterialStatePropertyAll(Size(64, 32)),
+        textStyle: MaterialStatePropertyAll(
+          TextStyle(fontWeight: FontWeight.normal),
+        ),
+        shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(_ToolbarTheme.menuButtonBorderRadius))),
+      ),
+    ),
+    dividerTheme: DividerThemeData(
+      space: _ToolbarTheme.dividerSpaceToAction,
+      color: _ToolbarTheme.dividerColor(context),
+    ),
+    menuBarTheme: MenuBarThemeData(
+        style: MenuStyle(
+      padding: MaterialStatePropertyAll(EdgeInsets.zero),
+      elevation: MaterialStatePropertyAll(0),
+      shape: MaterialStatePropertyAll(BeveledRectangleBorder()),
+    ).copyWith(
+            backgroundColor: transparentBar
+                ? MaterialStatePropertyAll(Colors.transparent)
+                : Theme.of(context).menuBarTheme.style?.backgroundColor)),
+  );
+}
+
+/// Windows only. Per-session title-bar actions, published by the session's
+/// [RemoteToolbar] (embedded mode) and read by the remote window's title bar
+/// (`DesktopTab.centerOverlay`) for the currently selected tab.
+/// Approximate width of one toolbar slot and the smallest allowed scale.
+const double _kTitleBarItemWidth = 34.0;
+const double _kTitleBarMinScale = 0.8;
+
+final RxMap<String, Widget> remoteTitleBarActions = <String, Widget>{}.obs;
+
+/// The remote-session actions rendered directly inside the window title bar.
+///
+/// It reuses [_buildToolbarItems], so every button keeps its original
+/// callbacks, tooltips, permissions and state. There is no panel, border or
+/// shadow; the row scales down (never up) to fit the title-bar height and the
+/// width the title bar grants it.
+class RemoteTitleBarActions extends StatelessWidget {
+  final String id;
+  final FFI ffi;
+  final ToolbarState state;
+  final Function(VoidCallback) setRemoteState;
+  final double height;
+
+  const RemoteTitleBarActions({
+    Key? key,
+    required this.id,
+    required this.ffi,
+    required this.state,
+    required this.setRemoteState,
+    this.height = kDesktopRemoteTabBarHeight - 2,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      // "Hide Toolbar" from the tab context menu keeps working.
+      if (!state.initialized.value || state.hide.value) {
+        return const SizedBox.shrink();
+      }
+      final items = _buildToolbarItems(
+        id: id,
+        ffi: ffi,
+        state: state,
+        edge: _ToolbarEdge.top,
+        setRemoteState: setRemoteState,
+        setFullscreen: (v) => stateGlobal.setFullscreen(v),
+      );
+      return Theme(
+        data: _toolbarThemeData(context, transparentBar: true),
+        child: LayoutBuilder(builder: (context, constraints) {
+          // Never shrink below _kTitleBarMinScale; beyond that, the items
+          // that do not fit move (unchanged) into an overflow menu.
+          final slot = _kTitleBarItemWidth * _kTitleBarMinScale;
+          final maxW = constraints.maxWidth;
+          final natural = items.length * _kTitleBarItemWidth;
+          List<Widget> shown = items;
+          List<Widget> hidden = const [];
+          if (natural * _kTitleBarMinScale > maxW) {
+            // reserve one slot for the overflow button itself
+            final fit = ((maxW - slot) / slot).floor().clamp(0, items.length);
+            shown = items.take(fit).toList();
+            hidden = items.skip(fit).toList();
+          }
+          final row = Row(mainAxisSize: MainAxisSize.min, children: [
+            ...shown,
+            if (hidden.isNotEmpty)
+              PopupMenuButton<int>(
+                tooltip: translate('More'),
+                padding: EdgeInsets.zero,
+                icon: const Icon(Icons.more_horiz, size: 20),
+                itemBuilder: (_) => [
+                  PopupMenuItem<int>(
+                    enabled: false,
+                    padding: EdgeInsets.zero,
+                    child: Theme(
+                      data: _toolbarThemeData(context, transparentBar: true),
+                      child: Wrap(children: hidden),
+                    ),
+                  ),
+                ],
+              ),
+          ]);
+          return SizedBox(
+            height: height,
+            child: FittedBox(fit: BoxFit.scaleDown, child: row),
+          );
+        }),
+      );
+    });
+  }
+}
+
+/// Builds the ordered list of remote-session action widgets.
+///
+/// Shared by the floating [RemoteToolbar] and the Windows title-bar
+/// [RemoteTitleBarActions], so both expose exactly the same buttons,
+/// callbacks, tooltips and visibility conditions.
+List<Widget> _buildToolbarItems({
+  required String id,
+  required FFI ffi,
+  required ToolbarState state,
+  required _ToolbarEdge edge,
+  required Function(VoidCallback) setRemoteState,
+  required Function(bool) setFullscreen,
+}) {
+  final List<Widget> toolbarItems = [];
+  toolbarItems.add(_PinMenu(state: state));
+  toolbarItems.add(Obx(() {
+    final privacyModeState = PrivacyModeState.find(id);
+    if ((privacyModeState.isEmpty ||
+            allowDisplaySwitchInPrivacyMode(
+                ffi.ffiModel.pi, privacyModeState.value)) &&
+        ffi.ffiModel.pi.displaysCount.value > 1 &&
+        mainGetLocalBoolOptionSync(kOptionAllowMonitorSwitchMainToolbar)) {
+      return _MainMonitorSwitchButton(id: id, ffi: ffi);
+    } else {
+      return const Offstage();
+    }
+  }));
+  if (!isWebDesktop) {
+    toolbarItems.add(_MobileActionMenu(ffi: ffi));
+  }
+
+  toolbarItems.add(Obx(() {
+    final privacyModeState = PrivacyModeState.find(id);
+    if ((privacyModeState.isEmpty ||
+            allowDisplaySwitchInPrivacyMode(
+                ffi.ffiModel.pi, privacyModeState.value)) &&
+        ffi.ffiModel.pi.displaysCount.value > 1) {
+      return _MonitorMenu(
+          id: id, ffi: ffi, edge: edge, setRemoteState: setRemoteState);
+    } else {
+      return Offstage();
+    }
+  }));
+
+  toolbarItems.add(_ControlMenu(id: id, ffi: ffi, state: state));
+  toolbarItems.add(_DisplayMenu(
+    id: id,
+    ffi: ffi,
+    state: state,
+    setFullscreen: setFullscreen,
+  ));
+  // Do not show keyboard for camera connection type.
+  if (ffi.connType == ConnType.defaultConn) {
+    toolbarItems.add(_KeyboardMenu(id: id, ffi: ffi));
+  }
+  toolbarItems.add(_ChatMenu(id: id, ffi: ffi));
+  if (!isWeb) {
+    toolbarItems.add(_VoiceCallMenu(id: id, ffi: ffi));
+  }
+  if (!isWeb) toolbarItems.add(_RecordMenu());
+  toolbarItems.add(_CloseMenu(id: id, ffi: ffi));
+  return toolbarItems;
+}
+
 class RemoteToolbar extends StatefulWidget {
   final String id;
   final FFI ffi;
@@ -444,6 +632,11 @@ class RemoteToolbar extends StatefulWidget {
   final Function(int, Function(bool)) onEnterOrLeaveImageSetter;
   final Function(int) onEnterOrLeaveImageCleaner;
   final Function(VoidCallback) setRemoteState;
+
+  /// Windows remote-session windows: when true (and the window title bar is
+  /// visible) the actions are rendered by [RemoteTitleBarActions] inside the
+  /// title bar and this floating panel renders nothing.
+  final bool embedInTitleBar;
 
   RemoteToolbar({
     Key? key,
@@ -453,6 +646,7 @@ class RemoteToolbar extends StatefulWidget {
     required this.onEnterOrLeaveImageSetter,
     required this.onEnterOrLeaveImageCleaner,
     required this.setRemoteState,
+    this.embedInTitleBar = false,
   }) : super(key: key);
 
   @override
@@ -484,6 +678,42 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
   int _dragEpoch = 0;
 
   int get windowId => stateGlobal.windowId;
+
+  Widget? _publishedTitleBarActions;
+
+  /// The actions live in the title bar (not in a floating panel).
+  bool get _embedded => widget.embedInTitleBar;
+
+  void _publishTitleBarActions() {
+    if (!_embedded) return;
+    final actions = RemoteTitleBarActions(
+      id: widget.id,
+      ffi: widget.ffi,
+      state: widget.state,
+      setRemoteState: widget.setRemoteState,
+    );
+    _publishedTitleBarActions = actions;
+    remoteTitleBarActions[widget.id] = actions;
+  }
+
+  /// Removes the entry we published for [id]. Deferred to after the frame so
+  /// observers are never notified while the tree is being torn down. Only our
+  /// own entry is removed, so a newer toolbar for the same id is not affected.
+  void _unpublishTitleBarActions([String? id]) {
+    final key = id ?? widget.id;
+    final mine = _publishedTitleBarActions;
+    _publishedTitleBarActions = null;
+    if (mine == null) return;
+    void remove() {
+      if (identical(remoteTitleBarActions[key], mine)) {
+        remoteTitleBarActions.remove(key);
+      }
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => remove());
+    // Also remove right away when no frame will run (window closing).
+    if (!WidgetsBinding.instance.hasScheduledFrame) remove();
+  }
 
   void _setFullscreen(bool v) {
     stateGlobal.setFullscreen(v);
@@ -659,6 +889,7 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
           force: !isWindows && (cached == null || shouldResetToTop));
       // Initialize toolbar states (collapse, hide) from session options
       widget.state.init(widget.ffi.sessionId);
+      if (mounted) _publishTitleBarActions();
     });
 
     _debouncerHide = Debouncer<int>(
@@ -680,12 +911,18 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
   @override
   void didUpdateWidget(covariant RemoteToolbar oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.id != widget.id) {
+      // Session changed: drop the old entry before publishing the new one.
+      _unpublishTitleBarActions(oldWidget.id);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _syncDockingOptions(force: false);
+      if (mounted) _publishTitleBarActions();
     });
   }
 
   _debouncerHideProc(int v) {
+    if (_embedded) return; // title-bar actions are always expanded
     if (!pin && collapse.isFalse && _isCursorOverImage && _dragging.isFalse) {
       collapse.value = true;
     }
@@ -694,6 +931,7 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
   @override
   dispose() {
     ++_dockingOptionSyncSerial;
+    _unpublishTitleBarActions();
     widget.onEnterOrLeaveImageCleaner(identityHashCode(this));
     super.dispose();
   }
@@ -701,6 +939,13 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      // Windows: the title bar hosts the actions. In fullscreen the title bar
+      // is hidden (stateGlobal.showTabBar == false), so fall back to the
+      // floating toolbar there; otherwise there would be no way to reach the
+      // session controls or to leave fullscreen.
+      if (_embedded && stateGlobal.showTabBar.isTrue) {
+        return const SizedBox.shrink();
+      }
       // Wait for initialization to complete to prevent flickering
       if (!widget.state.initialized.value ||
           !_dockingOptionsInitialized.value) {
@@ -818,56 +1063,14 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
 
   Widget _buildToolbar(
       BuildContext context, _ToolbarEdge edge, bool isHorizontal) {
-    final List<Widget> toolbarItems = [];
-    toolbarItems.add(_PinMenu(state: widget.state));
-    toolbarItems.add(Obx(() {
-      final privacyModeState = PrivacyModeState.find(widget.id);
-      if ((privacyModeState.isEmpty ||
-              allowDisplaySwitchInPrivacyMode(pi, privacyModeState.value)) &&
-          pi.displaysCount.value > 1 &&
-          mainGetLocalBoolOptionSync(kOptionAllowMonitorSwitchMainToolbar)) {
-        return _MainMonitorSwitchButton(id: widget.id, ffi: widget.ffi);
-      } else {
-        return const Offstage();
-      }
-    }));
-    if (!isWebDesktop) {
-      toolbarItems.add(_MobileActionMenu(ffi: widget.ffi));
-    }
-
-    toolbarItems.add(Obx(() {
-      final privacyModeState = PrivacyModeState.find(widget.id);
-      if ((privacyModeState.isEmpty ||
-              allowDisplaySwitchInPrivacyMode(pi, privacyModeState.value)) &&
-          pi.displaysCount.value > 1) {
-        return _MonitorMenu(
-            id: widget.id,
-            ffi: widget.ffi,
-            edge: edge,
-            setRemoteState: widget.setRemoteState);
-      } else {
-        return Offstage();
-      }
-    }));
-
-    toolbarItems
-        .add(_ControlMenu(id: widget.id, ffi: widget.ffi, state: widget.state));
-    toolbarItems.add(_DisplayMenu(
+    final List<Widget> toolbarItems = _buildToolbarItems(
       id: widget.id,
       ffi: widget.ffi,
       state: widget.state,
+      edge: edge,
+      setRemoteState: widget.setRemoteState,
       setFullscreen: _setFullscreen,
-    ));
-    // Do not show keyboard for camera connection type.
-    if (widget.ffi.connType == ConnType.defaultConn) {
-      toolbarItems.add(_KeyboardMenu(id: widget.id, ffi: widget.ffi));
-    }
-    toolbarItems.add(_ChatMenu(id: widget.id, ffi: widget.ffi));
-    if (!isWeb) {
-      toolbarItems.add(_VoiceCallMenu(id: widget.id, ffi: widget.ffi));
-    }
-    if (!isWeb) toolbarItems.add(_RecordMenu());
-    toolbarItems.add(_CloseMenu(id: widget.id, ffi: widget.ffi));
+    );
     final toolbarBorderRadius = BorderRadius.all(Radius.circular(4.0));
     // innerAxis: how the toolbar icons themselves flow.
     // outerAxis: how the toolbar block and the handle stack against each other
@@ -919,33 +1122,7 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
     );
   }
 
-  ThemeData themeData() {
-    return Theme.of(context).copyWith(
-      menuButtonTheme: MenuButtonThemeData(
-        style: ButtonStyle(
-          minimumSize: MaterialStatePropertyAll(Size(64, 32)),
-          textStyle: MaterialStatePropertyAll(
-            TextStyle(fontWeight: FontWeight.normal),
-          ),
-          shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(_ToolbarTheme.menuButtonBorderRadius))),
-        ),
-      ),
-      dividerTheme: DividerThemeData(
-        space: _ToolbarTheme.dividerSpaceToAction,
-        color: _ToolbarTheme.dividerColor(context),
-      ),
-      menuBarTheme: MenuBarThemeData(
-          style: MenuStyle(
-        padding: MaterialStatePropertyAll(EdgeInsets.zero),
-        elevation: MaterialStatePropertyAll(0),
-        shape: MaterialStatePropertyAll(BeveledRectangleBorder()),
-      ).copyWith(
-              backgroundColor:
-                  Theme.of(context).menuBarTheme.style?.backgroundColor)),
-    );
-  }
+  ThemeData themeData() => _toolbarThemeData(context);
 }
 
 class _PinMenu extends StatelessWidget {

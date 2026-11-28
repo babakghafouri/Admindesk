@@ -726,6 +726,8 @@ class _RemotePageState extends State<RemotePage>
             }
           },
           setRemoteState: setState,
+          // Windows: the actions live in the window title bar.
+          embedInTitleBar: isWindows,
         );
 
     bodyWidget() {

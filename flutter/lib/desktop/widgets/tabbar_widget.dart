@@ -247,6 +247,11 @@ class DesktopTab extends StatefulWidget {
   final Widget? tail;
   /// Optional branded leading title; default behavior is unchanged for other windows.
   final Widget? leading;
+
+  /// Optional widget drawn in the title bar, centered relative to the whole
+  /// window width (not the space left between the other title-bar parts).
+  /// Used on Windows for the remote-session actions. Null keeps the old bar.
+  final Widget? centerOverlay;
   final Future<bool> Function()? onWindowCloseButton;
   final TabBuilder? tabBuilder;
   final LabelGetter? labelGetter;
@@ -273,6 +278,7 @@ class DesktopTab extends StatefulWidget {
     this.tabMenuBuilder,
     this.tail,
     this.leading,
+    this.centerOverlay,
     this.onWindowCloseButton,
     this.tabBuilder,
     this.labelGetter,
@@ -633,7 +639,7 @@ class _DesktopTabState extends State<DesktopTab>
       labelGetter: labelGetter,
       ).paddingOnly(left: 10, right: 8),
     );
-    return Directionality(
+    final bar = Directionality(
       textDirection:
           moveWindowControlsRight ? TextDirection.ltr : Directionality.of(context),
       child: Row(
@@ -739,6 +745,34 @@ class _DesktopTabState extends State<DesktopTab>
         ],
       ),
     );
+    final overlay = widget.centerOverlay;
+    if (overlay == null) return bar;
+    return LayoutBuilder(builder: (context, constraints) {
+      // Equal space on both sides keeps the actions centered on the complete
+      // window width, not merely the remaining title-bar space.
+      const windowControls = 170.0;
+      const perExtraTab = 110.0;
+      final tabCount = controller.state.value.tabs.length;
+      final tabReserve =
+          (tabCount > 1 ? (tabCount - 1) * perExtraTab : 0.0).clamp(0.0, 330.0);
+      final sideReserve = windowControls + tabReserve;
+      final maxWidth =
+          (constraints.maxWidth - 2 * sideReserve).clamp(0.0, double.infinity);
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          bar,
+          Positioned.fill(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                child: overlay,
+              ),
+            ),
+          ),
+        ],
+      );
+    });
   }
 }
 

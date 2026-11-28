@@ -135,6 +135,16 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
       body: DesktopTab(
         controller: tabController,
         onWindowCloseButton: handleWindowCloseButton,
+        // Windows: remote-session actions embedded in the title bar,
+        // centered across the full window width.
+        centerOverlay: isWindows
+            ? Obx(() {
+                final tabs = tabController.state.value.tabs;
+                if (tabs.isEmpty) return const SizedBox.shrink();
+                final key = tabController.state.value.selectedTabInfo.key;
+                return remoteTitleBarActions[key] ?? const SizedBox.shrink();
+              })
+            : null,
         tail: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
