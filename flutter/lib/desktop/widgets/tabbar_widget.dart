@@ -764,9 +764,9 @@ class _DesktopTabState extends State<DesktopTab>
           bar,
           Positioned.fill(
             child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: maxWidth),
-                child: overlay,
+              child: SizedBox(
+                width: maxWidth,
+                child: Center(child: overlay),
               ),
             ),
           ),
